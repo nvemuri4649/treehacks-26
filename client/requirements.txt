@@ -1,3 +1,4 @@
 # Client-side dependencies (installed on your laptop)
 requests
 pillow
+anthropic>=0.18.0

@@ -122,6 +122,31 @@ python client/test_glazing.py \
 This runs inpainting on both the original and protected images and generates a
 side-by-side comparison grid in `test_results/comparison_grid.png`.
 
+### 5. Adversarial Agent Loop (NEW!)
+
+**Automatically find the optimal glazing strength** using Claude's vision capabilities:
+
+```bash
+# Set your Anthropic API key
+export ANTHROPIC_API_KEY="sk-ant-api03-..."
+
+# Run the agent loop
+python client/agent_loop.py \
+  --image face.png \
+  --mask mask.png \
+  --prompt "a person in jail" \
+  --threshold 6 \
+  --backend gx10
+```
+
+The agent loop:
+1. Glazes the image with increasing PGD iterations
+2. Generates deepfakes from the protected image
+3. Uses Claude to rate deepfake quality (1-10 scale)
+4. Iterates until protection is effective (score ≤ threshold)
+
+See [AGENT_LOOP.md](AGENT_LOOP.md) for full documentation.
+
 ## Backend Configuration
 
 Edit `backends.json` to configure your GPU backends:
