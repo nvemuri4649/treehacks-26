@@ -1,13 +1,22 @@
+# Environment variables (contains API keys)
+.env
+*.env
+
 # Python
 __pycache__/
+*.py[cod]
+*$py.class
 *.pyc
 *.pyo
 *.egg-info/
 dist/
 build/
 *.egg
-.venv/
+
+# Virtual environments
 venv/
+.venv/
+env/
 
 # Generated outputs (images, videos, masks)
 output/
@@ -25,12 +34,10 @@ Thumbs.db
 .vscode/
 .idea/
 .cursor/
+*.swp
+*.swo
 
 # Model weights (downloaded at runtime)
 *.bin
 *.safetensors
 *.ckpt
-
-# Environment
-.env
-*.env
