@@ -12,6 +12,9 @@ venv/
 # Test outputs
 test_results/
 *_protected.png
+comparison_outputs*/
+conditioned_outputs*/
+test_images/
 
 # OS
 .DS_Store

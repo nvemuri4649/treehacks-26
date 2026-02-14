@@ -1,6 +1,6 @@
 # Server-side dependencies (installed inside NGC container on GX10)
 # NOTE: Do NOT install torch/torchvision here — use what's in the NGC container
-diffusers==0.24.0
+diffusers>=0.25.0
 transformers
 datasets
 huggingface-hub
