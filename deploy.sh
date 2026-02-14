@@ -1,49 +1,157 @@
 #!/usr/bin/env bash
 #
-# Deploy server code to the ASUS Ascent GX10
-# ===========================================
+# Deploy DiffusionGuard server to a GPU backend
+# ===============================================
+#
 # Usage:
-#   ./deploy.sh <user>@<gx10-host>
-#   ./deploy.sh nikhil@spark-abcd.local
-#   ./deploy.sh nikhil@192.168.1.42
+#   ./deploy.sh gx10   <user>@<host>             Deploy to ASUS Ascent GX10
+#   ./deploy.sh runpod  <ssh-args>                Deploy to RunPod GPU pod
+#   ./deploy.sh ssh     <user>@<host>             Deploy to any SSH-accessible GPU box
+#
+# Examples:
+#   ./deploy.sh gx10   nikhil@spark-abcd.local
+#   ./deploy.sh runpod  -p 22177 root@ssh.runpod.io
+#   ./deploy.sh ssh     ubuntu@my-gpu-server.com
 #
 set -euo pipefail
 
-if [ $# -lt 1 ]; then
-    echo "Usage: $0 <user>@<gx10-host>"
-    echo "Example: $0 nikhil@spark-abcd.local"
+usage() {
+    cat <<'EOF'
+Usage: ./deploy.sh <target-type> <connection-args...>
+
+Target types:
+  gx10    ASUS Ascent GX10 (uses Docker container 'diffguard')
+  runpod  RunPod GPU pod (direct install, no Docker)
+  ssh     Any SSH-accessible machine with NVIDIA GPU (direct install)
+
+Examples:
+  ./deploy.sh gx10   nikhil@spark-abcd.local
+  ./deploy.sh runpod  -p 22177 root@ssh.runpod.io
+  ./deploy.sh ssh     ubuntu@lambda-box.com
+EOF
     exit 1
-fi
+}
 
-TARGET="$1"
+[ $# -lt 2 ] && usage
+
+TARGET_TYPE="$1"
+shift
+SSH_ARGS="$@"
 REMOTE_DIR="diffusionguard_project"
+PIP_DEPS="diffusers==0.24.0 transformers datasets huggingface-hub numpy omegaconf opencv-contrib-python scikit-learn tqdm hydra-core flask pillow"
 
-echo "=== Deploying to $TARGET ==="
+# -----------------------------------------------------------------------
+# Helper: copy server code via SSH pipe (works with any SSH config)
+# -----------------------------------------------------------------------
+copy_server_code() {
+    local ssh_args="$1"
+    local remote_dir="$2"
+    echo "[*] Copying server code..."
+    ssh $ssh_args "mkdir -p $remote_dir/server"
+    cat server/app.py          | ssh $ssh_args "cat > $remote_dir/server/app.py"
+    cat server/requirements.txt | ssh $ssh_args "cat > $remote_dir/server/requirements.txt"
+}
 
-# 1. Copy server code
-echo "[1/4] Copying server code..."
-scp -r server/ "$TARGET:~/$REMOTE_DIR/"
+clone_diffguard() {
+    local ssh_args="$1"
+    local remote_dir="$2"
+    echo "[*] Cloning DiffusionGuard repo (if needed)..."
+    ssh $ssh_args "cd $remote_dir && [ -d DiffusionGuard ] || git clone https://github.com/choi403/DiffusionGuard.git"
+}
 
-# 2. Clone DiffusionGuard repo on the GX10 (if not already there)
-echo "[2/4] Ensuring DiffusionGuard repo exists..."
-ssh "$TARGET" "cd ~/$REMOTE_DIR && [ -d DiffusionGuard ] || git clone https://github.com/choi403/DiffusionGuard.git"
+# -----------------------------------------------------------------------
+# GX10 deploy (Docker-based)
+# -----------------------------------------------------------------------
+deploy_gx10() {
+    local remote="$REMOTE_DIR"
+    echo "=== Deploying to GX10 ($SSH_ARGS) ==="
 
-# 3. Check if docker container exists
-echo "[3/4] Checking Docker container..."
-ssh "$TARGET" "docker ps -a --format '{{.Names}}' | grep -q diffguard && echo 'Container exists' || echo 'Container not found — create it with the commands in SETUP_GX10.md'"
+    copy_server_code "$SSH_ARGS" "~/$remote"
+    clone_diffguard  "$SSH_ARGS" "~/$remote"
 
-# 4. Install dependencies inside container
-echo "[4/4] Installing Python dependencies inside container..."
-ssh "$TARGET" "docker start diffguard 2>/dev/null; docker exec diffguard pip install -q diffusers==0.24.0 transformers datasets huggingface-hub numpy omegaconf opencv-contrib-python scikit-learn tqdm hydra-core flask pillow"
+    echo "[*] Checking Docker container 'diffguard'..."
+    ssh $SSH_ARGS "docker ps -a --format '{{.Names}}' | grep -q diffguard" || {
+        echo "ERROR: Docker container 'diffguard' not found."
+        echo "Create it first — see SETUP_GX10.md Phase 3."
+        exit 1
+    }
 
-echo ""
-echo "=== Deploy complete! ==="
-echo ""
-echo "To start the server:"
-echo "  ssh $TARGET 'docker exec -it diffguard bash -c \"cd /workspace/project/server && python app.py\"'"
-echo ""
-echo "Or interactively:"
-echo "  ssh $TARGET"
-echo "  docker exec -it diffguard bash"
-echo "  cd /workspace/project/server"
-echo "  python app.py"
+    echo "[*] Installing dependencies inside Docker container..."
+    ssh $SSH_ARGS "docker start diffguard 2>/dev/null; docker exec diffguard pip install -q $PIP_DEPS"
+
+    echo ""
+    echo "=== GX10 deploy complete! ==="
+    echo ""
+    echo "Start the server:"
+    echo "  ssh $SSH_ARGS"
+    echo "  docker exec -it diffguard bash -c 'cd /workspace/project/server && python app.py'"
+    echo ""
+    echo "Then from your laptop:"
+    echo "  python client/glaze.py --image photo.png --mask mask.png --backend gx10"
+}
+
+# -----------------------------------------------------------------------
+# RunPod deploy (direct install, no Docker)
+# -----------------------------------------------------------------------
+deploy_runpod() {
+    local remote="/workspace/$REMOTE_DIR"
+    echo "=== Deploying to RunPod ($SSH_ARGS) ==="
+
+    copy_server_code "$SSH_ARGS" "$remote"
+    clone_diffguard  "$SSH_ARGS" "$remote"
+
+    echo "[*] Installing dependencies..."
+    ssh $SSH_ARGS "pip install -q $PIP_DEPS"
+
+    echo "[*] Starting server in background..."
+    ssh $SSH_ARGS "cd $remote/server && nohup python app.py > /workspace/diffguard.log 2>&1 &"
+
+    echo ""
+    echo "=== RunPod deploy complete! ==="
+    echo ""
+    echo "Server is starting on port 5000."
+    echo "First run downloads the model (~4GB) — check logs:"
+    echo "  ssh $SSH_ARGS 'tail -f /workspace/diffguard.log'"
+    echo ""
+    echo "Access URL: https://<POD_ID>-5000.proxy.runpod.net"
+    echo ""
+    echo "  1. Get your pod ID from runpod.io dashboard"
+    echo "  2. export RUNPOD_POD_ID=<pod-id>"
+    echo "  3. python client/glaze.py --image photo.png --mask mask.png --backend runpod"
+}
+
+# -----------------------------------------------------------------------
+# Generic SSH deploy (any machine with GPU)
+# -----------------------------------------------------------------------
+deploy_ssh() {
+    local remote="~/$REMOTE_DIR"
+    echo "=== Deploying to remote GPU ($SSH_ARGS) ==="
+
+    copy_server_code "$SSH_ARGS" "$remote"
+    clone_diffguard  "$SSH_ARGS" "$remote"
+
+    echo "[*] Installing dependencies..."
+    ssh $SSH_ARGS "pip install -q $PIP_DEPS"
+
+    echo ""
+    echo "=== SSH deploy complete! ==="
+    echo ""
+    echo "Start the server:"
+    echo "  ssh $SSH_ARGS 'cd ~/$REMOTE_DIR/server && python app.py'"
+    echo ""
+    echo "Then from your laptop:"
+    echo "  python client/glaze.py --image photo.png --mask mask.png --server http://<host>:5000"
+}
+
+# -----------------------------------------------------------------------
+# Dispatch
+# -----------------------------------------------------------------------
+case "$TARGET_TYPE" in
+    gx10)   deploy_gx10   ;;
+    runpod) deploy_runpod  ;;
+    ssh)    deploy_ssh     ;;
+    *)
+        echo "ERROR: Unknown target type '$TARGET_TYPE'"
+        usage
+        ;;
+esac

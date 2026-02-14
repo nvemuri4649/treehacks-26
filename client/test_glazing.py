@@ -16,9 +16,19 @@ If DiffusionGuard works, inpaint_protected.png should be clearly degraded/broken
 compared to inpaint_original.png, proving the image is defended against malicious editing.
 
 Usage:
-    python client/test_glazing.py --image test_images/face.png --mask test_images/face_mask.png
-    python client/test_glazing.py --image face.png --mask mask.png --prompt "a person being arrested"
+    # Default backend
+    python client/test_glazing.py --image face.png --mask mask.png
+
+    # Named backends
+    python client/test_glazing.py --image face.png --mask mask.png --backend gx10
+    python client/test_glazing.py --image face.png --mask mask.png --backend runpod
+    python client/test_glazing.py --image face.png --mask mask.png --backend local
+
+    # Direct URL
     python client/test_glazing.py --image face.png --mask mask.png --server http://192.168.1.42:5000
+
+    # Custom prompt
+    python client/test_glazing.py --image face.png --mask mask.png --prompt "a person being arrested"
 """
 
 import argparse
@@ -30,17 +40,16 @@ import time
 import requests
 from PIL import Image, ImageDraw, ImageFont
 
-
-DEFAULT_SERVER = os.environ.get("DIFFGUARD_SERVER", "http://localhost:5000")
+from backends import add_backend_args, get_server_url, print_backend_info
 
 
 def check_health(server: str):
     """Verify the server is up."""
     try:
-        resp = requests.get(f"{server}/health", timeout=5)
+        resp = requests.get(f"{server}/health", timeout=10)
         resp.raise_for_status()
         info = resp.json()
-        print(f"Server OK — GPU: {info.get('gpu', '?')}, Memory: {info.get('gpu_memory', '?')}")
+        print(f"  Server OK — GPU: {info.get('gpu', '?')}, Memory: {info.get('gpu_memory', '?')}")
         return info
     except Exception as e:
         print(f"ERROR: Cannot reach server at {server}: {e}")
@@ -124,14 +133,23 @@ def compute_pixel_diff(img_a: Image.Image, img_b: Image.Image) -> float:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Test DiffusionGuard protection effectiveness")
+    parser = argparse.ArgumentParser(
+        description="Test DiffusionGuard protection effectiveness",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python client/test_glazing.py --image face.png --mask mask.png --backend gx10
+  python client/test_glazing.py --image face.png --mask mask.png --backend runpod
+  python client/test_glazing.py --image face.png --mask mask.png --server http://my-gpu:5000
+        """,
+    )
     parser.add_argument("--image", required=True, help="Path to the source image")
     parser.add_argument("--mask", required=True, help="Path to the mask image")
-    parser.add_argument("--server", default=DEFAULT_SERVER, help=f"Server URL (default: {DEFAULT_SERVER})")
     parser.add_argument("--prompt", default="a person in a hospital", help="Inpainting prompt")
     parser.add_argument("--iters", type=int, default=200, help="PGD iterations for protection")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for inpainting")
     parser.add_argument("--output-dir", default="test_results", help="Output directory")
+    add_backend_args(parser)
     args = parser.parse_args()
 
     # Validate inputs
@@ -142,13 +160,17 @@ def main():
 
     os.makedirs(args.output_dir, exist_ok=True)
 
+    # Resolve backend
+    server = get_server_url(args)
+
     # ------------------------------------------------------------------
     # Step 0: Health check
     # ------------------------------------------------------------------
     print("=" * 60)
     print("DiffusionGuard Protection Test")
     print("=" * 60)
-    check_health(args.server)
+    print_backend_info(server, args.backend)
+    check_health(server)
     print()
 
     # ------------------------------------------------------------------
@@ -163,7 +185,7 @@ def main():
     # ------------------------------------------------------------------
     print(f"[2/4] Protecting image ({args.iters} PGD iterations)...")
     t0 = time.time()
-    protected = protect(args.server, args.image, args.mask, args.iters)
+    protected = protect(server, args.image, args.mask, args.iters)
     protect_time = time.time() - t0
     protected.save(os.path.join(args.output_dir, "protected.png"))
     print(f"       Done in {protect_time:.1f}s")
@@ -178,7 +200,7 @@ def main():
     # ------------------------------------------------------------------
     print(f"[3/4] Inpainting ORIGINAL image with prompt: \"{args.prompt}\"...")
     t0 = time.time()
-    inpainted_original = inpaint(args.server, original, args.mask, args.prompt, args.seed)
+    inpainted_original = inpaint(server, original, args.mask, args.prompt, args.seed)
     inpaint_orig_time = time.time() - t0
     inpainted_original.save(os.path.join(args.output_dir, "inpaint_original.png"))
     print(f"       Done in {inpaint_orig_time:.1f}s")
@@ -188,7 +210,7 @@ def main():
     # ------------------------------------------------------------------
     print(f"[4/4] Inpainting PROTECTED image with prompt: \"{args.prompt}\"...")
     t0 = time.time()
-    inpainted_protected = inpaint(args.server, protected, args.mask, args.prompt, args.seed)
+    inpainted_protected = inpaint(server, protected, args.mask, args.prompt, args.seed)
     inpaint_prot_time = time.time() - t0
     inpainted_protected.save(os.path.join(args.output_dir, "inpaint_protected.png"))
     print(f"       Done in {inpaint_prot_time:.1f}s")
