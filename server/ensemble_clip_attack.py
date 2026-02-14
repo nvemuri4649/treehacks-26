@@ -69,6 +69,10 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--test-ip-adapter", action="store_true",
                         help="Also generate IP-Adapter results to verify")
+    parser.add_argument("--ip-adapter-only", action="store_true",
+                        help="Skip PGD attack, just run IP-Adapter tests using existing adversarial image")
+    parser.add_argument("--adversarial-image", default=None,
+                        help="Path to pre-computed adversarial image (for --ip-adapter-only)")
     return parser.parse_args()
 
 
@@ -410,67 +414,86 @@ def main():
     original = center_crop_square(original, IMG_SIZE)
     original.save(os.path.join(args.output_dir, "00_original.png"))
 
-    # Load ensemble
-    ensemble = load_ensemble()
-    if not ensemble:
-        logger.error("No models loaded!")
-        sys.exit(1)
+    # Fast path: skip attack, just generate IP-Adapter examples
+    if args.ip_adapter_only:
+        if args.adversarial_image:
+            adversarial = Image.open(args.adversarial_image).convert("RGB")
+            adversarial = center_crop_square(adversarial, IMG_SIZE)
+        else:
+            # Look for existing ensemble output
+            adv_path = os.path.join(args.output_dir, f"01_ensemble_eps{args.eps}_{args.target_name}.png")
+            if not os.path.exists(adv_path):
+                logger.error("No adversarial image found. Run without --ip-adapter-only first.")
+                sys.exit(1)
+            adversarial = Image.open(adv_path).convert("RGB")
+        logger.info("Loaded pre-computed adversarial image, skipping PGD attack.")
+        args.test_ip_adapter = True
+    else:
+        # Load ensemble
+        ensemble = load_ensemble()
+        if not ensemble:
+            logger.error("No models loaded!")
+            sys.exit(1)
 
-    # Load text encoder for targeted attack
-    text_encoder, tokenizer = load_text_encoder()
-    target_emb = get_text_embedding(args.target_concept, text_encoder, tokenizer)
+        # Load text encoder for targeted attack
+        text_encoder, tokenizer = load_text_encoder()
+        target_emb = get_text_embedding(args.target_concept, text_encoder, tokenizer)
 
-    # Free text encoder
-    del text_encoder, tokenizer
-    torch.cuda.empty_cache()
+        # Free text encoder
+        del text_encoder, tokenizer
+        torch.cuda.empty_cache()
 
-    # Run ensemble attack
-    logger.info("Running ensemble PGD attack...")
-    t0 = time.time()
-    adversarial = ensemble_pgd_targeted(
-        original, target_emb, ensemble,
-        eps=args.eps / 255.0,
-        num_iters=args.pgd_iters,
-    )
-    elapsed = time.time() - t0
-    logger.info("Ensemble attack complete in %.1fs", elapsed)
+        # Run ensemble attack
+        logger.info("Running ensemble PGD attack...")
+        t0 = time.time()
+        adversarial = ensemble_pgd_targeted(
+            original, target_emb, ensemble,
+            eps=args.eps / 255.0,
+            num_iters=args.pgd_iters,
+        )
+        elapsed = time.time() - t0
+        logger.info("Ensemble attack complete in %.1fs", elapsed)
 
-    adversarial.save(os.path.join(args.output_dir, f"01_ensemble_eps{args.eps}_{args.target_name}.png"))
+        adversarial.save(os.path.join(args.output_dir, f"01_ensemble_eps{args.eps}_{args.target_name}.png"))
 
-    # Also run single-model attacks for comparison
-    for model in ensemble:
-        if "clip_vit_h" in model.name:
-            logger.info("Running single-model attack (CLIP ViT-H only)...")
-            single = ensemble_pgd_targeted(
-                original, target_emb, [model],
-                eps=args.eps / 255.0,
-                num_iters=args.pgd_iters,
-            )
-            single.save(os.path.join(args.output_dir, f"02_single_clip_h_eps{args.eps}_{args.target_name}.png"))
-            break
+        # Also run single-model attacks for comparison
+        for model in ensemble:
+            if "clip_vit_h" in model.name:
+                logger.info("Running single-model attack (CLIP ViT-H only)...")
+                single = ensemble_pgd_targeted(
+                    original, target_emb, [model],
+                    eps=args.eps / 255.0,
+                    num_iters=args.pgd_iters,
+                )
+                single.save(os.path.join(args.output_dir, f"02_single_clip_h_eps{args.eps}_{args.target_name}.png"))
+                break
 
-    # Evaluate
-    logger.info("\n" + "=" * 70)
-    logger.info("EVALUATION — Embedding shifts per model")
-    logger.info("=" * 70)
+        # Evaluate
+        logger.info("\n" + "=" * 70)
+        logger.info("EVALUATION — Embedding shifts per model")
+        logger.info("=" * 70)
 
-    eval_ensemble = evaluate_attack(original, adversarial, ensemble, target_emb)
-    logger.info("ENSEMBLE attack results:")
-    for model_name, metrics in eval_ensemble.items():
-        cos_o = metrics["cos_to_original"]
-        cos_t = metrics["cos_to_target"]
-        t_str = f", cos→target={cos_t:.4f}" if cos_t is not None else ""
-        logger.info("  %-20s cos→original=%.4f%s", model_name, cos_o, t_str)
-
-    if os.path.exists(os.path.join(args.output_dir, f"02_single_clip_h_eps{args.eps}_{args.target_name}.png")):
-        single_img = Image.open(os.path.join(args.output_dir, f"02_single_clip_h_eps{args.eps}_{args.target_name}.png"))
-        eval_single = evaluate_attack(original, single_img, ensemble, target_emb)
-        logger.info("\nSINGLE (CLIP ViT-H only) attack results:")
-        for model_name, metrics in eval_single.items():
+        eval_ensemble = evaluate_attack(original, adversarial, ensemble, target_emb)
+        logger.info("ENSEMBLE attack results:")
+        for model_name, metrics in eval_ensemble.items():
             cos_o = metrics["cos_to_original"]
             cos_t = metrics["cos_to_target"]
             t_str = f", cos→target={cos_t:.4f}" if cos_t is not None else ""
             logger.info("  %-20s cos→original=%.4f%s", model_name, cos_o, t_str)
+
+        if os.path.exists(os.path.join(args.output_dir, f"02_single_clip_h_eps{args.eps}_{args.target_name}.png")):
+            single_img = Image.open(os.path.join(args.output_dir, f"02_single_clip_h_eps{args.eps}_{args.target_name}.png"))
+            eval_single = evaluate_attack(original, single_img, ensemble, target_emb)
+            logger.info("\nSINGLE (CLIP ViT-H only) attack results:")
+            for model_name, metrics in eval_single.items():
+                cos_o = metrics["cos_to_original"]
+                cos_t = metrics["cos_to_target"]
+                t_str = f", cos→target={cos_t:.4f}" if cos_t is not None else ""
+                logger.info("  %-20s cos→original=%.4f%s", model_name, cos_o, t_str)
+
+        # Free ensemble models before loading SD
+        del ensemble
+        torch.cuda.empty_cache()
 
     # Optionally test with IP-Adapter
     if args.test_ip_adapter:
@@ -483,16 +506,18 @@ def main():
         ).to(DEVICE)
         pipe.load_ip_adapter("h94/IP-Adapter", subfolder="models", weight_name="ip-adapter_sd15.bin")
 
-        # --- Multiple prompts to show attack works across scenarios ---
+        # --- Dramatic prompts that put the subject in wildly different settings ---
         test_prompts = [
-            ("portrait", "a professional portrait photograph, studio lighting, 4k, sharp"),
-            ("painting", "an oil painting in the style of Van Gogh, vivid colors, impasto"),
-            ("fantasy", "a fantasy character portrait, magical glowing background, detailed"),
-            ("photo", "a high quality detailed photograph, natural lighting, 4k"),
+            ("cyberpunk", "a cyberpunk hacker in a neon-lit tokyo alley at night, rain, holographic displays, blade runner aesthetic, 4k cinematic"),
+            ("astronaut", "an astronaut floating in space with earth in the background, detailed spacesuit, cinematic lighting, NASA photo"),
+            ("medieval", "a medieval knight in full plate armor standing in a castle, dramatic lighting, oil painting, epic fantasy"),
+            ("anime", "an anime character in a dynamic action pose, studio ghibli style, vibrant colors, detailed illustration"),
+            ("noir", "a 1940s film noir detective in a smoky office, black and white, dramatic shadows, holding a cigarette, moody"),
+            ("superhero", "a marvel-style superhero flying above a city skyline at sunset, cape flowing, cinematic, highly detailed, 8k"),
         ]
 
-        # --- Multiple IP-adapter scales to show robustness ---
-        test_scales = [0.5, 0.7, 1.0]
+        # --- IP-adapter scales ---
+        test_scales = [0.6, 1.0]
 
         GEN_SIZE = 512
         total = len(test_prompts) * len(test_scales)
