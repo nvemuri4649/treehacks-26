@@ -1,4 +1,4 @@
-# Makefile for GlazeGuard
+# Makefile for Cena
 
 .PHONY: build run clean release test install help
 
@@ -7,19 +7,19 @@ all: build
 
 # Build debug version
 build:
-	@echo "🔨 Building GlazeGuard (debug)..."
+	@echo "🔨 Building Cena (debug)..."
 	swift build
 
 # Build release version
 release:
-	@echo "🔨 Building GlazeGuard (release)..."
+	@echo "🔨 Building Cena (release)..."
 	swift build -c release
-	@echo "✅ Release build complete: .build/release/GlazeGuard"
+	@echo "✅ Release build complete: .build/release/Cena"
 
 # Run the app
 run: build
-	@echo "🚀 Running GlazeGuard..."
-	.build/debug/GlazeGuard
+	@echo "🚀 Running Cena..."
+	.build/debug/Cena
 
 # Run tests
 test:
@@ -34,20 +34,20 @@ clean:
 
 # Install to /Applications (requires release build)
 install: release
-	@echo "📦 Installing GlazeGuard to /Applications..."
-	@if [ -d "/Applications/GlazeGuard.app" ]; then \
+	@echo "📦 Installing Cena to /Applications..."
+	@if [ -d "/Applications/Cena.app" ]; then \
 		echo "⚠️  Removing existing installation..."; \
-		rm -rf /Applications/GlazeGuard.app; \
+		rm -rf /Applications/Cena.app; \
 	fi
 	@echo "Creating app bundle..."
-	@mkdir -p GlazeGuard.app/Contents/MacOS
-	@mkdir -p GlazeGuard.app/Contents/Resources
-	@cp .build/release/GlazeGuard GlazeGuard.app/Contents/MacOS/
-	@cp GlazeGuard/Info.plist GlazeGuard.app/Contents/
-	@cp -r GlazeGuard/Assets.xcassets GlazeGuard.app/Contents/Resources/
-	@cp ../backends.json GlazeGuard.app/Contents/Resources/ 2>/dev/null || true
-	@mv GlazeGuard.app /Applications/
-	@echo "✅ GlazeGuard installed to /Applications/GlazeGuard.app"
+	@mkdir -p Cena.app/Contents/MacOS
+	@mkdir -p Cena.app/Contents/Resources
+	@cp .build/release/Cena Cena.app/Contents/MacOS/
+	@cp Cena/Info.plist Cena.app/Contents/
+	@cp -r Cena/Assets.xcassets Cena.app/Contents/Resources/
+	@cp ../backends.json Cena.app/Contents/Resources/ 2>/dev/null || true
+	@mv Cena.app /Applications/
+	@echo "✅ Cena installed to /Applications/Cena.app"
 
 # Open in Xcode
 xcode:
@@ -80,7 +80,7 @@ dev-setup:
 
 # Show help
 help:
-	@echo "GlazeGuard Build System"
+	@echo "Cena Build System"
 	@echo ""
 	@echo "Usage: make [target]"
 	@echo ""

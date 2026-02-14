@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# Create Xcode project for GlazeGuard
+# Create Xcode project for Cena
 set -e
 
-echo "🔧 Creating Xcode project for GlazeGuard..."
+echo "🔧 Creating Xcode project for Cena..."
 
 # Create Xcode project directory structure
-PROJECT_DIR="GlazeGuard.xcodeproj"
+PROJECT_DIR="Cena.xcodeproj"
 mkdir -p "$PROJECT_DIR"
 
 # Get all Swift source files
-SOURCES=$(find GlazeGuard -name "*.swift" | sed 's/^/\t\t\t\t/' | sed 's/$/,/')
+SOURCES=$(find Cena -name "*.swift" | sed 's/^/\t\t\t\t/' | sed 's/$/,/')
 
 # Create project.pbxproj
 cat > "$PROJECT_DIR/project.pbxproj" << 'EOF'
@@ -41,7 +41,7 @@ cat > "$PROJECT_DIR/project.pbxproj" << 'EOF'
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				TARGET_GLAZEGUARD,
+				TARGET_CENA,
 			);
 		};
 	};
@@ -53,13 +53,13 @@ echo "✅ Xcode project structure created"
 echo ""
 echo "⚠️  For macOS apps with menu bars, it's best to use Xcode directly:"
 echo ""
-echo "  cd GlazeGuard"
+echo "  cd Cena"
 echo "  open -a Xcode ."
 echo ""
 echo "Then in Xcode:"
 echo "  1. File → New → Project"
 echo "  2. Choose 'macOS → App'"
-echo "  3. Name: GlazeGuard"
+echo "  3. Name: Cena"
 echo "  4. Interface: SwiftUI, Lifecycle: SwiftUI App"
 echo "  5. Replace the generated files with our Swift files"
 echo ""

@@ -1,5 +1,5 @@
 """
-Configuration settings for Privacy Shield.
+Configuration settings for Cena.
 Loads environment variables from .env and exposes them as module-level constants.
 """
 

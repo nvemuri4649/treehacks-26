@@ -2,20 +2,20 @@
 import PackageDescription
 
 let package = Package(
-    name: "GlazeGuard",
+    name: "Cena",
     platforms: [
         .macOS(.v13)
     ],
     products: [
         .executable(
-            name: "GlazeGuard",
-            targets: ["GlazeGuard"]
+            name: "Cena",
+            targets: ["Cena"]
         )
     ],
     targets: [
         .executableTarget(
-            name: "GlazeGuard",
-            path: "GlazeGuard"
+            name: "Cena",
+            path: "Cena"
         )
     ]
 )

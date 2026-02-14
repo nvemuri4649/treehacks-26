@@ -1,6 +1,6 @@
 //
 //  GlazingJob.swift
-//  GlazeGuard
+//  Cena
 //
 //  Represents a single image glazing job and its state
 //

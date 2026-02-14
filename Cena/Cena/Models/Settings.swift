@@ -1,6 +1,6 @@
 //
 //  Settings.swift
-//  GlazeGuard
+//  Cena
 //
 //  User preferences and application settings
 //
@@ -20,7 +20,7 @@ class Settings: ObservableObject, Codable {
     // Configuration file path
     private static let configPath = FileManager.default
         .homeDirectoryForCurrentUser
-        .appendingPathComponent("Library/Application Support/GlazeGuard/config.json")
+        .appendingPathComponent("Library/Application Support/Cena/config.json")
 
     enum CodingKeys: String, CodingKey {
         case enabled

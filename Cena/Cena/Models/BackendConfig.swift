@@ -1,6 +1,6 @@
 //
 //  BackendConfig.swift
-//  GlazeGuard
+//  Cena
 //
 //  Model for parsing backends.json configuration file
 //

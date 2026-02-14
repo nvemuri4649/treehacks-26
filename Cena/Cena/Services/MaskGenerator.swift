@@ -1,6 +1,6 @@
 //
 //  MaskGenerator.swift
-//  GlazeGuard
+//  Cena
 //
 //  Automatic mask generation using Apple Vision framework for face detection
 //

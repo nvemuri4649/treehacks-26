@@ -1,6 +1,6 @@
 //
 //  PasteboardMonitor.swift
-//  GlazeGuard
+//  Cena
 //
 //  Monitors the system pasteboard for copied images and triggers protection
 //

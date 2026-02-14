@@ -2,7 +2,7 @@
 ImageTransformer — Applies DiffusionGuard adversarial glazing to images
 before they are sent to cloud LLMs.
 
-This module connects the Privacy Shield pipeline to the DiffusionGuard
+This module connects the Cena pipeline to the DiffusionGuard
 glazing server running on the local GPU (DGX Spark). When an image is
 uploaded through the chat, it is sent to the glazing server for adversarial
 perturbation before being forwarded to any cloud model.

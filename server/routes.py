@@ -1,5 +1,5 @@
 """
-API routes for Privacy Shield.
+API routes for Cena.
 
 Endpoints:
   GET  /health              — Healthcheck
@@ -30,7 +30,7 @@ router = APIRouter()
 @router.get("/health")
 async def health() -> dict:
     """Simple healthcheck."""
-    return {"status": "ok", "service": "privacy-shield"}
+    return {"status": "ok", "service": "cena"}
 
 
 @router.post("/api/session")

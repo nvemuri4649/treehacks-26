@@ -55,8 +55,8 @@ Thumbs.db
 *.swo
 
 # macOS build artifacts
-GlazeGuard/.build/
-GlazeGuard/build/
-GlazeGuard/*.xcodeproj
+Cena/.build/
+Cena/build/
+Cena/*.xcodeproj
 *.xcworkspace
 DerivedData/

@@ -1,6 +1,6 @@
 //
 //  GlazingProgressView.swift
-//  GlazeGuard
+//  Cena
 //
 //  Animated progress view for the overlay window
 //

@@ -1,5 +1,5 @@
 """
-Privacy Shield — FastAPI application entry point.
+Cena — FastAPI application entry point.
 
 Run with:
     python -m server.main
@@ -16,8 +16,8 @@ from config.settings import HOST, PORT
 from server.routes import router
 
 app = FastAPI(
-    title="Privacy Shield",
-    description="Multi-agent local privacy proxy for cloud LLMs",
+    title="Cena",
+    description="Personal data privacy suite for the age of AI",
     version="0.1.0",
 )
 

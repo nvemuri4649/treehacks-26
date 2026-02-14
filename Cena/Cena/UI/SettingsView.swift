@@ -1,6 +1,6 @@
 //
 //  SettingsView.swift
-//  GlazeGuard
+//  Cena
 //
 //  User settings and configuration panel
 //
@@ -34,7 +34,7 @@ struct SettingsView: View {
                         )
                     )
 
-                Text("GlazeGuard Settings")
+                Text("Cena Settings")
                     .font(.title2.weight(.semibold))
 
                 Spacer()
@@ -57,7 +57,7 @@ struct SettingsView: View {
 
                     // General Section
                     SettingsSection(title: "General", icon: "gearshape") {
-                        Toggle("Enable GlazeGuard", isOn: $settings.enabled)
+                        Toggle("Enable Cena", isOn: $settings.enabled)
                             .toggleStyle(.switch)
 
                         Toggle("Launch at Login", isOn: $settings.launchAtLogin)
@@ -138,7 +138,7 @@ struct SettingsView: View {
                             .toggleStyle(.switch)
                             .disabled(!settings.monitorPasteboard)
 
-                        Text("When enabled, GlazeGuard will automatically detect when you copy images and offer to protect them before pasting.")
+                        Text("When enabled, Cena will automatically detect when you copy images and offer to protect them before pasting.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .fixedSize(horizontal: false, vertical: true)

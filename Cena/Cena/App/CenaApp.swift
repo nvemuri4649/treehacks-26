@@ -1,6 +1,6 @@
 //
-//  GlazeGuardApp.swift
-//  GlazeGuard
+//  CenaApp.swift
+//  Cena
 //
 //  Main application entry point
 //
@@ -9,7 +9,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct GlazeGuardApp: App {
+struct CenaApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
@@ -26,7 +26,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     private var approvalWindowController: NSWindowController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        print("🚀 GlazeGuard starting...")
+        print("🚀 Cena starting...")
 
         // Hide dock icon (menu bar app only)
         NSApp.setActivationPolicy(.accessory)
@@ -48,13 +48,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         // Monitor for approval dialog
         setupApprovalDialogObserver()
 
-        print("✅ GlazeGuard ready")
+        print("✅ Cena ready")
         print("   Backend: \(appState.settings.selectedBackend)")
         print("   Monitoring: \(appState.settings.monitorPasteboard)")
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        print("👋 GlazeGuard shutting down...")
+        print("👋 Cena shutting down...")
         appState.stopPasteboardMonitoring()
     }
 
@@ -89,7 +89,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         let hostingController = NSHostingController(rootView: approvalView)
         let window = NSWindow(contentViewController: hostingController)
 
-        window.title = "GlazeGuard"
+        window.title = "Cena"
         window.styleMask = [.titled, .closable]
         window.level = .floating
         window.center()

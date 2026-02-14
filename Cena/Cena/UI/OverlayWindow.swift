@@ -1,6 +1,6 @@
 //
 //  OverlayWindow.swift
-//  GlazeGuard
+//  Cena
 //
 //  Translucent system overlay window for displaying glazing progress
 //

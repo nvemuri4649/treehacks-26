@@ -1,5 +1,5 @@
 /**
- * Privacy Shield — Chatbot Frontend
+ * Cena — Chatbot Frontend
  *
  * Connects to the FastAPI WebSocket backend, sends user messages
  * (text + optional image), and displays responses with status indicators.

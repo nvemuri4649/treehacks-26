@@ -1,6 +1,6 @@
 //
 //  GlazingQueue.swift
-//  GlazeGuard
+//  Cena
 //
 //  Manages a queue of glazing jobs and coordinates processing
 //

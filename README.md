@@ -6,7 +6,7 @@ Cena provides two core functionalities:
 
 1. **Image & Video Glazing** — A translucent system overlay (macOS) that intercepts images/videos before upload and applies adversarial glazing to defeat deepfake generation and AI inpainting. A small loading indicator and checkmark appear in a translucent bubble, seamlessly replacing the original with a glazed version.
 
-2. **Privacy Shield Agent** — A dual local-cloud agent system with a web-based chat interface. Documents, images, and messages are dereferenced/redacted locally before being sent to cloud LLMs for heavy reasoning. Images uploaded here also get the glazing treatment. Personal information never leaves your device unprotected.
+2. **Cena Agent** — A dual local-cloud agent system with a web-based chat interface. Documents, images, and messages are dereferenced/redacted locally before being sent to cloud LLMs for heavy reasoning. Images uploaded here also get the glazing treatment. Personal information never leaves your device unprotected.
 
 **Key principle:** All personalized information is processed locally (on the DGX Spark) — the local agent, glazing, redaction — before being dereferenced/glazed and sent to the cloud.
 
@@ -17,7 +17,7 @@ Cena provides two core functionalities:
 │                         YOUR MACHINE (DGX Spark / SSH)                      │
 │                                                                             │
 │  ┌──────────────────────┐    ┌──────────────────────────────────────────┐   │
-│  │  GlazeGuard (macOS)  │    │  Privacy Shield Local Guardian          │   │
+│  │  Cena (macOS)  │    │  Cena Local Guardian          │   │
 │  │  ├─ Clipboard monitor│    │  ├─ Nemotron (vLLM, local)              │   │
 │  │  ├─ Translucent HUD  │    │  ├─ PII Redactor (placeholder)         │   │
 │  │  └─ Auto-glaze on    │    │  ├─ Image Glazer (→ DiffusionGuard)    │   │
@@ -47,16 +47,16 @@ Cena provides two core functionalities:
 
 ```
 .
-├── GlazeGuard/                  # macOS menu-bar app (translucent overlay UI)
-│   └── GlazeGuard/              # App/, UI/, Models/, Services/
+├── Cena/                        # macOS menu-bar app (translucent overlay UI)
+│   └── Cena/                    # App/, UI/, Models/, Services/
 ├── agents/
 │   ├── local_guardian/          # Nemotron agent: redact, glaze, re-reference
 │   └── cloud_relay/             # Routes sanitized requests to Claude / GPT
 ├── frontend/                    # Web chat UI (index.html, styles.css, app.js)
 ├── server/
-│   ├── app.py                   # Flask GPU server (DiffusionGuard + Fawkes)
+│   ├── app.py                   # Flask GPU server (glazing + Fawkes)
 │   ├── fawkes_modern.py         # Fawkes facial recognition cloaking
-│   ├── main.py                  # FastAPI server (Privacy Shield chat)
+│   ├── main.py                  # FastAPI server (Cena chat)
 │   └── routes.py                # WebSocket + REST endpoints
 ├── client/
 │   ├── glaze.py                 # CLI image protection
@@ -67,7 +67,7 @@ Cena provides two core functionalities:
 ├── backends.json                # GPU backend definitions
 ├── deploy.sh                    # Deploy to GX10 / RunPod / SSH
 ├── .env.example                 # Environment variable template
-└── requirements.txt             # Privacy Shield dependencies
+└── requirements.txt             # Cena dependencies
 ```
 
 ## Quick Start
@@ -80,15 +80,15 @@ ssh nikhil@spark-abcd.local
 docker exec -it diffguard bash -c 'cd /workspace/project/server && python app.py'
 ```
 
-### 2. GlazeGuard App (macOS overlay)
+### 2. Cena App (macOS overlay)
 
 ```bash
-cd GlazeGuard && swift build -c release    # or: make build && make run
+cd Cena && swift build -c release    # or: make build && make run
 ```
 
 Copy an image → translucent bubble appears → image is glazed → paste the protected version.
 
-### 3. Privacy Shield Chat (web UI)
+### 3. Cena Chat (web UI)
 
 ```bash
 # On DGX Spark: start local Nemotron

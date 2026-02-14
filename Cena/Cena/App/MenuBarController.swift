@@ -1,6 +1,6 @@
 //
 //  MenuBarController.swift
-//  GlazeGuard
+//  Cena
 //
 //  Menu bar app controller with status icon and menu
 //
@@ -29,7 +29,7 @@ class MenuBarController: NSObject {
 
         if let button = statusItem.button {
             // Use shield icon
-            button.image = NSImage(systemSymbolName: "shield.checkered", accessibilityDescription: "GlazeGuard")
+            button.image = NSImage(systemSymbolName: "shield.checkered", accessibilityDescription: "Cena")
             button.image?.isTemplate = true
 
             // Enable drag and drop
@@ -43,7 +43,7 @@ class MenuBarController: NSObject {
 
         // Status info
         let statusItem = NSMenuItem(
-            title: "GlazeGuard",
+            title: "Cena",
             action: nil,
             keyEquivalent: ""
         )
@@ -64,7 +64,7 @@ class MenuBarController: NSObject {
 
         // Enable/Disable
         let enableItem = NSMenuItem(
-            title: appState.settings.enabled ? "Disable GlazeGuard" : "Enable GlazeGuard",
+            title: appState.settings.enabled ? "Disable Cena" : "Enable Cena",
             action: #selector(toggleEnabled),
             keyEquivalent: "e"
         )
@@ -102,7 +102,7 @@ class MenuBarController: NSObject {
 
         // Quit
         let quitItem = NSMenuItem(
-            title: "Quit GlazeGuard",
+            title: "Quit Cena",
             action: #selector(quit),
             keyEquivalent: "q"
         )
@@ -126,7 +126,7 @@ class MenuBarController: NSObject {
 
         // Update enable/disable (item at index 4)
         if menu.items.count > 4 {
-            menu.items[4].title = appState.settings.enabled ? "Disable GlazeGuard" : "Enable GlazeGuard"
+            menu.items[4].title = appState.settings.enabled ? "Disable Cena" : "Enable Cena"
         }
 
         // Update monitoring toggle (item at index 5)
@@ -162,7 +162,7 @@ class MenuBarController: NSObject {
             appState.startPasteboardMonitoring()
         }
 
-        print(appState.settings.enabled ? "✅ GlazeGuard enabled" : "⏸️  GlazeGuard disabled")
+        print(appState.settings.enabled ? "✅ Cena enabled" : "⏸️  Cena disabled")
     }
 
     @objc private func toggleMonitoring() {
@@ -212,7 +212,7 @@ class MenuBarController: NSObject {
         let hostingController = NSHostingController(rootView: settingsView)
 
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "GlazeGuard Settings"
+        window.title = "Cena Settings"
         window.styleMask = [.titled, .closable]
         window.center()
         window.makeKeyAndOrderFront(nil)

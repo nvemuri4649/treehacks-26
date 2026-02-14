@@ -1,6 +1,6 @@
 //
 //  ApprovalDialog.swift
-//  GlazeGuard
+//  Cena
 //
 //  Dialog asking user for consent before protecting an image
 //
@@ -40,7 +40,7 @@ struct ApprovalDialog: View {
                     Text("Protect This Image?")
                         .font(.title2.weight(.semibold))
 
-                    Text("GlazeGuard can add adversarial protection to prevent deepfake generation")
+                    Text("Cena can add adversarial protection to prevent deepfake generation")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }

@@ -145,7 +145,7 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
 # =========================================================================
 
 GUARDIAN_SYSTEM_PROMPT = """\
-You are the Privacy Shield Local Guardian agent running on the user's own \
+You are the Cena Local Guardian agent running on the user's own \
 machine.  Your sole purpose is to protect user privacy by processing every \
 message through a strict pipeline before and after cloud LLM calls.
 
@@ -312,7 +312,7 @@ async def _run_nemotron_pipeline(
         content = last_assistant[-1].get("content", "")
         if content:
             return content
-    return "(Privacy Shield: max iterations reached without a final response)"
+    return "(Cena: max iterations reached without a final response)"
 
 
 # =========================================================================

@@ -1,6 +1,6 @@
 //
 //  AppState.swift
-//  GlazeGuard
+//  Cena
 //
 //  Shared application state management
 //

@@ -1,6 +1,6 @@
 //
 //  BackendService.swift
-//  GlazeGuard
+//  Cena
 //
 //  HTTP client for communicating with DiffusionGuard Flask API
 //
