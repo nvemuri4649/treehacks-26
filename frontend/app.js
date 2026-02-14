@@ -98,9 +98,10 @@
     // --- Status indicator ---
 
     const stageLabels = {
-        sanitizing: "Sanitizing personal information...",
-        thinking:   "Cloud model is thinking...",
-        restoring:  "Restoring your information...",
+        sanitizing: "Dereferencing personal information locally...",
+        glazing:    "Glazing uploaded image with adversarial protection...",
+        thinking:   "Cloud model is thinking (sanitized data only)...",
+        restoring:  "Re-referencing your information locally...",
     };
 
     function showStatus(stage) {
@@ -122,8 +123,13 @@
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
                 <h2>Your conversations, protected.</h2>
-                <p>Personal information is redacted locally before reaching any cloud model.
-                   Type a message or upload an image to get started.</p>
+                <p>Personal information is dereferenced and images are glazed locally before reaching any cloud model.
+                   Your data never leaves your machine unprotected.</p>
+                <div class="welcome-features">
+                    <div class="feature-pill">PII Dereferencing</div>
+                    <div class="feature-pill">Image Glazing</div>
+                    <div class="feature-pill">Local Processing</div>
+                </div>
             </div>
         `;
     }

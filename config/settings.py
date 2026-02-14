@@ -33,6 +33,10 @@ OPENAI_MODELS = {
     "gpt-4-turbo",
 }
 
+# ── Glazing Server (DiffusionGuard) ───────────────────────────────────────
+GLAZE_SERVER_URL: str = os.getenv("GLAZE_SERVER_URL", "http://spark-abcd.local:5000")
+GLAZE_DEFAULT_ITERS: int = int(os.getenv("GLAZE_DEFAULT_ITERS", "200"))
+
 # ── Server ────────────────────────────────────────────────────────────────
 HOST: str = os.getenv("HOST", "127.0.0.1")
 PORT: int = int(os.getenv("PORT", "8000"))

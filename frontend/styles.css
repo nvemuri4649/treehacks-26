@@ -1,5 +1,5 @@
 /* ============================================================
-   Privacy Shield — Chatbot Styles
+   Cena — Privacy Shield Chatbot Styles
    ============================================================ */
 
 :root {
@@ -244,6 +244,7 @@ body {
 }
 
 .status-bar[data-stage="sanitizing"] .status-dot { background: var(--warning); }
+.status-bar[data-stage="glazing"] .status-dot     { background: #a78bfa; }
 .status-bar[data-stage="thinking"] .status-dot   { background: var(--accent); }
 .status-bar[data-stage="restoring"] .status-dot   { background: var(--success); }
 
@@ -379,4 +380,25 @@ body {
     background: rgba(248, 113, 113, 0.12);
     color: var(--error);
     border: 1px solid rgba(248, 113, 113, 0.25);
+}
+
+/* --- Welcome feature pills --- */
+
+.welcome-features {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.feature-pill {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: var(--bg-tertiary);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    letter-spacing: 0.02em;
 }

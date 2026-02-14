@@ -116,8 +116,12 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                     continue
 
             try:
-                # Stage 1: Sanitizing
+                # Stage 1: Sanitizing (dereferencing PII locally)
                 await ws.send_json({"type": "status", "stage": "sanitizing"})
+
+                # Stage 1.5: Glazing (if image uploaded, apply adversarial protection)
+                if image_bytes:
+                    await ws.send_json({"type": "status", "stage": "glazing"})
 
                 # Stage 2 & 3: Thinking (cloud call) + Restoring
                 # The process_message function handles the full pipeline
