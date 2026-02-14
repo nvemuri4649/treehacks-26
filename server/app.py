@@ -1,12 +1,13 @@
 """
-DiffusionGuard API Server
-=========================
-Runs on the ASUS Ascent GX10 inside the NGC PyTorch container.
-Exposes HTTP endpoints to protect images against diffusion-based inpainting.
+DiffusionGuard + Fawkes API Server
+====================================
+Exposes HTTP endpoints to protect images against diffusion-based inpainting
+and facial recognition.
 
 Endpoints:
     GET  /health          - Check server status + GPU info
-    POST /protect         - Protect an image (send image + mask, receive glazed image)
+    POST /protect         - Protect an image with DiffusionGuard (send image + mask)
+    POST /fawkes          - Cloak an image with Fawkes (send image, no mask needed)
     POST /test-inpaint    - Run inpainting on an image to demonstrate protection effectiveness
 
 Usage:
@@ -73,11 +74,11 @@ DEFAULT_CONFIG = {
     "model": {"inpainting": MODEL_ID},
     "training": {
         "size": IMG_SIZE,
-        "iters": 200,        # Reduced from 800 for faster API response (~25s)
+        "iters": 500,        # Cranked up from 200 for stronger protection (~90s)
         "grad_reps": 1,
         "batch_size": 1,
-        "eps": 0.06274509803921569,       # 16/255
-        "step_size": 0.00392156862745098,  # 1/255
+        "eps": 0.12549019607843137,       # 32/255 — doubled perturbation budget
+        "step_size": 0.00784313725490196,  # 2/255 — doubled step size
         "num_inference_steps": 4,
         "mask": {
             "generation_method": "contour_shrink",
@@ -105,12 +106,23 @@ def load_model():
 # Helpers
 # ---------------------------------------------------------------------------
 
+def center_crop_square(img: Image.Image) -> Image.Image:
+    """Center-crop an image to a square (no stretching)."""
+    w, h = img.size
+    side = min(w, h)
+    left = (w - side) // 2
+    top = (h - side) // 2
+    return img.crop((left, top, left + side, top + side))
+
+
 def read_image_from_request(field: str) -> Image.Image:
-    """Read an image from a multipart form field."""
+    """Read an image from a multipart form field (center-crop, no stretch)."""
     if field not in request.files:
         raise ValueError(f"Missing required file field: '{field}'")
     f = request.files[field]
-    return Image.open(f.stream).convert("RGB").resize((IMG_SIZE, IMG_SIZE))
+    img = Image.open(f.stream).convert("RGB")
+    img = center_crop_square(img)
+    return img.resize((IMG_SIZE, IMG_SIZE), Image.LANCZOS)
 
 
 def pil_to_bytes(img: Image.Image, fmt: str = "PNG") -> io.BytesIO:
@@ -131,7 +143,7 @@ def health():
     gpu_name = torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU"
     gpu_mem = ""
     if torch.cuda.is_available():
-        mem = torch.cuda.get_device_properties(0).total_mem
+        mem = torch.cuda.get_device_properties(0).total_memory
         gpu_mem = f"{mem / 1e9:.1f} GB"
     return jsonify({
         "status": "ok",
@@ -257,10 +269,63 @@ def test_inpaint():
 
 
 # ---------------------------------------------------------------------------
+# Fawkes cloaking endpoint
+# ---------------------------------------------------------------------------
+
+@app.route("/fawkes", methods=["POST"])
+def fawkes_cloak():
+    """
+    Cloak an image using Fawkes (facial recognition protection).
+
+    Expects multipart form data:
+        image  - The source image to cloak (PNG/JPEG)
+
+    Optional query params:
+        mode   - Cloaking strength: 'low', 'mid', 'high' (default: 'mid')
+
+    Returns:
+        The cloaked image as PNG.
+    """
+    from fawkes_modern import cloak_image
+
+    if "image" not in request.files:
+        return jsonify({"error": "Missing required file field: 'image'"}), 400
+
+    f = request.files["image"]
+    img = Image.open(f.stream).convert("RGB")
+
+    mode = request.args.get("mode", "mid")
+    if mode not in ("low", "mid", "high"):
+        return jsonify({"error": "mode must be 'low', 'mid', or 'high'"}), 400
+
+    logger.info("Fawkes cloaking (mode=%s)...", mode)
+    t0 = time.time()
+
+    cloaked = cloak_image(img, mode=mode)
+
+    elapsed = time.time() - t0
+    logger.info("Fawkes cloaking complete in %.1fs", elapsed)
+
+    return send_file(
+        pil_to_bytes(cloaked),
+        mimetype="image/png",
+        download_name="fawkes_cloaked.png",
+    )
+
+
+# ---------------------------------------------------------------------------
 # Entrypoint
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     load_model()
-    logger.info("Starting DiffusionGuard API server on :5000")
-    app.run(host="0.0.0.0", port=5000, debug=False)
+
+    # Pre-load Fawkes models (lazy — loads on first request if skipped here)
+    try:
+        from fawkes_modern import init_fawkes
+        init_fawkes("mid")
+    except Exception as e:
+        logger.warning("Fawkes init failed (will retry on first request): %s", e)
+
+    logger.info("Starting DiffusionGuard + Fawkes API server on :8888")
+    app.run(host="0.0.0.0", port=8888, debug=False)
