@@ -18,9 +18,26 @@ venv/
 .venv/
 env/
 
-# Generated outputs (images, videos, masks)
+# Generated outputs (images, videos, masks, results)
 output/
 video_demo_output/
+test_results/
+agent_loop_results_*/
+*_protected.png
+
+# Test / demo images & photos
+photosofnikhil/
+test_images/
+
+# Model weights (downloaded at runtime on backend)
+*.bin
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+
+# DiffusionGuard repo (cloned at deploy time on GPU backend)
+DiffusionGuard/
 
 # Temporary / intermediate files
 _conditioned_*.png
@@ -37,7 +54,9 @@ Thumbs.db
 *.swp
 *.swo
 
-# Model weights (downloaded at runtime)
-*.bin
-*.safetensors
-*.ckpt
+# macOS build artifacts
+GlazeGuard/.build/
+GlazeGuard/build/
+GlazeGuard/*.xcodeproj
+*.xcworkspace
+DerivedData/
