@@ -9,12 +9,13 @@ build/
 .venv/
 venv/
 
-# Test outputs
-test_results/
-*_protected.png
-comparison_outputs*/
-conditioned_outputs*/
-test_images/
+# Generated outputs (images, videos, masks)
+output/
+video_demo_output/
+
+# Temporary / intermediate files
+_conditioned_*.png
+*.log
 
 # OS
 .DS_Store
@@ -23,8 +24,13 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+.cursor/
 
 # Model weights (downloaded at runtime)
 *.bin
 *.safetensors
 *.ckpt
+
+# Environment
+.env
+*.env
