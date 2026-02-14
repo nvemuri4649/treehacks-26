@@ -1,0 +1,14 @@
+# Server-side dependencies (installed inside NGC container on GX10)
+# NOTE: Do NOT install torch/torchvision here — use what's in the NGC container
+diffusers==0.24.0
+transformers
+datasets
+huggingface-hub
+numpy
+omegaconf
+opencv-contrib-python
+scikit-learn
+tqdm
+hydra-core
+flask
+pillow
