@@ -132,6 +132,15 @@ _REGEX_PATTERNS: list[tuple[str, re.Pattern]] = [
         "ZIPCODE",
         re.compile(r"\b\d{5}(?:-\d{4})?\b"),
     ),
+    # ── Monetary amounts ───────────────────────────────────────────────
+    (
+        "MONEY",
+        re.compile(
+            r"\$\s?\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?"
+            r"|\b\d{1,3}(?:,\d{3})*(?:\.\d{1,2})?\s*(?:dollars?|USD)\b",
+            re.IGNORECASE,
+        ),
+    ),
     # ── Age expressions ───────────────────────────────────────────────
     (
         "AGE",
@@ -191,6 +200,13 @@ def _detect_regex(text: str) -> list[PIISpan]:
     return spans
 
 
+_NER_STOPWORDS: frozenset[str] = frozenset({
+    "ssn", "dob", "dob:", "id", "id:", "ph", "tel", "fax", "re:", "re",
+    "cc", "bcc", "attn", "attn:", "n/a", "tbd", "asap", "eta", "etc",
+    "mr", "mrs", "ms", "dr", "jr", "sr", "ii", "iii", "iv",
+})
+
+
 def _detect_ner(text: str) -> list[PIISpan]:
     """Run spaCy NER over *text* (no-op if spaCy is unavailable)."""
     if not _SPACY_AVAILABLE or _nlp is None:
@@ -200,17 +216,24 @@ def _detect_ner(text: str) -> list[PIISpan]:
     spans: list[PIISpan] = []
     for ent in doc.ents:
         pii_type = _SPACY_TYPE_MAP.get(ent.label_)
-        if pii_type:
-            spans.append(
-                PIISpan(
-                    text=ent.text,
-                    start=ent.start_char,
-                    end=ent.end_char,
-                    pii_type=pii_type,
-                    detection_method="ner",
-                    confidence=0.85,
-                )
+        if pii_type is None:
+            continue
+        # Skip common abbreviations / labels that NER picks up spuriously
+        if ent.text.strip().lower() in _NER_STOPWORDS:
+            continue
+        # Skip very short entities (likely noise)
+        if len(ent.text.strip()) < 2:
+            continue
+        spans.append(
+            PIISpan(
+                text=ent.text,
+                start=ent.start_char,
+                end=ent.end_char,
+                pii_type=pii_type,
+                detection_method="ner",
+                confidence=0.85,
             )
+        )
     return spans
 
 

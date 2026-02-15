@@ -7,3 +7,8 @@ openai>=1.60.0
 claude-agent-sdk>=0.1.0
 Pillow>=11.0.0
 python-multipart>=0.0.18
+
+# PII detection — spaCy is optional but recommended for NER-based entity
+# detection.  The system works with regex-only if spaCy is not installed.
+# Install with:  pip install spacy && python -m spacy download en_core_web_sm
+spacy>=3.7.0

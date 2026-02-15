@@ -23,7 +23,7 @@ class AgentWebSocket: ObservableObject {
     struct ServerMessage {
         enum MessageType {
             case status(stage: String)
-            case response(text: String, model: String?, hadImage: Bool, sanitizedPrompt: String?)
+            case response(text: String, model: String?, hadImage: Bool, sanitizedPrompt: String?, privacyReport: PrivacyReport?)
             case error(message: String)
         }
         let type: MessageType
@@ -132,11 +132,16 @@ class AgentWebSocket: ObservableObject {
             let model = json["model"] as? String
             let hadImage = json["had_image"] as? Bool ?? false
             let sanitized = json["sanitized_prompt"] as? String
+            let privacyReport: PrivacyReport? = {
+                guard let reportDict = json["privacy_report"] as? [String: Any] else { return nil }
+                return PrivacyReport.from(reportDict)
+            }()
             onMessage?(ServerMessage(type: .response(
                 text: responseText,
                 model: model,
                 hadImage: hadImage,
-                sanitizedPrompt: sanitized
+                sanitizedPrompt: sanitized,
+                privacyReport: privacyReport
             )))
 
         case "error":

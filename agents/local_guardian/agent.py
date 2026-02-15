@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from typing import Any, Optional
 
 from agents.local_guardian.nemotron_client import get_client as get_nemotron, get_model as get_nemotron_model
-from agents.local_guardian.redactor import redact
+from agents.local_guardian.redactor import redact, get_last_report, clear_report
 from agents.local_guardian.image_transformer import transform
 from agents.local_guardian.rereferencer import re_reference
 from agents.local_guardian.mapping_store import store as mapping_store
@@ -336,6 +336,7 @@ def delete_session(session_id: str) -> None:
     mapping_store.clear_session(session_id)
     _pending_images.pop(session_id, None)
     _last_sanitized.pop(session_id, None)
+    clear_report(session_id)
 
 
 # =========================================================================
@@ -396,12 +397,20 @@ async def process_message(
     # Run the local Nemotron tool-calling loop
     final_response = await _run_nemotron_pipeline(agent_prompt)
 
+    # Grab the privacy report before cleanup
+    privacy_report = get_last_report(session_id)
+
     # Clean up per-message transient state
     _pending_images.pop(session_id, None)
+    clear_report(session_id)
 
-    return {
+    result = {
         "response": final_response,
         "sanitized_prompt": _last_sanitized.get(session_id, text),
         "model": model,
         "had_image": has_image,
     }
+    if privacy_report is not None:
+        result["privacy_report"] = privacy_report.to_dict()
+
+    return result

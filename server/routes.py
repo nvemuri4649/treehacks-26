@@ -137,14 +137,18 @@ async def websocket_chat(ws: WebSocket, session_id: str):
 
                 await ws.send_json({"type": "status", "stage": "restoring"})
 
-                # Send final response
-                await ws.send_json({
+                # Send final response (include privacy report if available)
+                response_payload = {
                     "type": "response",
                     "text": result["response"],
                     "sanitized_prompt": result["sanitized_prompt"],
                     "model": result["model"],
                     "had_image": result["had_image"],
-                })
+                }
+                if "privacy_report" in result:
+                    response_payload["privacy_report"] = result["privacy_report"]
+
+                await ws.send_json(response_payload)
 
             except Exception as e:
                 traceback.print_exc()

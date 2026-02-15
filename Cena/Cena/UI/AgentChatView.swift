@@ -19,6 +19,7 @@ struct AgentChatView: View {
     @State private var pendingImageData: Data?
     @State private var pendingMimeType: String?
     @State private var sessionId: String?
+    @State private var expandedPrivacyId: UUID?
 
     private let accentGrad = LinearGradient(
         colors: [.blue, .purple],
@@ -215,15 +216,28 @@ struct AgentChatView: View {
                         )
                         .textSelection(.enabled)
 
-                    if let model = msg.model {
-                        HStack(spacing: 3) {
-                            Image(systemName: models.first(where: { $0.id == model })?.icon ?? "cpu")
-                                .font(.system(size: 8))
-                            Text(model)
-                                .font(.system(size: 9))
+                    // Footer: model label + privacy badge
+                    HStack(spacing: 8) {
+                        if let model = msg.model {
+                            HStack(spacing: 3) {
+                                Image(systemName: models.first(where: { $0.id == model })?.icon ?? "cpu")
+                                    .font(.system(size: 8))
+                                Text(model)
+                                    .font(.system(size: 9))
+                            }
+                            .foregroundStyle(.quaternary)
                         }
-                        .foregroundStyle(.quaternary)
-                        .padding(.leading, 6)
+
+                        if let report = msg.privacyReport, report.totalDetected > 0 {
+                            privacyBadge(msg: msg, report: report)
+                        }
+                    }
+                    .padding(.leading, 6)
+
+                    // Expandable privacy detail panel
+                    if expandedPrivacyId == msg.id, let report = msg.privacyReport {
+                        privacyDetailPanel(report: report, sanitizedPrompt: msg.sanitizedPrompt)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                 }
                 Spacer(minLength: 80)
@@ -289,6 +303,188 @@ struct AgentChatView: View {
         case "thinking": return "Thinking..."
         case "restoring": return "Re-referencing your information..."
         default: return s
+        }
+    }
+
+    // MARK: - Privacy Badge
+
+    private func privacyBadge(msg: ChatMessage, report: PrivacyReport) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                expandedPrivacyId = (expandedPrivacyId == msg.id) ? nil : msg.id
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "shield.checkered")
+                    .font(.system(size: 8, weight: .semibold))
+                Text("\(report.protectedCount) protected")
+                    .font(.system(size: 9, weight: .medium))
+                Image(systemName: expandedPrivacyId == msg.id ? "chevron.up" : "chevron.down")
+                    .font(.system(size: 6, weight: .bold))
+            }
+            .foregroundStyle(privacyConfidenceColor(report.privacyConfidence))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(
+                privacyConfidenceColor(report.privacyConfidence).opacity(0.12),
+                in: Capsule()
+            )
+            .overlay(
+                Capsule().stroke(
+                    privacyConfidenceColor(report.privacyConfidence).opacity(0.2),
+                    lineWidth: 0.5
+                )
+            )
+        }
+        .buttonStyle(.plain)
+        .help("Privacy: \(report.protectedCount) items protected, \(Int(report.privacyConfidence * 100))% confidence")
+    }
+
+    private func privacyConfidenceColor(_ confidence: Double) -> Color {
+        if confidence >= 0.85 { return .green }
+        if confidence >= 0.60 { return .yellow }
+        return .orange
+    }
+
+    // MARK: - Privacy Detail Panel
+
+    private func privacyDetailPanel(report: PrivacyReport, sanitizedPrompt: String?) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Confidence bar
+            HStack(spacing: 8) {
+                Image(systemName: "shield.lefthalf.filled")
+                    .font(.system(size: 11))
+                    .foregroundStyle(privacyConfidenceColor(report.privacyConfidence))
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Privacy Confidence: \(Int(report.privacyConfidence * 100))%")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.primary.opacity(0.8))
+
+                    GeometryReader { geo in
+                        ZStack(alignment: .leading) {
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(.white.opacity(0.08))
+                                .frame(height: 4)
+                            RoundedRectangle(cornerRadius: 2)
+                                .fill(privacyConfidenceColor(report.privacyConfidence))
+                                .frame(width: geo.size.width * report.privacyConfidence, height: 4)
+                        }
+                    }
+                    .frame(height: 4)
+                }
+            }
+
+            // Stats row
+            HStack(spacing: 12) {
+                statPill(count: report.redactedCount, label: "Redacted", color: .red)
+                statPill(count: report.blurredCount, label: "Blurred", color: .yellow)
+                statPill(count: report.keptCount, label: "Kept", color: .green)
+            }
+
+            // Entity list
+            if !report.entities.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Detected Entities")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .textCase(.uppercase)
+
+                    ForEach(report.entities) { entity in
+                        HStack(spacing: 6) {
+                            Image(systemName: entity.actionIcon)
+                                .font(.system(size: 8))
+                                .foregroundColor(entityColor(entity.action))
+                                .frame(width: 12)
+
+                            Text(entity.typeLabel)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(.primary.opacity(0.7))
+
+                            Spacer()
+
+                            if let hint = entity.hint {
+                                Text("~ \(hint)")
+                                    .font(.system(size: 9))
+                                    .foregroundStyle(.secondary)
+                                    .lineLimit(1)
+                            }
+
+                            Text(entity.action)
+                                .font(.system(size: 8, weight: .semibold, design: .monospaced))
+                                .foregroundColor(entityColor(entity.action))
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 1)
+                                .background(entityColor(entity.action).opacity(0.12), in: Capsule())
+                        }
+                    }
+                }
+            }
+
+            // Warnings
+            if !report.warnings.isEmpty {
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(report.warnings, id: \.self) { warning in
+                        HStack(alignment: .top, spacing: 4) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 8))
+                                .foregroundColor(.orange)
+                            Text(warning)
+                                .font(.system(size: 9))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }
+            }
+
+            // Sanitized prompt preview
+            if let prompt = sanitizedPrompt, !prompt.isEmpty {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Sent to Cloud")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .textCase(.uppercase)
+
+                    Text(prompt)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(.primary.opacity(0.5))
+                        .lineLimit(4)
+                        .padding(8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.black.opacity(0.2), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .textSelection(.enabled)
+                }
+            }
+        }
+        .padding(12)
+        .background(.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(.white.opacity(0.06), lineWidth: 0.5)
+        )
+        .padding(.top, 4)
+    }
+
+    private func statPill(count: Int, label: String, color: Color) -> some View {
+        HStack(spacing: 3) {
+            Text("\(count)")
+                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .foregroundColor(color)
+            Text(label)
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(color.opacity(0.08), in: Capsule())
+    }
+
+    private func entityColor(_ action: String) -> Color {
+        switch action {
+        case "REDACT": return .red
+        case "BLUR":   return .yellow
+        case "KEEP":   return .green
+        default:       return .gray
         }
     }
 
@@ -370,9 +566,10 @@ struct AgentChatView: View {
                 ws.connect(sessionId: sid)
                 ws.onMessage = { handleServerMessage($0) }
             } catch {
-                messages.append(ChatMessage(role: .error,
-                    text: "Cannot reach server. Is python -m server.main running?",
-                    model: nil, image: nil))
+                messages.append(ChatMessage(
+                    role: .error,
+                    text: "Cannot reach server. Is python -m server.main running?"
+                ))
             }
         }
     }
@@ -380,7 +577,7 @@ struct AgentChatView: View {
     private func sendMessage() {
         let text = inputText.trimmingCharacters(in: .whitespaces)
         guard !text.isEmpty, !isProcessing else { return }
-        messages.append(ChatMessage(role: .user, text: text, model: nil, image: pendingImage))
+        messages.append(ChatMessage(role: .user, text: text, image: pendingImage))
         ws.send(text: text, model: selectedModel, imageData: pendingImageData, mimeType: pendingMimeType)
         inputText = ""; clearImage(); isProcessing = true
     }
@@ -388,11 +585,17 @@ struct AgentChatView: View {
     private func handleServerMessage(_ msg: AgentWebSocket.ServerMessage) {
         switch msg.type {
         case .status: break
-        case .response(let text, let model, _, _):
-            messages.append(ChatMessage(role: .assistant, text: text, model: model, image: nil))
+        case .response(let text, let model, _, let sanitizedPrompt, let privacyReport):
+            messages.append(ChatMessage(
+                role: .assistant,
+                text: text,
+                model: model,
+                sanitizedPrompt: sanitizedPrompt,
+                privacyReport: privacyReport
+            ))
             isProcessing = false
         case .error(let message):
-            messages.append(ChatMessage(role: .error, text: message, model: nil, image: nil))
+            messages.append(ChatMessage(role: .error, text: message))
             isProcessing = false
         }
     }
