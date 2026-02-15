@@ -1,6 +1,12 @@
-# DiffusionGuard Pipeline — TreeHacks '26
+# Cena — Maintaining Humanity in a World of AI
 
-Protect images against malicious AI inpainting using [DiffusionGuard](https://github.com/choi403/DiffusionGuard) (ICLR 2025), running on any GPU backend — ASUS Ascent GX10, RunPod, or any remote GPU.
+<img width="2622" height="1508" alt="Screenshot 2026-02-14 at 11 43 53 PM" src="https://github.com/user-attachments/assets/dcc9a921-ac09-4860-9680-e01ac7bf70ec" /> <img width="2578" height="1668" alt="Screenshot 2026-02-14 at 11 48 52 PM" src="https://github.com/user-attachments/assets/e313929b-8e00-4279-8b03-f455b99230fe" />
+
+Cena is an invisible companion that travels the Web with you, safeguarding your digital identity every step of the way.
+From defending your digital likeness against deepfake attacks to supporting safe transmission of sensitive data to remote
+LLMs, Cena presents one unified platform for combatting malicious uses of AI.
+
+Supports execution on any GPU backend — ASUS Ascent GX10, RunPod, or any remote GPU.
 
 ## Architecture
 
