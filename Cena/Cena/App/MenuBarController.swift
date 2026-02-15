@@ -245,9 +245,15 @@ class MenuBarController: NSObject {
         let hostingController = NSHostingController(rootView: settingsView)
 
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "Cena Settings"
-        window.styleMask = [.titled, .closable]
+        window.title = "Settings"
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.styleMask = [.titled, .closable, .fullSizeContentView]
+        window.setContentSize(NSSize(width: 480, height: 520))
         window.center()
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.hasShadow = true
         window.makeKeyAndOrderFront(nil)
         window.isReleasedWhenClosed = false
 

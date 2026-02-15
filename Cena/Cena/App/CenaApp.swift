@@ -93,8 +93,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         let window = NSWindow(contentViewController: hostingController)
 
         window.title = "Cena"
-        window.styleMask = [.titled, .closable]
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.styleMask = [.titled, .closable, .fullSizeContentView]
         window.level = .floating
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.hasShadow = true
         window.center()
 
         let windowController = NSWindowController(window: window)

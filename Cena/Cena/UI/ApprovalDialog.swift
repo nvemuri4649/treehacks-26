@@ -137,6 +137,10 @@ struct ApprovalDialog: View {
         }
         .padding(24)
         .frame(width: 500)
+        .background(
+            VisualEffectViewRepresentable(material: .hudWindow, blendingMode: .behindWindow)
+                .ignoresSafeArea()
+        )
     }
 
     // MARK: - Helpers

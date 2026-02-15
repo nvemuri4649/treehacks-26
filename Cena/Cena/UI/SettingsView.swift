@@ -174,7 +174,11 @@ struct SettingsView: View {
             }
             .padding()
         }
-        .frame(width: 600, height: 550)
+        .frame(width: 520, height: 500)
+        .background(
+            VisualEffectViewRepresentable(material: .hudWindow, blendingMode: .behindWindow)
+                .ignoresSafeArea()
+        )
     }
 
     // MARK: - Helpers
