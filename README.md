@@ -1,6 +1,11 @@
 # Cena — Maintaining Humanity in a World of AI
 
-<img width="2622" height="1508" alt="Screenshot 2026-02-14 at 11 43 53 PM" src="https://github.com/user-attachments/assets/dcc9a921-ac09-4860-9680-e01ac7bf70ec" /> <img width="2578" height="1668" alt="Screenshot 2026-02-14 at 11 48 52 PM" src="https://github.com/user-attachments/assets/e313929b-8e00-4279-8b03-f455b99230fe" />
+<!-- <img width="2622" height="1508" alt="Screenshot 2026-02-14 at 11 43 53 PM" src="https://github.com/user-attachments/assets/dcc9a921-ac09-4860-9680-e01ac7bf70ec" /> <img width="2578" height="1668" alt="Screenshot 2026-02-14 at 11 48 52 PM" src="https://github.com/user-attachments/assets/e313929b-8e00-4279-8b03-f455b99230fe" /> -->
+
+<div style="display: flex; gap: 10px;">
+  <img width="50%" alt="Screenshot 2026-02-14 at 11 43 53 PM" src="https://github.com/user-attachments/assets/dcc9a921-ac09-4860-9680-e01ac7bf70ec" />
+  <img width="50%" alt="Screenshot 2026-02-14 at 11 48 52 PM" src="https://github.com/user-attachments/assets/e313929b-8e00-4279-8b03-f455b99230fe" />
+</div>
 
 Cena is an invisible companion that travels the Web with you, safeguarding your digital identity every step of the way.
 From defending your digital likeness against deepfake attacks to supporting safe transmission of sensitive data to remote
