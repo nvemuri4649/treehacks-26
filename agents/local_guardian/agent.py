@@ -394,8 +394,44 @@ async def process_message(
         f"User Message:\n{text}"
     )
 
-    # Run the local Nemotron tool-calling loop
-    final_response = await _run_nemotron_pipeline(agent_prompt)
+    # Try the local Nemotron tool-calling loop; fall back to direct cloud
+    try:
+        final_response = await _run_nemotron_pipeline(agent_prompt)
+    except Exception as e:
+        import logging
+        logging.warning(f"Nemotron unavailable ({e}), falling back to direct cloud relay")
+
+        # Run placeholder pipeline steps manually
+        sanitized, _ = redact(text, session_id)
+        _last_sanitized[session_id] = sanitized
+
+        # Transform image if present
+        transformed_image = None
+        transformed_mime = None
+        if has_image:
+            img_data = _pending_images.get(session_id, {})
+            raw = img_data.get("raw")
+            if raw:
+                transformed_image = transform(raw, img_data.get("mime_type", "image/png"))
+                transformed_mime = img_data.get("mime_type")
+
+        # Call cloud directly
+        cloud_response = await cloud_relay(
+            prompt=sanitized,
+            model=model,
+            image_bytes=transformed_image,
+            mime_type=transformed_mime,
+            conversation_history=session.cloud_history if session else None,
+        )
+
+        # Re-reference
+        mapping = mapping_store.get_mapping(session_id)
+        final_response = re_reference(cloud_response, mapping)
+
+        # Update session history
+        if session:
+            session.cloud_history.append({"role": "user", "content": sanitized})
+            session.cloud_history.append({"role": "assistant", "content": cloud_response})
 
     # Grab the privacy report before cleanup
     privacy_report = get_last_report(session_id)

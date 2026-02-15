@@ -269,40 +269,13 @@ struct AgentChatView: View {
     @ViewBuilder
     private var statusIndicator: some View {
         if let stage = ws.currentStage {
-            HStack(spacing: 7) {
-                Circle()
-                    .fill(stageColor(stage))
-                    .frame(width: 6, height: 6)
-                    .opacity(isProcessing ? 1 : 0.5)
-                    .animation(.easeInOut(duration: 0.6).repeatForever(autoreverses: true), value: isProcessing)
-                Text(stageLabel(stage))
-                    .font(.system(size: 10))
-                    .foregroundStyle(.secondary)
-                Spacer()
+            VStack(spacing: 4) {
+                PipelineView(stage: stage)
+                PipelineStageLabel(stage: stage)
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 5)
-            .transition(.opacity)
-        }
-    }
-
-    private func stageColor(_ s: String) -> Color {
-        switch s {
-        case "sanitizing": return .yellow
-        case "glazing": return .purple
-        case "thinking": return .blue
-        case "restoring": return .green
-        default: return .gray
-        }
-    }
-
-    private func stageLabel(_ s: String) -> String {
-        switch s {
-        case "sanitizing": return "Dereferencing personal information..."
-        case "glazing": return "Encrypting likeness..."
-        case "thinking": return "Thinking..."
-        case "restoring": return "Re-referencing your information..."
-        default: return s
+            .padding(.vertical, 4)
+            .transition(.opacity.combined(with: .scale(scale: 0.95)))
+            .animation(.easeInOut(duration: 0.3), value: stage)
         }
     }
 
