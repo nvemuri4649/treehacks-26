@@ -44,13 +44,13 @@ class MenuBarController: NSObject {
         let menu = NSMenu()
 
         // Status info
-        let statusItem = NSMenuItem(
+        let titleItem = NSMenuItem(
             title: "Cena",
             action: nil,
             keyEquivalent: ""
         )
-        statusItem.isEnabled = false
-        menu.addItem(statusItem)
+        titleItem.isEnabled = false
+        menu.addItem(titleItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -117,6 +117,11 @@ class MenuBarController: NSObject {
             keyEquivalent: "q"
         )
         menu.addItem(quitItem)
+
+        // Set target on all actionable items so selectors resolve
+        for item in menu.items where item.action != nil {
+            item.target = self
+        }
 
         statusItem.menu = menu
 
@@ -202,16 +207,15 @@ class MenuBarController: NSObject {
         let window = NSWindow(contentViewController: hostingController)
         window.title = "Cena Agent"
         window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
         window.styleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
-        window.setContentSize(NSSize(width: 640, height: 700))
-        window.minSize = NSSize(width: 480, height: 400)
+        window.setContentSize(NSSize(width: 600, height: 680))
+        window.minSize = NSSize(width: 440, height: 360)
         window.center()
         window.isReleasedWhenClosed = false
+        window.backgroundColor = .clear
+        window.isOpaque = false
         window.makeKeyAndOrderFront(nil)
-
-        // Dark translucent background
-        window.backgroundColor = NSColor(white: 0.08, alpha: 0.95)
-        window.isMovableByWindowBackground = true
 
         agentChatWindow = window
         NSApp.activate(ignoringOtherApps: true)

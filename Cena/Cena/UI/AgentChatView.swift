@@ -2,7 +2,7 @@
 //  AgentChatView.swift
 //  Cena
 //
-//  Native SwiftUI chat interface for the Cena privacy agent
+//  Native SwiftUI chat interface — liquid glass aesthetic
 //
 
 import SwiftUI
@@ -19,7 +19,6 @@ struct AgentChatView: View {
     @State private var pendingImageData: Data?
     @State private var pendingMimeType: String?
     @State private var sessionId: String?
-    @State private var showImagePicker = false
 
     private let models = [
         ("Claude Sonnet 4", "claude-sonnet-4-20250514"),
@@ -29,50 +28,47 @@ struct AgentChatView: View {
     ]
 
     var body: some View {
-        ZStack {
-            // Background
-            VisualEffectViewRepresentable(
-                material: .sidebar,
-                blendingMode: .behindWindow
-            )
-            .ignoresSafeArea()
-
-            VStack(spacing: 0) {
-                headerBar
-                Divider().opacity(0.3)
-                chatArea
-                statusIndicator
-                imagePreviewBar
-                Divider().opacity(0.3)
-                inputBar
-            }
+        VStack(spacing: 0) {
+            headerBar
+            glassRule
+            chatArea
+            statusIndicator
+            imagePreviewBar
+            glassRule
+            inputBar
         }
-        .frame(minWidth: 580, minHeight: 500)
+        .background(.ultraThinMaterial)
+        .frame(minWidth: 560, minHeight: 480)
         .onAppear { initSession() }
         .onDisappear { ws.disconnect() }
+    }
+
+    // MARK: - Thin glass separator
+
+    private var glassRule: some View {
+        Rectangle()
+            .fill(.white.opacity(0.08))
+            .frame(height: 1)
     }
 
     // MARK: - Header
 
     private var headerBar: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 10) {
             Image(systemName: "shield.checkered")
-                .font(.title2)
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.blue, .purple],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+                .font(.system(size: 20, weight: .medium))
+                .foregroundStyle(.linearGradient(
+                    colors: [.blue, .purple],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ))
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text("Cena Agent")
-                    .font(.headline)
-                Text("Privacy-first cloud reasoning")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
+            Text("Cena")
+                .font(.system(size: 15, weight: .semibold))
+
+            Text("Agent")
+                .font(.system(size: 15, weight: .regular))
+                .foregroundStyle(.secondary)
 
             Spacer()
 
@@ -82,20 +78,22 @@ struct AgentChatView: View {
                 }
             }
             .pickerStyle(.menu)
-            .frame(width: 180)
+            .frame(width: 170)
+            .controlSize(.small)
 
             Button {
                 initSession()
             } label: {
-                Image(systemName: "plus.circle")
-                    .font(.title3)
-                    .foregroundColor(.secondary)
+                Image(systemName: "arrow.counterclockwise.circle")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
             .help("New session")
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+        .padding(.top, 8) // extra space for titlebar
     }
 
     // MARK: - Chat area
@@ -103,17 +101,16 @@ struct AgentChatView: View {
     private var chatArea: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 12) {
+                LazyVStack(spacing: 14) {
                     if messages.isEmpty {
                         welcomeView
                     }
-
                     ForEach(messages) { msg in
-                        messageBubble(msg)
-                            .id(msg.id)
+                        messageBubble(msg).id(msg.id)
                     }
                 }
-                .padding(16)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
             }
             .onChange(of: messages.count) { _, _ in
                 if let last = messages.last {
@@ -125,78 +122,88 @@ struct AgentChatView: View {
         }
     }
 
-    private var welcomeView: some View {
-        VStack(spacing: 16) {
-            Spacer()
+    // MARK: - Welcome
 
-            Image(systemName: "shield.checkered")
-                .font(.system(size: 48))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.blue.opacity(0.5), .purple.opacity(0.5)],
+    private var welcomeView: some View {
+        VStack(spacing: 14) {
+            Spacer(minLength: 60)
+
+            ZStack {
+                Circle()
+                    .fill(.linearGradient(
+                        colors: [.blue.opacity(0.12), .purple.opacity(0.12)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
-                    )
-                )
+                    ))
+                    .frame(width: 80, height: 80)
 
-            Text("Your conversations, protected.")
-                .font(.title3.weight(.semibold))
-
-            Text("Personal information is dereferenced and likenesses are encrypted locally before reaching any cloud model.")
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 380)
-
-            HStack(spacing: 8) {
-                featurePill("PII Dereferencing")
-                featurePill("Likeness Encryption")
-                featurePill("Local Processing")
+                Image(systemName: "shield.checkered")
+                    .font(.system(size: 36, weight: .light))
+                    .foregroundStyle(.linearGradient(
+                        colors: [.blue.opacity(0.7), .purple.opacity(0.7)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
             }
 
-            Spacer()
+            Text("Your conversations, protected.")
+                .font(.system(size: 16, weight: .semibold))
+
+            Text("Personal data is dereferenced locally.\nLikenesses are encrypted before reaching any cloud model.")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .lineSpacing(2)
+                .frame(maxWidth: 340)
+
+            HStack(spacing: 6) {
+                pill("PII Dereferencing")
+                pill("Likeness Encryption")
+                pill("Local Processing")
+            }
+            .padding(.top, 4)
+
+            Spacer(minLength: 60)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.vertical, 40)
     }
 
-    private func featurePill(_ text: String) -> some View {
+    private func pill(_ text: String) -> some View {
         Text(text)
-            .font(.caption2.weight(.medium))
+            .font(.system(size: 10, weight: .medium))
             .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.purple.opacity(0.15))
-            )
-            .foregroundColor(.purple)
+            .padding(.vertical, 5)
+            .background(.ultraThinMaterial, in: Capsule())
+            .overlay(Capsule().strokeBorder(.white.opacity(0.12), lineWidth: 0.5))
+            .foregroundStyle(.secondary)
     }
 
-    // MARK: - Message bubble
+    // MARK: - Bubbles
 
     @ViewBuilder
     private func messageBubble(_ msg: ChatMessage) -> some View {
         switch msg.role {
         case .user:
             HStack {
-                Spacer(minLength: 80)
+                Spacer(minLength: 60)
                 VStack(alignment: .trailing, spacing: 4) {
                     if let img = msg.image {
                         Image(nsImage: img)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
                             .frame(maxWidth: 200, maxHeight: 140)
-                            .cornerRadius(10)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                     Text(msg.text)
-                        .padding(12)
+                        .font(.system(size: 13))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
                         .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(LinearGradient(
-                                    colors: [Color(nsColor: .controlAccentColor), .purple],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ))
+                            LinearGradient(
+                                colors: [.blue.opacity(0.7), .purple.opacity(0.65)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            in: BubbleShape(isUser: true)
                         )
                         .foregroundColor(.white)
                 }
@@ -204,41 +211,41 @@ struct AgentChatView: View {
 
         case .assistant:
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(msg.text)
-                        .padding(12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.6))
+                        .font(.system(size: 13))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 10)
+                        .background(.ultraThinMaterial, in: BubbleShape(isUser: false))
+                        .overlay(
+                            BubbleShape(isUser: false)
+                                .stroke(.white.opacity(0.1), lineWidth: 0.5)
                         )
                         .textSelection(.enabled)
 
                     if let model = msg.model {
                         Text(model)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .padding(.leading, 4)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.tertiary)
+                            .padding(.leading, 6)
                     }
                 }
-                Spacer(minLength: 80)
+                Spacer(minLength: 60)
             }
 
         case .error:
             HStack {
-                VStack(alignment: .leading) {
-                    Text(msg.text)
-                        .padding(12)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color.red.opacity(0.12))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                        .strokeBorder(Color.red.opacity(0.25), lineWidth: 1)
-                                )
-                        )
-                        .foregroundColor(.red)
-                }
-                Spacer(minLength: 80)
+                Text(msg.text)
+                    .font(.system(size: 12))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 10)
+                    .background(Color.red.opacity(0.1), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .strokeBorder(Color.red.opacity(0.2), lineWidth: 0.5)
+                    )
+                    .foregroundColor(.red.opacity(0.9))
+                Spacer(minLength: 60)
             }
 
         case .status:
@@ -246,7 +253,7 @@ struct AgentChatView: View {
         }
     }
 
-    // MARK: - Status indicator
+    // MARK: - Status
 
     @ViewBuilder
     private var statusIndicator: some View {
@@ -254,23 +261,23 @@ struct AgentChatView: View {
             HStack(spacing: 8) {
                 Circle()
                     .fill(stageColor(stage))
-                    .frame(width: 8, height: 8)
+                    .frame(width: 6, height: 6)
                     .modifier(PulseAnimation())
 
                 Text(stageLabel(stage))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
 
                 Spacer()
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 6)
-            .transition(.opacity)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 5)
+            .transition(.opacity.combined(with: .move(edge: .top)))
         }
     }
 
-    private func stageColor(_ stage: String) -> Color {
-        switch stage {
+    private func stageColor(_ s: String) -> Color {
+        switch s {
         case "sanitizing": return .yellow
         case "glazing": return .purple
         case "thinking": return .blue
@@ -279,13 +286,13 @@ struct AgentChatView: View {
         }
     }
 
-    private func stageLabel(_ stage: String) -> String {
-        switch stage {
+    private func stageLabel(_ s: String) -> String {
+        switch s {
         case "sanitizing": return "Dereferencing personal information locally..."
-        case "glazing": return "Encrypting likeness in uploaded image..."
-        case "thinking": return "Cloud model is thinking (sanitized data only)..."
-        case "restoring": return "Re-referencing your information locally..."
-        default: return stage
+        case "glazing": return "Encrypting likeness..."
+        case "thinking": return "Cloud model thinking (sanitized data only)..."
+        case "restoring": return "Re-referencing your information..."
+        default: return s
         }
     }
 
@@ -294,29 +301,27 @@ struct AgentChatView: View {
     @ViewBuilder
     private var imagePreviewBar: some View {
         if let img = pendingImage {
-            HStack(spacing: 8) {
+            HStack(spacing: 10) {
                 Image(nsImage: img)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: 48, height: 48)
-                    .cornerRadius(8)
-                    .clipped()
+                    .frame(width: 40, height: 40)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
 
                 Text("Image attached")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
 
                 Spacer()
 
-                Button {
-                    clearImage()
-                } label: {
+                Button { clearImage() } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 14))
+                        .foregroundStyle(.tertiary)
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 20)
             .padding(.vertical, 6)
         }
     }
@@ -324,62 +329,41 @@ struct AgentChatView: View {
     // MARK: - Input bar
 
     private var inputBar: some View {
-        HStack(alignment: .bottom, spacing: 8) {
-            Button {
-                pickImage()
-            } label: {
-                Image(systemName: "photo.badge.plus")
-                    .font(.title3)
-                    .foregroundColor(.secondary)
+        HStack(alignment: .center, spacing: 10) {
+            Button { pickImage() } label: {
+                Image(systemName: "photo.on.rectangle.angled")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
-            .help("Upload image")
+            .help("Attach image")
 
-            ZStack(alignment: .leading) {
-                if inputText.isEmpty {
-                    Text("Type your message...")
-                        .foregroundColor(.secondary.opacity(0.6))
-                        .padding(.leading, 12)
-                        .padding(.vertical, 10)
-                }
+            TextField("Message...", text: $inputText)
+                .textFieldStyle(.plain)
+                .font(.system(size: 13))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(.ultraThinMaterial, in: Capsule())
+                .overlay(Capsule().strokeBorder(.white.opacity(0.1), lineWidth: 0.5))
+                .onSubmit { sendMessage() }
 
-                TextEditor(text: $inputText)
-                    .font(.body)
-                    .scrollContentBackground(.hidden)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .frame(minHeight: 36, maxHeight: 120)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(nsColor: .controlBackgroundColor).opacity(0.4))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(Color(nsColor: .separatorColor).opacity(0.3), lineWidth: 1)
-                    )
-            )
-
-            Button {
-                sendMessage()
-            } label: {
+            Button { sendMessage() } label: {
                 Image(systemName: "arrow.up.circle.fill")
-                    .font(.title2)
-                    .foregroundStyle(sendButtonDisabled ? AnyShapeStyle(Color.gray) : AnyShapeStyle(
-                        LinearGradient(
+                    .font(.system(size: 22))
+                    .foregroundStyle(sendButtonDisabled
+                        ? AnyShapeStyle(.tertiary)
+                        : AnyShapeStyle(.linearGradient(
                             colors: [.blue, .purple],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
-                        )
-                    ))
+                          )))
             }
             .buttonStyle(.plain)
             .disabled(sendButtonDisabled)
-            .help("Send message")
-            .keyboardShortcut(.return, modifiers: [])
+            .help("Send")
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
     }
 
     private var sendButtonDisabled: Bool {
@@ -399,18 +383,13 @@ struct AgentChatView: View {
                 let sid = try await ws.createSession()
                 sessionId = sid
                 ws.connect(sessionId: sid)
-
-                ws.onMessage = { msg in
-                    handleServerMessage(msg)
-                }
-
+                ws.onMessage = { msg in handleServerMessage(msg) }
                 print("🔗 Agent session: \(sid)")
             } catch {
                 messages.append(ChatMessage(
                     role: .error,
-                    text: "Cannot connect to agent server at 127.0.0.1:8000. Is it running?",
-                    model: nil,
-                    image: nil
+                    text: "Cannot reach agent server at 127.0.0.1:8000. Is python -m server.main running?",
+                    model: nil, image: nil
                 ))
             }
         }
@@ -420,21 +399,8 @@ struct AgentChatView: View {
         let text = inputText.trimmingCharacters(in: .whitespaces)
         guard !text.isEmpty, !isProcessing else { return }
 
-        let userMsg = ChatMessage(
-            role: .user,
-            text: text,
-            model: nil,
-            image: pendingImage
-        )
-        messages.append(userMsg)
-
-        ws.send(
-            text: text,
-            model: selectedModel,
-            imageData: pendingImageData,
-            mimeType: pendingMimeType
-        )
-
+        messages.append(ChatMessage(role: .user, text: text, model: nil, image: pendingImage))
+        ws.send(text: text, model: selectedModel, imageData: pendingImageData, mimeType: pendingMimeType)
         inputText = ""
         clearImage()
         isProcessing = true
@@ -442,25 +408,12 @@ struct AgentChatView: View {
 
     private func handleServerMessage(_ msg: AgentWebSocket.ServerMessage) {
         switch msg.type {
-        case .status:
-            break // handled by ws.currentStage binding
-
+        case .status: break
         case .response(let text, let model, _, _):
-            messages.append(ChatMessage(
-                role: .assistant,
-                text: text,
-                model: model,
-                image: nil
-            ))
+            messages.append(ChatMessage(role: .assistant, text: text, model: model, image: nil))
             isProcessing = false
-
         case .error(let message):
-            messages.append(ChatMessage(
-                role: .error,
-                text: message,
-                model: nil,
-                image: nil
-            ))
+            messages.append(ChatMessage(role: .error, text: message, model: nil, image: nil))
             isProcessing = false
         }
     }
@@ -470,25 +423,16 @@ struct AgentChatView: View {
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.allowedContentTypes = [.png, .jpeg, .gif, .webP]
-        panel.message = "Select an image to send"
-
         panel.begin { response in
             guard response == .OK, let url = panel.url else { return }
-
             Task { @MainActor in
-                if let data = try? Data(contentsOf: url),
-                   let image = NSImage(data: data) {
+                if let data = try? Data(contentsOf: url), let image = NSImage(data: data) {
                     pendingImage = image
                     pendingImageData = data
-
                     let ext = url.pathExtension.lowercased()
-                    switch ext {
-                    case "png": pendingMimeType = "image/png"
-                    case "jpg", "jpeg": pendingMimeType = "image/jpeg"
-                    case "gif": pendingMimeType = "image/gif"
-                    case "webp": pendingMimeType = "image/webp"
-                    default: pendingMimeType = "image/png"
-                    }
+                    pendingMimeType = ext == "jpg" || ext == "jpeg" ? "image/jpeg" :
+                                      ext == "gif" ? "image/gif" :
+                                      ext == "webp" ? "image/webp" : "image/png"
                 }
             }
         }
@@ -501,18 +445,35 @@ struct AgentChatView: View {
     }
 }
 
-// MARK: - Pulse animation modifier
+// MARK: - Bubble shape
+
+struct BubbleShape: Shape {
+    let isUser: Bool
+
+    func path(in rect: CGRect) -> Path {
+        let r: CGFloat = 16
+        let tail: CGFloat = 4
+        var path = Path()
+
+        if isUser {
+            path.addRoundedRect(in: CGRect(x: rect.minX, y: rect.minY,
+                width: rect.width - tail, height: rect.height), cornerSize: CGSize(width: r, height: r))
+        } else {
+            path.addRoundedRect(in: CGRect(x: rect.minX + tail, y: rect.minY,
+                width: rect.width - tail, height: rect.height), cornerSize: CGSize(width: r, height: r))
+        }
+        return path
+    }
+}
+
+// MARK: - Pulse animation
 
 struct PulseAnimation: ViewModifier {
-    @State private var opacity: Double = 1.0
-
+    @State private var on = false
     func body(content: Content) -> some View {
-        content
-            .opacity(opacity)
+        content.opacity(on ? 0.3 : 1.0)
             .onAppear {
-                withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) {
-                    opacity = 0.3
-                }
+                withAnimation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true)) { on = true }
             }
     }
 }

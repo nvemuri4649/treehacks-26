@@ -36,17 +36,38 @@ struct BackendConfig: Codable {
 
     /// Load backend configuration from backends.json in the project directory
     static func load(from path: String = "") -> BackendConfig? {
-        let configPath: String
+        var configPath: String
 
         if path.isEmpty {
-            // Try project directory first
-            let projectPath = "/Users/shahabhishek1729/Documents/Stanford/Notes/EC/TreeHacks26/treehacks-26/backends.json"
-            if FileManager.default.fileExists(atPath: projectPath) {
-                configPath = projectPath
-            } else {
-                // Fallback to bundle
+            // Search upward from the binary to find backends.json in the project root
+            let searchPaths = [
+                // Relative to binary (e.g. Cena/.build/release/ -> project root)
+                URL(fileURLWithPath: CommandLine.arguments[0])
+                    .deletingLastPathComponent()
+                    .deletingLastPathComponent()
+                    .deletingLastPathComponent()
+                    .deletingLastPathComponent()
+                    .appendingPathComponent("backends.json").path,
+                // Common project paths
+                "/Users/nikhil/Documents/StudioProjects/treehacks-26/backends.json",
+                // Fallback: current working directory
+                FileManager.default.currentDirectoryPath + "/backends.json",
+            ]
+
+            var found = false
+            configPath = ""
+            for p in searchPaths {
+                if FileManager.default.fileExists(atPath: p) {
+                    configPath = p
+                    found = true
+                    break
+                }
+            }
+
+            if !found {
+                // Try bundle as last resort
                 guard let bundlePath = Bundle.main.path(forResource: "backends", ofType: "json") else {
-                    print("❌ backends.json not found in project or bundle")
+                    print("❌ backends.json not found. Searched: \(searchPaths)")
                     return nil
                 }
                 configPath = bundlePath

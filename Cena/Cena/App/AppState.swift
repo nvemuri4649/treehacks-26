@@ -65,15 +65,15 @@ class AppState: ObservableObject {
             settings: settings
         )
 
-        // Check backend health
+        // Check backend health (non-blocking, silent on failure)
         Task {
-            await checkBackendHealth()
+            await checkBackendHealth(silent: true)
         }
     }
 
     // MARK: - Backend Management
 
-    func checkBackendHealth() async {
+    func checkBackendHealth(silent: Bool = false) async {
         guard let backendService = backendService else {
             backendStatus = .unavailable
             return
@@ -84,11 +84,13 @@ class AppState: ObservableObject {
         do {
             let health = try await backendService.checkHealth()
             backendStatus = .available
-            print("✅ Backend is healthy: \(health.status)")
+            print("✅ Backend healthy: \(health.status)")
         } catch {
             backendStatus = .unavailable
-            lastError = "Backend unavailable: \(error.localizedDescription)"
-            print("❌ Backend health check failed: \(error)")
+            if !silent {
+                lastError = "Backend unavailable: \(error.localizedDescription)"
+                print("❌ Health check failed: \(error.localizedDescription)")
+            }
         }
     }
 

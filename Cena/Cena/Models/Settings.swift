@@ -9,7 +9,7 @@ import Foundation
 
 class Settings: ObservableObject, Codable {
     @Published var enabled: Bool = true
-    @Published var selectedBackend: String = "local"
+    @Published var selectedBackend: String = "gx10"
     @Published var monitorPasteboard: Bool = true
     @Published var autoApprove: Bool = false
     @Published var defaultIterations: Int = 200

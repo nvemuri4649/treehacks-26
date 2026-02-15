@@ -2,10 +2,10 @@
     "_comment": "Named GPU backends for DiffusionGuard. Add your own or edit URLs.",
     "backends": {
         "gx10": {
-            "url": "http://spark-abcd.local:8888",
-            "description": "ASUS Ascent GX10 on local network",
-            "ssh": "nikhil@spark-abcd.local",
-            "type": "ssh-docker"
+            "url": "http://10.16.93.23:8888",
+            "description": "ASUS DGX Spark on local network",
+            "ssh": "asus@gx10-4a58",
+            "type": "ssh"
         },
         "runpod": {
             "url": "https://{POD_ID}-8888.proxy.runpod.net",
