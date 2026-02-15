@@ -206,16 +206,6 @@ class MenuBarController: NSObject {
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = true
-
-        // Add a vibrant background view behind the SwiftUI content
-        if let contentView = window.contentView {
-            let vibrant = NSVisualEffectView(frame: contentView.bounds)
-            vibrant.autoresizingMask = [.width, .height]
-            vibrant.material = .hudWindow
-            vibrant.blendingMode = .behindWindow
-            vibrant.state = .active
-            contentView.addSubview(vibrant, positioned: .below, relativeTo: contentView.subviews.first)
-        }
         window.makeKeyAndOrderFront(nil)
 
         agentChatWindow = window

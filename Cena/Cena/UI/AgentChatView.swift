@@ -45,6 +45,7 @@ struct AgentChatView: View {
         .frame(minWidth: 640, minHeight: 480)
         .background(
             VisualEffectViewRepresentable(material: .hudWindow, blendingMode: .behindWindow)
+                .ignoresSafeArea()
         )
         .onAppear { initSession() }
         .onDisappear { ws.disconnect() }
@@ -58,10 +59,8 @@ struct AgentChatView: View {
 
     private var headerBar: some View {
         HStack(spacing: 8) {
-            // Icon
-            Image(systemName: "shield.checkered")
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(accentGrad)
+            // Logo
+            CenaLogo(size: 18, isAnimating: isProcessing)
 
             Text("Cena")
                 .font(.system(size: 14, weight: .semibold, design: .rounded))
@@ -162,15 +161,9 @@ struct AgentChatView: View {
         VStack(spacing: 14) {
             Spacer(minLength: 60)
 
-            // Subtle glow icon
-            ZStack {
-                Circle()
-                    .fill(accentGrad.opacity(0.1))
-                    .frame(width: 64, height: 64)
-                Image(systemName: "shield.checkered")
-                    .font(.system(size: 28, weight: .light))
-                    .foregroundStyle(accentGrad.opacity(0.6))
-            }
+            // Logo
+            CenaLogo(size: 52, isAnimating: false)
+                .opacity(0.6)
 
             Text("What can I help with?")
                 .font(.system(size: 20, weight: .medium, design: .rounded))
