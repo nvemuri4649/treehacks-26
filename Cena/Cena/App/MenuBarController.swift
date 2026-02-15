@@ -119,9 +119,9 @@ class MenuBarController: NSObject {
         )
         menu.addItem(demoItem)
 
-        // Watermark robustness demo
+        // Cinematic image display (original vs encrypted)
         let cinematicItem = NSMenuItem(
-            title: "Watermark Robustness...",
+            title: "Cinematic Image Display...",
             action: #selector(openCinematic),
             keyEquivalent: "i"
         )
@@ -347,11 +347,11 @@ class MenuBarController: NSObject {
         let hc = NSHostingController(rootView: view)
 
         let window = NSWindow(contentViewController: hc)
-        window.title = "Watermark Robustness"
+        window.title = "Cinematic Display"
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
         window.styleMask = [.titled, .closable, .fullSizeContentView]
-        window.setContentSize(NSSize(width: 580, height: 850))
+        window.setContentSize(NSSize(width: 480, height: 900))
         window.isReleasedWhenClosed = false
         window.isOpaque = false
         window.backgroundColor = .clear

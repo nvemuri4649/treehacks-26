@@ -230,58 +230,8 @@ extension NSImage {
         return NSImage(cgImage: out, size: self.size)
     }
 
-    /// Embed a discreet dual-block watermark: small white block at top-left,
-    /// small black block at bottom-left. The pair acts as a verifiable
-    /// signature that survives common image transformations.
+    /// Optional finalization pass (e.g. for export). No visible markers applied.
     func applyFinalization() -> NSImage {
-        guard let cg = self.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return self }
-        let w = cg.width
-        let h = cg.height
-        guard w > 10, h > 10 else { return self }
-        let cs = CGColorSpaceCreateDeviceRGB()
-        guard let ctx = CGContext(
-            data: nil, width: w, height: h,
-            bitsPerComponent: 8, bytesPerRow: w * 4,
-            space: cs,
-            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ) else { return self }
-
-        ctx.draw(cg, in: CGRect(x: 0, y: 0, width: w, height: h))
-
-        guard let buf = ctx.data else { return self }
-        let ptr = buf.bindMemory(to: UInt8.self, capacity: w * h * 4)
-
-        // Buffer layout: row 0 = top of displayed image
-        let blockSize = 3   // 3×3 pixel blocks
-        let margin = 1      // 1 px inset from edge
-
-        // ── White block — top-left corner ──
-        for dy in 0..<blockSize {
-            for dx in 0..<blockSize {
-                let x = margin + dx
-                let y = margin + dy
-                guard x < w, y < h else { continue }
-                let off = (y * w + x) * 4
-                ptr[off]     = 255   // R
-                ptr[off + 1] = 255   // G
-                ptr[off + 2] = 255   // B
-            }
-        }
-
-        // ── Black block — bottom-left corner ──
-        for dy in 0..<blockSize {
-            for dx in 0..<blockSize {
-                let x = margin + dx
-                let y = h - margin - blockSize + dy
-                guard x < w, y >= 0, y < h else { continue }
-                let off = (y * w + x) * 4
-                ptr[off]     = 0     // R
-                ptr[off + 1] = 0     // G
-                ptr[off + 2] = 0     // B
-            }
-        }
-
-        guard let out = ctx.makeImage() else { return self }
-        return NSImage(cgImage: out, size: self.size)
+        return self
     }
 }
