@@ -104,7 +104,9 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = true
-        window.center()
+
+        // Position at left-middle of screen
+        MenuBarController.positionWindowLeftMiddle(window)
 
         let windowController = NSWindowController(window: window)
         windowController.showWindow(nil)
@@ -127,17 +129,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         approvalWindowController = nil
 
         switch option {
-        case .once(let iterations, let maskMode):
+        case .once(let iterations, let maskMode, let intensity):
             let mode: GlazingJob.MaskMode = maskMode == "auto_face" ? .autoFace : .fullImage
             appState.startGlazingJob(
                 image: image,
                 iterations: iterations,
                 maskMode: mode,
-                source: .pasteboard
+                source: .pasteboard,
+                intensity: intensity
             )
 
-        case .always(let iterations, let maskMode):
-            // Save preference
+        case .always(let iterations, let maskMode, let intensity):
             appState.settings.autoApprove = true
             appState.settings.defaultIterations = iterations
             appState.settings.defaultMaskMode = maskMode
@@ -148,7 +150,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
                 image: image,
                 iterations: iterations,
                 maskMode: mode,
-                source: .pasteboard
+                source: .pasteboard,
+                intensity: intensity
             )
         }
     }

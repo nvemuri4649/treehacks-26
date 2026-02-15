@@ -2,7 +2,7 @@
 //  SettingsView.swift
 //  Cena
 //
-//  User settings and configuration panel
+//  User settings and configuration panel — glass aesthetic
 //
 
 import SwiftUI
@@ -20,59 +20,50 @@ struct SettingsView: View {
         self._selectedBackendName = State(initialValue: settings.selectedBackend)
     }
 
+    private let accentGrad = LinearGradient(
+        colors: [.blue, .purple],
+        startPoint: .topLeading, endPoint: .bottomTrailing
+    )
+
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            HStack {
-                Image(systemName: "shield.checkered")
-                    .font(.title2)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.blue, .purple],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+            HStack(spacing: 10) {
+                CenaLogo(size: 22, isAnimating: false, color: .white.opacity(0.8))
 
-                Text("Cena Settings")
-                    .font(.title2.weight(.semibold))
+                Text("Settings")
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
 
                 Spacer()
 
                 Button(action: { dismiss() }) {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.title3)
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 16))
+                        .foregroundColor(.white.opacity(0.25))
                 }
                 .buttonStyle(.plain)
             }
-            .padding()
-            .background(Color(NSColor.windowBackgroundColor))
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .padding(.top, 12)
 
-            Divider()
+            Rectangle().fill(.white.opacity(0.06)).frame(height: 0.5)
 
-            // Settings content
+            // Content
             ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
+                VStack(alignment: .leading, spacing: 20) {
 
-                    // General Section
                     SettingsSection(title: "General", icon: "gearshape") {
-                        Toggle("Enable Cena", isOn: $settings.enabled)
-                            .toggleStyle(.switch)
-
-                        Toggle("Launch at Login", isOn: $settings.launchAtLogin)
-                            .toggleStyle(.switch)
-
-                        Toggle("Show Notifications", isOn: $settings.showNotifications)
-                            .toggleStyle(.switch)
+                        SettingsToggle(label: "Enable Cena", isOn: $settings.enabled)
+                        SettingsToggle(label: "Launch at Login", isOn: $settings.launchAtLogin)
+                        SettingsToggle(label: "Show Notifications", isOn: $settings.showNotifications)
                     }
 
-                    // Backend Section
                     SettingsSection(title: "Backend Server", icon: "server.rack") {
                         Picker("Backend:", selection: $selectedBackendName) {
                             ForEach(Array(backendConfig.backends.keys.sorted()), id: \.self) { key in
                                 if let backend = backendConfig.backends[key] {
-                                    Text("\(key.capitalized) - \(backend.description)")
+                                    Text("\(key.capitalized) — \(backend.description)")
                                         .tag(key)
                                 }
                             }
@@ -83,80 +74,82 @@ struct SettingsView: View {
                         }
 
                         if let backend = backendConfig.backends[selectedBackendName] {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("URL:")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Text(backend.url)
-                                    .font(.caption.monospaced())
-                                    .foregroundColor(.blue)
-                                    .textSelection(.enabled)
-                            }
-                            .padding(.top, 4)
+                            Text(backend.url)
+                                .font(.system(size: 11, design: .monospaced))
+                                .foregroundColor(.blue.opacity(0.7))
+                                .textSelection(.enabled)
+                                .padding(.top, 2)
                         }
                     }
 
-                    // Protection Settings Section
-                    SettingsSection(title: "Encryption Settings", icon: "lock.shield") {
-                        VStack(alignment: .leading, spacing: 12) {
+                    SettingsSection(title: "Encryption", icon: "lock.shield") {
+                        VStack(alignment: .leading, spacing: 10) {
                             HStack {
-                                Text("Encryption Strength:")
-                                    .frame(width: 140, alignment: .leading)
+                                Text("Strength:")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.white.opacity(0.5))
+                                    .frame(width: 80, alignment: .leading)
 
                                 Picker("", selection: $settings.defaultIterations) {
-                                    Text("Low (100 iters)").tag(100)
-                                    Text("Medium (200 iters)").tag(200)
-                                    Text("High (500 iters)").tag(500)
-                                    Text("Maximum (1000 iters)").tag(1000)
+                                    Text("50").tag(50)
+                                    Text("100").tag(100)
+                                    Text("200").tag(200)
+                                    Text("500").tag(500)
+                                    Text("1000").tag(1000)
                                 }
-                                .pickerStyle(.menu)
+                                .pickerStyle(.segmented)
                             }
 
                             HStack {
-                                Text("Encryption Mode:")
-                                    .frame(width: 140, alignment: .leading)
+                                Text("Region:")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.white.opacity(0.5))
+                                    .frame(width: 80, alignment: .leading)
 
                                 Picker("", selection: $settings.defaultMaskMode) {
-                                    Text("Auto-detect Faces").tag("auto_face")
+                                    Text("Faces").tag("auto_face")
                                     Text("Full Image").tag("full_image")
                                 }
-                                .pickerStyle(.menu)
+                                .pickerStyle(.segmented)
                             }
 
-                            Text("Estimated time: \(estimatedTime)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                            HStack(spacing: 4) {
+                                Image(systemName: "clock")
+                                    .font(.system(size: 9))
+                                Text("Est. time: \(estimatedTime)")
+                                    .font(.system(size: 10))
+                            }
+                            .foregroundColor(.white.opacity(0.3))
                         }
                     }
 
-                    // Pasteboard Section
-                    SettingsSection(title: "Clipboard Monitoring", icon: "doc.on.clipboard") {
-                        Toggle("Monitor Clipboard for Images", isOn: $settings.monitorPasteboard)
-                            .toggleStyle(.switch)
+                    SettingsSection(title: "Clipboard", icon: "doc.on.clipboard") {
+                        SettingsToggle(label: "Monitor clipboard for images", isOn: $settings.monitorPasteboard)
 
-                        Toggle("Auto-approve Encryption", isOn: $settings.autoApprove)
-                            .toggleStyle(.switch)
+                        SettingsToggle(label: "Auto-approve encryption", isOn: $settings.autoApprove)
                             .disabled(!settings.monitorPasteboard)
 
-                        Text("When enabled, Cena will automatically detect when you copy images and encrypt your likeness before pasting.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        Text("When enabled, Cena automatically detects copied images and encrypts your likeness before pasting.")
+                            .font(.system(size: 10))
+                            .foregroundColor(.white.opacity(0.25))
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
-                    Spacer()
+                    Spacer(minLength: 10)
                 }
-                .padding()
+                .padding(20)
             }
 
-            Divider()
+            Rectangle().fill(.white.opacity(0.06)).frame(height: 0.5)
 
-            // Footer buttons
+            // Footer
             HStack {
-                Button("Reset to Defaults") {
+                Button("Reset Defaults") {
                     resetToDefaults()
                 }
+                .font(.system(size: 11))
                 .buttonStyle(.borderless)
+                .foregroundColor(.white.opacity(0.4))
 
                 Spacer()
 
@@ -172,9 +165,10 @@ struct SettingsView: View {
                 .keyboardShortcut(.defaultAction)
                 .buttonStyle(.borderedProminent)
             }
-            .padding()
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
         }
-        .frame(width: 520, height: 500)
+        .frame(width: 520, height: 540)
         .background(
             VisualEffectViewRepresentable(material: .hudWindow, blendingMode: .behindWindow)
                 .ignoresSafeArea()
@@ -211,7 +205,7 @@ struct SettingsView: View {
     }
 }
 
-// MARK: - Settings Section Component
+// MARK: - Section
 
 struct SettingsSection<Content: View>: View {
     let title: String
@@ -219,43 +213,42 @@ struct SettingsSection<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
                 Image(systemName: icon)
-                    .foregroundColor(.blue)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(
+                        LinearGradient(colors: [.blue, .purple],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing)
+                    )
                 Text(title)
-                    .font(.headline)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.7))
             }
 
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
                 content
             }
-            .padding(.leading, 28)
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.white.opacity(0.04), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(.white.opacity(0.06), lineWidth: 0.5)
+            )
         }
     }
 }
 
-// MARK: - Preview
+// MARK: - Toggle row
 
-#if DEBUG
-struct SettingsView_Previews: PreviewProvider {
-    static var previews: some View {
-        let settings = Settings()
-        let config = BackendConfig.load() ?? BackendConfig(
-            backends: [
-                "local": BackendConfig.Backend(
-                    url: "http://localhost:8888",
-                    description: "Local machine",
-                    type: "local",
-                    ssh: nil,
-                    podId: nil,
-                    apiKey: nil
-                )
-            ],
-            defaultBackend: "local"
-        )
+struct SettingsToggle: View {
+    let label: String
+    @Binding var isOn: Bool
 
-        SettingsView(settings: settings, backendConfig: config)
+    var body: some View {
+        Toggle(label, isOn: $isOn)
+            .toggleStyle(.switch)
+            .font(.system(size: 12))
     }
 }
-#endif

@@ -32,9 +32,9 @@ Both features are native SwiftUI, unified in a single menu-bar app.
 │  │  Cena Backend (FastAPI :8000 + Flask :5000)                         │   │
 │  │  ├─ Local Guardian (Nemotron via vLLM)                              │   │
 │  │  │   ├─ PII Redactor (placeholder)                                  │   │
-│  │  │   ├─ Likeness Encryptor (DiffusionGuard)                         │   │
+│  │  │   ├─ Likeness Encryptor (Cena Encryption)                        │   │
 │  │  │   └─ Re-referencing engine                                       │   │
-│  │  └─ DiffusionGuard Server (PGD + SD Inpainting + Fawkes)           │   │
+│  │  └─ Encryption Server (PGD + SD Inpainting + Fawkes)               │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
 └──────────────────────────────────────────┬──────────────────────────────────┘
                                            │ redacted / encrypted data only
@@ -85,7 +85,7 @@ Both features are native SwiftUI, unified in a single menu-bar app.
 ```bash
 ./deploy.sh gx10 nikhil@spark-abcd.local
 ssh nikhil@spark-abcd.local
-docker exec -it diffguard bash -c 'cd /workspace/project/server && python app.py'
+docker exec -it cena bash -c 'cd /workspace/project/server && python app.py'
 ```
 
 ### 2. Start Agent Backend
@@ -119,10 +119,10 @@ Copy `.env.example` to `.env` and set:
 | Variable | Purpose |
 |----------|---------|
 | `NEMOTRON_ENDPOINT` | vLLM server URL (default: `http://spark-abcd.local:8001/v1`) |
-| `GLAZE_SERVER_URL` | DiffusionGuard Flask server (default: `http://spark-abcd.local:5000`) |
+| `GLAZE_SERVER_URL` | Encryption server (default: `http://spark-abcd.local:5000`) |
 | `ANTHROPIC_API_KEY` | Cloud Claude access |
 | `OPENAI_API_KEY` | Cloud GPT access |
-| `DIFFGUARD_BACKEND` | Default backend name from `backends.json` |
+| `ENCRYPTION_BACKEND` | Default backend name from `backends.json` |
 
 ## Placeholders
 
@@ -131,6 +131,6 @@ Copy `.env.example` to `.env` and set:
 
 ## References
 
-- [DiffusionGuard (ICLR 2025)](https://arxiv.org/abs/2410.05694) — adversarial image protection
+- [Adversarial Image Encryption (ICLR 2025)](https://arxiv.org/abs/2410.05694) — adversarial image protection
 - [NVIDIA Nemotron](https://build.nvidia.com/nvidia/NVIDIA-Nemotron-Nano-9B-v2) — local LLM
 - [Claude Agent SDK](https://docs.anthropic.com/en/docs/agents-and-tools/claude-agent-sdk) — agentic cloud relay

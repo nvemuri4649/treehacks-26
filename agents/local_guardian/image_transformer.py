@@ -1,13 +1,13 @@
 """
-ImageTransformer — Applies DiffusionGuard adversarial glazing to images
+ImageTransformer — Applies adversarial encryption to images
 before they are sent to cloud LLMs.
 
-This module connects the Cena pipeline to the DiffusionGuard
-glazing server running on the local GPU (DGX Spark). When an image is
-uploaded through the chat, it is sent to the glazing server for adversarial
-perturbation before being forwarded to any cloud model.
+This module connects the Cena pipeline to the encryption server running
+on the local GPU (DGX Spark). When an image is uploaded through the chat,
+it is sent to the encryption server for adversarial perturbation before
+being forwarded to any cloud model.
 
-The glazing uses a low epsilon for visual similarity, but the perturbation
+The encryption uses a low epsilon for visual similarity, but the perturbation
 is designed to defeat AI inpainting/deepfake generation when processed by
 diffusion models.
 """
@@ -36,10 +36,10 @@ def _create_full_mask(image_bytes: bytes) -> bytes:
 
 def transform(image_bytes: bytes, mime_type: str) -> bytes:
     """
-    Apply DiffusionGuard adversarial glazing to *image_bytes* and return
+    Apply adversarial encryption to *image_bytes* and return
     the protected image as bytes.
 
-    Sends the image to the DiffusionGuard Flask server running on the local
+    Sends the image to the encryption server running on the local
     GPU (DGX Spark / SSH backend). The server applies PGD adversarial
     perturbations that are visually imperceptible but defeat AI inpainting.
 
@@ -61,7 +61,7 @@ def transform(image_bytes: bytes, mime_type: str) -> bytes:
         # Determine file extension from mime type
         ext = "png" if "png" in mime_type else "jpg"
 
-        # Send to the DiffusionGuard glazing server
+        # Send to the encryption server
         logger.info(
             "Sending image to glazing server at %s (%d iterations)",
             GLAZE_SERVER_URL,

@@ -1,0 +1,70 @@
+/* Cena Deepfake Scanner — translucent glass theme */
+
+* { box-sizing: border-box; }
+
+html, body {
+    background: transparent !important;
+    -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+#log-feed::-webkit-scrollbar { width: 4px; }
+#log-feed::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+.step { transition: all 0.3s ease; }
+.step .step-icon { transition: all 0.3s ease; }
+
+#drop-zone.drag-active {
+    border-color: rgba(147, 130, 255, 0.5) !important;
+    background-color: rgba(147, 130, 255, 0.05) !important;
+}
+
+@keyframes gentle-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+.animate-pulse { animation: gentle-pulse 2s ease-in-out infinite; }
+
+details summary { list-style: none; }
+details summary::-webkit-details-marker { display: none; }
+details[open] summary { border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 0.75rem; }
+
+#log-feed p { animation: fadeIn 0.2s ease-in; }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Glass card */
+.glass-card {
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+/* Accent gradient */
+.accent-grad {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Button */
+.btn-accent {
+    background: linear-gradient(135deg, #6366f1, #a855f7);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 32px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+.btn-accent:hover { opacity: 0.85; }
+.btn-accent:disabled { opacity: 0.3; cursor: not-allowed; }

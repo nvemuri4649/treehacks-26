@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Adversarial Agent Loop for DiffusionGuard Testing
+Adversarial Agent Loop for Encryption Testing
 ==================================================
 This script implements an adversarial testing loop to find the optimal glazing
 strength needed to defeat deepfakes:
 
-1. GLAZE: Apply DiffusionGuard protection to the image
+1. GLAZE: Apply Cena encryption to the image
 2. DEEPFAKE: Generate a deepfake from the protected image
 3. RATE: Use Claude to evaluate how convincing the deepfake is (1-10 scale)
 4. ITERATE: If score > threshold, increase glazing strength and repeat
@@ -41,7 +41,7 @@ Usage:
 
 Environment variables:
     ANTHROPIC_API_KEY    Required for Claude rater agent
-    DIFFGUARD_BACKEND    Default backend name (can override with --backend)
+    ENCRYPTION_BACKEND   Default backend name (can override with --backend)
 """
 
 import argparse
@@ -444,7 +444,7 @@ Examples:
 
 Environment:
   ANTHROPIC_API_KEY    Required for Claude rater agent
-  DIFFGUARD_BACKEND    Default GPU backend
+  ENCRYPTION_BACKEND   Default GPU backend
         """,
     )
 

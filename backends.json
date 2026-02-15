@@ -1,9 +1,9 @@
 {
-    "_comment": "Named GPU backends for DiffusionGuard. Add your own or edit URLs.",
+    "_comment": "Named GPU backends for Cena encryption. Add your own or edit URLs.",
     "backends": {
         "gx10": {
-            "url": "http://10.16.93.23:8888",
-            "description": "ASUS DGX Spark on local network",
+            "url": "http://127.0.0.1:8888",
+            "description": "ASUS DGX Spark via SSH tunnel",
             "ssh": "asus@gx10-4a58",
             "type": "ssh"
         },

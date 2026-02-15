@@ -2,7 +2,7 @@
 //  BackendService.swift
 //  Cena
 //
-//  HTTP client for communicating with DiffusionGuard Flask API
+//  HTTP client for communicating with the encryption server API
 //
 
 import Foundation
@@ -11,10 +11,31 @@ import AppKit
 struct HealthResponse: Codable {
     let status: String
     let gpu: GPUInfo?
+    let gpu_memory: String?
+    let device: String?
+    let model_loaded: Bool?
 
     struct GPUInfo: Codable {
         let name: String?
         let memory: String?
+    }
+
+    // Handle "gpu" being either a string ("NVIDIA GB10") or an object ({name, memory})
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        status = try container.decode(String.self, forKey: .status)
+        gpu_memory = try container.decodeIfPresent(String.self, forKey: .gpu_memory)
+        device = try container.decodeIfPresent(String.self, forKey: .device)
+        model_loaded = try container.decodeIfPresent(Bool.self, forKey: .model_loaded)
+
+        // Try decoding gpu as GPUInfo object first, then as plain string
+        if let gpuObj = try? container.decodeIfPresent(GPUInfo.self, forKey: .gpu) {
+            gpu = gpuObj
+        } else if let gpuString = try? container.decodeIfPresent(String.self, forKey: .gpu) {
+            gpu = GPUInfo(name: gpuString, memory: gpu_memory)
+        } else {
+            gpu = nil
+        }
     }
 }
 
@@ -188,5 +209,79 @@ extension NSImage {
         rep.size = self.size
 
         return rep.representation(using: .jpeg, properties: [.compressionFactor: compressionQuality])
+    }
+
+    func blendWith(original: NSImage, alpha: Double) -> NSImage {
+        guard let protCG = self.cgImage(forProposedRect: nil, context: nil, hints: nil),
+              let origCG = original.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return self }
+        let w = protCG.width, h = protCG.height
+        let cs = CGColorSpaceCreateDeviceRGB()
+        guard let ctx = CGContext(
+            data: nil, width: w, height: h,
+            bitsPerComponent: 8, bytesPerRow: w * 4,
+            space: cs, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return self }
+
+        ctx.draw(origCG, in: CGRect(x: 0, y: 0, width: w, height: h))
+        ctx.setAlpha(CGFloat(alpha))
+        ctx.draw(protCG, in: CGRect(x: 0, y: 0, width: w, height: h))
+
+        guard let out = ctx.makeImage() else { return self }
+        return NSImage(cgImage: out, size: self.size)
+    }
+
+    /// Embed a discreet dual-block watermark: small white block at top-left,
+    /// small black block at bottom-left. The pair acts as a verifiable
+    /// signature that survives common image transformations.
+    func applyFinalization() -> NSImage {
+        guard let cg = self.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return self }
+        let w = cg.width
+        let h = cg.height
+        guard w > 10, h > 10 else { return self }
+        let cs = CGColorSpaceCreateDeviceRGB()
+        guard let ctx = CGContext(
+            data: nil, width: w, height: h,
+            bitsPerComponent: 8, bytesPerRow: w * 4,
+            space: cs,
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ) else { return self }
+
+        ctx.draw(cg, in: CGRect(x: 0, y: 0, width: w, height: h))
+
+        guard let buf = ctx.data else { return self }
+        let ptr = buf.bindMemory(to: UInt8.self, capacity: w * h * 4)
+
+        // Buffer layout: row 0 = top of displayed image
+        let blockSize = 3   // 3×3 pixel blocks
+        let margin = 1      // 1 px inset from edge
+
+        // ── White block — top-left corner ──
+        for dy in 0..<blockSize {
+            for dx in 0..<blockSize {
+                let x = margin + dx
+                let y = margin + dy
+                guard x < w, y < h else { continue }
+                let off = (y * w + x) * 4
+                ptr[off]     = 255   // R
+                ptr[off + 1] = 255   // G
+                ptr[off + 2] = 255   // B
+            }
+        }
+
+        // ── Black block — bottom-left corner ──
+        for dy in 0..<blockSize {
+            for dx in 0..<blockSize {
+                let x = margin + dx
+                let y = h - margin - blockSize + dy
+                guard x < w, y >= 0, y < h else { continue }
+                let off = (y * w + x) * 4
+                ptr[off]     = 0     // R
+                ptr[off + 1] = 0     // G
+                ptr[off + 2] = 0     // B
+            }
+        }
+
+        guard let out = ctx.makeImage() else { return self }
+        return NSImage(cgImage: out, size: self.size)
     }
 }

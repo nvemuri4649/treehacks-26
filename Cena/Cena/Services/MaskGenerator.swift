@@ -104,23 +104,37 @@ class MaskGenerator {
 
     // MARK: - Drawing Helpers
 
-    /// Draw white rectangles for detected faces on black background
+    /// Draw white rectangles for detected faces on black background using CGContext
     private static func drawFaceMask(
         faces: [VNFaceObservation],
         imageSize: CGSize,
         cgImage: CGImage,
         padding: CGFloat = 0.0
     ) -> NSImage {
-        let maskImage = NSImage(size: imageSize)
+        // Use actual pixel dimensions from the CGImage for reliable rendering
+        let pixelWidth = cgImage.width
+        let pixelHeight = cgImage.height
 
-        maskImage.lockFocus()
+        let colorSpace = CGColorSpaceCreateDeviceGray()
+        guard let ctx = CGContext(
+            data: nil,
+            width: pixelWidth,
+            height: pixelHeight,
+            bitsPerComponent: 8,
+            bytesPerRow: pixelWidth,
+            space: colorSpace,
+            bitmapInfo: 0
+        ) else {
+            print("❌ Failed to create CGContext for mask")
+            return createFullMask(size: imageSize)
+        }
 
         // Black background
-        NSColor.black.setFill()
-        NSRect(origin: .zero, size: imageSize).fill()
+        ctx.setFillColor(gray: 0, alpha: 1)
+        ctx.fill(CGRect(x: 0, y: 0, width: pixelWidth, height: pixelHeight))
 
         // White rectangles for faces
-        NSColor.white.setFill()
+        ctx.setFillColor(gray: 1, alpha: 1)
 
         for face in faces {
             var bbox = face.boundingBox
@@ -138,21 +152,25 @@ class MaskGenerator {
                 bbox.size.height = min(newHeight, 1.0 - bbox.origin.y)
             }
 
-            // Convert normalized coordinates (0-1) to image coordinates
-            // Vision uses bottom-left origin, AppKit uses top-left
-            let x = bbox.origin.x * imageSize.width
-            let y = (1.0 - bbox.origin.y - bbox.size.height) * imageSize.height  // Flip Y
-            let width = bbox.size.width * imageSize.width
-            let height = bbox.size.height * imageSize.height
+            // Convert normalized Vision coordinates (bottom-left origin, 0-1)
+            // to pixel coordinates (CGContext also uses bottom-left origin)
+            let x = bbox.origin.x * CGFloat(pixelWidth)
+            let y = bbox.origin.y * CGFloat(pixelHeight)
+            let w = bbox.size.width * CGFloat(pixelWidth)
+            let h = bbox.size.height * CGFloat(pixelHeight)
 
-            let faceRect = NSRect(x: x, y: y, width: width, height: height)
-            faceRect.fill()
+            let faceRect = CGRect(x: x, y: y, width: w, height: h)
+            ctx.fill(faceRect)
 
-            print("  Face at: x=\(Int(x)), y=\(Int(y)), w=\(Int(width)), h=\(Int(height))")
+            print("  Face at: x=\(Int(x)), y=\(Int(y)), w=\(Int(w)), h=\(Int(h))")
         }
 
-        maskImage.unlockFocus()
+        guard let maskCGImage = ctx.makeImage() else {
+            print("❌ Failed to create mask image from context")
+            return createFullMask(size: imageSize)
+        }
 
+        let maskImage = NSImage(cgImage: maskCGImage, size: imageSize)
         return maskImage
     }
 
@@ -184,39 +202,48 @@ class MaskGenerator {
         return drawLandmarkMask(faces: results, imageSize: image.size)
     }
 
-    /// Draw mask using face landmarks (more precise)
+    /// Draw mask using face landmarks (more precise) via CGContext
     private static func drawLandmarkMask(faces: [VNFaceObservation], imageSize: CGSize) -> NSImage {
-        let maskImage = NSImage(size: imageSize)
+        // Default to reasonable pixel dimensions
+        let pixelWidth = Int(imageSize.width)
+        let pixelHeight = Int(imageSize.height)
 
-        maskImage.lockFocus()
+        let colorSpace = CGColorSpaceCreateDeviceGray()
+        guard let ctx = CGContext(
+            data: nil,
+            width: pixelWidth,
+            height: pixelHeight,
+            bitsPerComponent: 8,
+            bytesPerRow: pixelWidth,
+            space: colorSpace,
+            bitmapInfo: 0
+        ) else {
+            return createFullMask(size: imageSize)
+        }
 
         // Black background
-        NSColor.black.setFill()
-        NSRect(origin: .zero, size: imageSize).fill()
+        ctx.setFillColor(gray: 0, alpha: 1)
+        ctx.fill(CGRect(x: 0, y: 0, width: pixelWidth, height: pixelHeight))
 
-        // White ellipses for faces based on landmarks
-        NSColor.white.setFill()
+        // White ellipses for faces
+        ctx.setFillColor(gray: 1, alpha: 1)
 
         for face in faces {
             let bbox = face.boundingBox
+            let x = bbox.origin.x * CGFloat(pixelWidth)
+            let y = bbox.origin.y * CGFloat(pixelHeight)
+            let w = bbox.size.width * CGFloat(pixelWidth)
+            let h = bbox.size.height * CGFloat(pixelHeight)
 
-            // Convert to image coordinates
-            let x = bbox.origin.x * imageSize.width
-            let y = (1.0 - bbox.origin.y - bbox.size.height) * imageSize.height
-            let width = bbox.size.width * imageSize.width
-            let height = bbox.size.height * imageSize.height
-
-            // Draw ellipse instead of rectangle for more natural shape
-            let faceOval = NSRect(x: x, y: y, width: width, height: height)
-            let path = NSBezierPath(ovalIn: faceOval)
-            path.fill()
-
-            print("  Face oval at: x=\(Int(x)), y=\(Int(y)), w=\(Int(width)), h=\(Int(height))")
+            ctx.fillEllipse(in: CGRect(x: x, y: y, width: w, height: h))
+            print("  Face oval at: x=\(Int(x)), y=\(Int(y)), w=\(Int(w)), h=\(Int(h))")
         }
 
-        maskImage.unlockFocus()
+        guard let maskCGImage = ctx.makeImage() else {
+            return createFullMask(size: imageSize)
+        }
 
-        return maskImage
+        return NSImage(cgImage: maskCGImage, size: imageSize)
     }
 
     // MARK: - Mask Validation

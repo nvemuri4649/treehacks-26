@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-DiffusionGuard Testing Script — Prove That Glazing Works
+Cena Encryption Testing Script — Prove That Glazing Works
 =========================================================
 This script runs a full end-to-end test:
 
-1. Sends the ORIGINAL image to the server for DiffusionGuard protection (glazing).
+1. Sends the ORIGINAL image to the server for encryption (glazing).
 2. Sends BOTH the original AND protected image to the server's inpainting endpoint.
 3. Saves all four images side by side for visual comparison:
    - original.png         : The source image
@@ -12,7 +12,7 @@ This script runs a full end-to-end test:
    - inpaint_original.png : Inpainting result on UNPROTECTED image (should succeed - bad!)
    - inpaint_protected.png: Inpainting result on PROTECTED image (should fail - good!)
 
-If DiffusionGuard works, inpaint_protected.png should be clearly degraded/broken
+If encryption works, inpaint_protected.png should be clearly degraded/broken
 compared to inpaint_original.png, proving the image is defended against malicious editing.
 
 Usage:
@@ -134,7 +134,7 @@ def compute_pixel_diff(img_a: Image.Image, img_b: Image.Image) -> float:
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Test DiffusionGuard protection effectiveness",
+        description="Test Cena encryption protection effectiveness",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -167,7 +167,7 @@ Examples:
     # Step 0: Health check
     # ------------------------------------------------------------------
     print("=" * 60)
-    print("DiffusionGuard Protection Test")
+    print("Cena Encryption Protection Test")
     print("=" * 60)
     print_backend_info(server, args.backend)
     check_health(server)
@@ -235,7 +235,7 @@ Examples:
 
     if diff_between_inpaints > 20:
         print("  RESULT: Protection EFFECTIVE!")
-        print("  The inpainting results differ significantly, meaning DiffusionGuard")
+        print("  The inpainting results differ significantly, meaning the encryption")
         print("  successfully disrupted the diffusion model's ability to edit the image.")
     elif diff_between_inpaints > 10:
         print("  RESULT: Protection PARTIALLY effective.")

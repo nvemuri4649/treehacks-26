@@ -11,6 +11,7 @@ import UniformTypeIdentifiers
 
 struct AgentChatView: View {
     @StateObject private var ws = AgentWebSocket()
+    @ObservedObject var pipelineModel: PipelineStageModel
     @State private var messages: [ChatMessage] = []
     @State private var inputText = ""
     @State private var selectedModel = "claude-sonnet-4-20250514"
@@ -20,6 +21,10 @@ struct AgentChatView: View {
     @State private var pendingMimeType: String?
     @State private var sessionId: String?
     @State private var expandedPrivacyId: UUID?
+
+    init(pipelineModel: PipelineStageModel = PipelineStageModel()) {
+        self.pipelineModel = pipelineModel
+    }
 
     private let accentGrad = LinearGradient(
         colors: [.blue, .purple],
@@ -38,7 +43,6 @@ struct AgentChatView: View {
             headerBar
             sep
             chatArea
-            statusIndicator
             imagePreviewBar
             sep
             inputBar
@@ -204,8 +208,7 @@ struct AgentChatView: View {
         case .assistant:
             HStack {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(msg.text)
-                        .font(.system(size: 13))
+                    MarkdownText(text: msg.text, fontSize: 13)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 10)
                         .background(.white.opacity(0.08),
@@ -557,7 +560,9 @@ struct AgentChatView: View {
 
     private func handleServerMessage(_ msg: AgentWebSocket.ServerMessage) {
         switch msg.type {
-        case .status: break
+        case .status(let stage):
+            pipelineModel.currentStage = stage
+            pipelineModel.isActive = true
         case .response(let text, let model, _, let sanitizedPrompt, let privacyReport):
             messages.append(ChatMessage(
                 role: .assistant,
@@ -567,9 +572,13 @@ struct AgentChatView: View {
                 privacyReport: privacyReport
             ))
             isProcessing = false
+            pipelineModel.currentStage = nil
+            pipelineModel.isActive = false
         case .error(let message):
             messages.append(ChatMessage(role: .error, text: message))
             isProcessing = false
+            pipelineModel.currentStage = nil
+            pipelineModel.isActive = false
         }
     }
 

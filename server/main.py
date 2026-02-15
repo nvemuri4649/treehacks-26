@@ -1,15 +1,19 @@
 """
 Cena — FastAPI application entry point.
 
-Serves the WebSocket + REST API that the native Cena macOS agent
-chat connects to. No web frontend — the UI is native Swift.
+Serves:
+  - WebSocket + REST API for the native Cena macOS agent chat
+  - Deepfake Detection Agent web UI under /deepfake
 
 Run with:
     python -m server.main
 """
 
+from pathlib import Path
+
 import uvicorn
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from config.settings import HOST, PORT
 from server.routes import router
@@ -20,8 +24,30 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# Register API / WebSocket routes
+# ── Core agent routes (WebSocket chat, sessions) ─────────────────────────
 app.include_router(router)
+
+# ── Deepfake Detection Agent (optional — requires playwright) ────────────
+try:
+    from deepfake.routes import router as deepfake_router  # noqa: E402
+
+    _deepfake_dir = Path(__file__).resolve().parent.parent / "deepfake"
+    app.mount(
+        "/deepfake/static",
+        StaticFiles(directory=_deepfake_dir / "static"),
+        name="deepfake-static",
+    )
+    _evidence_dir = Path(__file__).resolve().parent.parent / "output" / "deepfake" / "evidence"
+    _evidence_dir.mkdir(parents=True, exist_ok=True)
+    app.mount(
+        "/deepfake/evidence",
+        StaticFiles(directory=_evidence_dir),
+        name="deepfake-evidence",
+    )
+    app.include_router(deepfake_router, prefix="/deepfake", tags=["deepfake"])
+except ImportError as _e:
+    import logging as _log
+    _log.warning("Deepfake module unavailable (missing dependency: %s) — skipping", _e)
 
 
 @app.get("/")
@@ -34,6 +60,7 @@ async def root():
             "health": "GET /health",
             "session": "POST /api/session",
             "chat": "WS /ws/{session_id}",
+            "deepfake_scanner": "GET /deepfake/",
         },
     }
 

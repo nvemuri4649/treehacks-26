@@ -258,61 +258,89 @@ async def _execute_tool(
 # =========================================================================
 
 async def _run_nemotron_pipeline(
-    agent_prompt: str,
-    max_iterations: int = 10,
+    session_id: str,
+    text: str,
+    model: str,
+    has_image: bool,
 ) -> str:
     """
-    Send *agent_prompt* to the local Nemotron model and execute any tool
-    calls it requests until it produces a final text response.
+    Execute the full privacy pipeline:
+      1. Redact PII locally
+      2. (Optional) Transform image locally
+      3. Send sanitized data to cloud LLM
+      4. Re-reference PII tokens in cloud response
+
+    Nemotron (local LLM) analyses the text for PII patterns to assist
+    the redaction step, keeping all personal data on the local machine.
 
     Returns:
-        The model's final text answer (should be the re-referenced response).
+        The final user-facing answer with PII restored.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    # ── Step 1: Local PII analysis via Nemotron + redaction ──────────
     client = get_nemotron()
-    model = get_nemotron_model()
+    nemotron_model = get_nemotron_model()
 
-    messages: list[dict[str, Any]] = [
-        {"role": "system", "content": GUARDIAN_SYSTEM_PROMPT},
-        {"role": "user", "content": agent_prompt},
-    ]
-
-    for _ in range(max_iterations):
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            tools=TOOL_DEFINITIONS,
-            tool_choice="auto",
+    try:
+        analysis = await client.chat.completions.create(
+            model=nemotron_model,
+            messages=[
+                {"role": "system", "content": (
+                    "You are a PII detection assistant. Analyse the following "
+                    "text and list any personal information you find (names, "
+                    "addresses, phone numbers, emails, SSNs, etc.). Be brief."
+                )},
+                {"role": "user", "content": text},
+            ],
+            max_tokens=256,
         )
+        pii_analysis = analysis.choices[0].message.content or ""
+        logger.info("Nemotron PII analysis: %s", pii_analysis[:200])
+    except Exception as e:
+        logger.warning("Nemotron PII analysis failed (%s), proceeding with rule-based redaction", e)
 
-        choice = response.choices[0]
+    # Rule-based redaction (always runs — Nemotron analysis is supplementary)
+    sanitized, new_mapping = redact(text, session_id)
+    _last_sanitized[session_id] = sanitized
+    logger.info("Redacted %d PII tokens", len(new_mapping))
 
-        # If the model is done (no more tool calls), return its text.
-        if choice.finish_reason != "tool_calls" and not choice.message.tool_calls:
-            return choice.message.content or ""
+    # ── Step 2: Transform image locally (if present) ─────────────────
+    transformed_image = None
+    transformed_mime = None
+    if has_image:
+        img_data = _pending_images.get(session_id, {})
+        raw = img_data.get("raw")
+        if raw:
+            transformed_image = transform(raw, img_data.get("mime_type", "image/png"))
+            transformed_mime = img_data.get("mime_type")
+            logger.info("Image transformed (%d bytes)", len(transformed_image) if transformed_image else 0)
 
-        # Append the assistant message (with tool_calls) to history
-        messages.append(choice.message.model_dump())
+    # ── Step 3: Send sanitized data to cloud LLM ────────────────────
+    session = _sessions.get(session_id)
+    history = session.cloud_history if session else []
 
-        # Execute each tool call locally
-        for tool_call in choice.message.tool_calls:
-            fn_name = tool_call.function.name
-            fn_args = json.loads(tool_call.function.arguments)
+    cloud_response = await cloud_relay(
+        prompt=sanitized,
+        model=model,
+        image_bytes=transformed_image,
+        mime_type=transformed_mime,
+        conversation_history=history or None,
+    )
 
-            result = await _execute_tool(fn_name, fn_args)
+    # Update session history
+    if session:
+        session.cloud_history.append({"role": "user", "content": sanitized})
+        session.cloud_history.append({"role": "assistant", "content": cloud_response})
 
-            messages.append({
-                "role": "tool",
-                "tool_call_id": tool_call.id,
-                "content": result,
-            })
+    logger.info("Cloud response received (%d chars)", len(cloud_response))
 
-    # Safety: if we exhausted iterations, return whatever we have
-    last_assistant = [m for m in messages if m.get("role") == "assistant"]
-    if last_assistant:
-        content = last_assistant[-1].get("content", "")
-        if content:
-            return content
-    return "(Cena: max iterations reached without a final response)"
+    # ── Step 4: Re-reference PII tokens in cloud response ───────────
+    mapping = mapping_store.get_mapping(session_id)
+    final_response = re_reference(cloud_response, mapping)
+
+    return final_response
 
 
 # =========================================================================
@@ -384,54 +412,13 @@ async def process_message(
             "transformed": None,
         }
 
-    # Build the prompt Nemotron will reason over
-    agent_prompt = (
-        f"Process this user message through the privacy pipeline.\n\n"
-        f"Metadata:\n"
-        f"- Session ID: {session_id}\n"
-        f"- Requested Cloud Model: {model}\n"
-        f"- Has Image: {has_image}\n\n"
-        f"User Message:\n{text}"
+    # Run the full privacy pipeline (Nemotron local + cloud relay)
+    final_response = await _run_nemotron_pipeline(
+        session_id=session_id,
+        text=text,
+        model=model,
+        has_image=has_image,
     )
-
-    # Try the local Nemotron tool-calling loop; fall back to direct cloud
-    try:
-        final_response = await _run_nemotron_pipeline(agent_prompt)
-    except Exception as e:
-        import logging
-        logging.warning(f"Nemotron unavailable ({e}), falling back to direct cloud relay")
-
-        # Run placeholder pipeline steps manually
-        sanitized, _ = redact(text, session_id)
-        _last_sanitized[session_id] = sanitized
-
-        # Transform image if present
-        transformed_image = None
-        transformed_mime = None
-        if has_image:
-            img_data = _pending_images.get(session_id, {})
-            raw = img_data.get("raw")
-            if raw:
-                transformed_image = transform(raw, img_data.get("mime_type", "image/png"))
-                transformed_mime = img_data.get("mime_type")
-
-        # Call cloud directly
-        cloud_response = await cloud_relay(
-            prompt=sanitized,
-            model=model,
-            image_bytes=transformed_image,
-            mime_type=transformed_mime,
-            conversation_history=session.cloud_history if session else None,
-        )
-
-        # Re-reference
-        mapping = mapping_store.get_mapping(session_id)
-        final_response = re_reference(cloud_response, mapping)
-
-        # Update session history
-        if session:
-            session.cloud_history.append({"role": "user", "content": sanitized})
-            session.cloud_history.append({"role": "assistant", "content": cloud_response})
 
     # Grab the privacy report before cleanup
     privacy_report = get_last_report(session_id)

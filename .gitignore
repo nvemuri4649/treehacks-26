@@ -36,7 +36,7 @@ test_images/
 *.pt
 *.pth
 
-# DiffusionGuard repo (cloned at deploy time on GPU backend)
+# Encryption engine repo (cloned at deploy time on GPU backend)
 DiffusionGuard/
 
 # Temporary / intermediate files

@@ -1,12 +1,12 @@
 """
-DiffusionGuard + Fawkes API Server
+Cena Encryption + Fawkes API Server
 ====================================
 Exposes HTTP endpoints to protect images against diffusion-based inpainting
 and facial recognition.
 
 Endpoints:
     GET  /health          - Check server status + GPU info
-    POST /protect         - Protect an image with DiffusionGuard (send image + mask)
+    POST /protect         - Encrypt an image (send image + mask)
     POST /fawkes          - Cloak an image with Fawkes (send image, no mask needed)
     POST /test-inpaint    - Run inpainting on an image to demonstrate protection effectiveness
 
@@ -28,16 +28,16 @@ from omegaconf import OmegaConf
 from diffusers import StableDiffusionInpaintPipeline
 
 # ---------------------------------------------------------------------------
-# Ensure DiffusionGuard repo is on the path
+# Ensure encryption engine repo is on the path
 # ---------------------------------------------------------------------------
-DIFFGUARD_REPO = os.environ.get(
-    "DIFFGUARD_REPO",
+ENCRYPTION_REPO = os.environ.get(
+    "ENCRYPTION_REPO",
     os.path.join(os.path.dirname(__file__), "..", "DiffusionGuard"),
 )
-if os.path.isdir(DIFFGUARD_REPO):
-    sys.path.insert(0, DIFFGUARD_REPO)
+if os.path.isdir(ENCRYPTION_REPO):
+    sys.path.insert(0, ENCRYPTION_REPO)
 else:
-    print(f"WARNING: DiffusionGuard repo not found at {DIFFGUARD_REPO}")
+    print(f"WARNING: Encryption engine repo not found at {ENCRYPTION_REPO}")
     print("Clone it:  git clone https://github.com/choi403/DiffusionGuard.git")
     sys.exit(1)
 
@@ -65,7 +65,7 @@ IMG_SIZE = 512
 
 pipe = None  # loaded in load_model()
 
-# Default DiffusionGuard config
+# Default encryption config
 DEFAULT_CONFIG = {
     "exp_name": "api",
     "method": "diffusionguard",
@@ -77,8 +77,8 @@ DEFAULT_CONFIG = {
         "iters": 500,        # Cranked up from 200 for stronger protection (~90s)
         "grad_reps": 1,
         "batch_size": 1,
-        "eps": 0.12549019607843137,       # 32/255 — doubled perturbation budget
-        "step_size": 0.00784313725490196,  # 2/255 — doubled step size
+        "eps": 0.03137254901960784,        # 8/255 — subtle perturbation
+        "step_size": 0.00392156862745098,  # 1/255 — fine step size
         "num_inference_steps": 4,
         "mask": {
             "generation_method": "contour_shrink",
@@ -157,7 +157,7 @@ def health():
 @app.route("/protect", methods=["POST"])
 def protect():
     """
-    Protect an image using DiffusionGuard.
+    Protect an image using adversarial encryption.
 
     Expects multipart form data:
         image  - The source image to protect (PNG/JPEG)
@@ -190,7 +190,7 @@ def protect():
     mask_image_combined = overlay_images(mask_image_list)
     mask_radius_list = get_mask_radius_list(mask_image_list)
 
-    # Run DiffusionGuard
+    # Run encryption
     adv_tensor = protect_image(
         config.method,
         pipe,
@@ -327,5 +327,5 @@ if __name__ == "__main__":
     except Exception as e:
         logger.warning("Fawkes init failed (will retry on first request): %s", e)
 
-    logger.info("Starting DiffusionGuard + Fawkes API server on :8888")
+    logger.info("Starting Cena Encryption + Fawkes API server on :8888")
     app.run(host="0.0.0.0", port=8888, debug=False)

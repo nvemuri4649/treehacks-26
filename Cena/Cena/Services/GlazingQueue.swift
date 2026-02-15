@@ -134,18 +134,25 @@ class GlazingQueue: ObservableObject {
             }
 
             // Call backend service
-            let protectedImage = try await backendService.protectImage(
+            let rawProtected = try await backendService.protectImage(
                 image: job.originalImage,
                 mask: mask,
                 iterations: job.iterations
             )
+
+            // Apply intensity scaling: blend between original and protected
+            let blended = job.intensity < 0.99
+                ? rawProtected.blendWith(original: job.originalImage, alpha: job.intensity)
+                : rawProtected
+
+            let finalImage = blended.applyFinalization()
 
             // Cancel progress simulation
             progressTask.cancel()
 
             // Mark as complete
             await MainActor.run {
-                job.complete(with: protectedImage)
+                job.complete(with: finalImage)
             }
 
             print("✅ Job \(job.id) completed successfully")

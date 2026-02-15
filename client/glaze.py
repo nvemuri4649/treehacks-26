@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-DiffusionGuard Client — Glaze Images via Any GPU Backend
+Cena Encryption Client — Glaze Images via Any GPU Backend
 =========================================================
-Sends an image + mask to a DiffusionGuard API server and saves the
+Sends an image + mask to the Cena encryption server and saves the
 protected (glazed) image locally. Supports multiple GPU backends.
 
 Usage:
@@ -79,7 +79,7 @@ def protect_image(server: str, image_path: str, mask_path: str, iters: int) -> b
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Protect images using DiffusionGuard on a remote GPU",
+        description="Protect images using Cena encryption on a remote GPU",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

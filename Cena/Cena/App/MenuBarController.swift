@@ -15,6 +15,11 @@ class MenuBarController: NSObject {
     private var settingsWindow: NSWindow?
     private var approvalWindow: NSWindow?
     private var agentChatWindow: NSWindow?
+    private var agentPipelineWindow: NSWindow?
+    private var deepfakeScannerWindow: NSWindow?
+    private var demoWindow: NSWindow?
+    private var cinematicWindow: NSWindow?
+    private let pipelineModel = PipelineStageModel()
 
     init(appState: AppState) {
         self.appState = appState
@@ -97,6 +102,30 @@ class MenuBarController: NSObject {
             keyEquivalent: "o"
         )
         menu.addItem(protectItem)
+
+        // Deepfake detection scanner
+        let deepfakeItem = NSMenuItem(
+            title: "Scan for Deepfakes...",
+            action: #selector(openDeepfakeScanner),
+            keyEquivalent: "d"
+        )
+        menu.addItem(deepfakeItem)
+
+        // Demo
+        let demoItem = NSMenuItem(
+            title: "Encryption Demo...",
+            action: #selector(openDemo),
+            keyEquivalent: "t"
+        )
+        menu.addItem(demoItem)
+
+        // Watermark robustness demo
+        let cinematicItem = NSMenuItem(
+            title: "Watermark Robustness...",
+            action: #selector(openCinematic),
+            keyEquivalent: "i"
+        )
+        menu.addItem(cinematicItem)
 
         menu.addItem(NSMenuItem.separator())
 
@@ -187,29 +216,107 @@ class MenuBarController: NSObject {
     @objc private func openAgentChat() {
         if let window = agentChatWindow, window.isVisible {
             window.makeKeyAndOrderFront(nil)
+            agentPipelineWindow?.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             return
         }
 
-        let chatView = AgentChatView()
+        // ── Chat window (right) ───────────────────────────────────
+        let chatView = AgentChatView(pipelineModel: pipelineModel)
         let hostingController = NSHostingController(rootView: chatView)
 
+        let chatWindow = NSWindow(contentViewController: hostingController)
+        chatWindow.title = "Cena"
+        chatWindow.titlebarAppearsTransparent = true
+        chatWindow.titleVisibility = .hidden
+        chatWindow.styleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
+        chatWindow.setContentSize(NSSize(width: 720, height: 640))
+        chatWindow.minSize = NSSize(width: 520, height: 360)
+        chatWindow.isReleasedWhenClosed = false
+        chatWindow.isOpaque = false
+        chatWindow.backgroundColor = .clear
+        chatWindow.hasShadow = true
+
+        // ── Pipeline window (left companion) ──────────────────────
+        let pipelineView = AgentPipelineWindowView(model: pipelineModel)
+        let pipelineHosting = NSHostingController(rootView: pipelineView)
+
+        let pipeWindow = NSWindow(contentViewController: pipelineHosting)
+        pipeWindow.title = "Pipeline"
+        pipeWindow.titlebarAppearsTransparent = true
+        pipeWindow.titleVisibility = .hidden
+        pipeWindow.styleMask = [.titled, .closable, .fullSizeContentView]
+        pipeWindow.setContentSize(NSSize(width: 260, height: 640))
+        pipeWindow.isReleasedWhenClosed = false
+        pipeWindow.isOpaque = false
+        pipeWindow.backgroundColor = .clear
+        pipeWindow.hasShadow = true
+
+        // Position: pipeline window on left, chat window adjacent to its right
+        if let screen = NSScreen.main {
+            let vis = screen.visibleFrame
+            let gap: CGFloat = 8
+            let totalWidth = 260 + gap + 720
+            let startX = vis.origin.x + (vis.width - totalWidth) / 2
+            let centerY = vis.origin.y + (vis.height - 640) / 2
+
+            pipeWindow.setFrameOrigin(NSPoint(x: startX, y: centerY))
+            chatWindow.setFrameOrigin(NSPoint(x: startX + 260 + gap, y: centerY))
+        } else {
+            chatWindow.center()
+            pipeWindow.setFrameOrigin(NSPoint(
+                x: chatWindow.frame.origin.x - 260 - 8,
+                y: chatWindow.frame.origin.y
+            ))
+        }
+
+        pipeWindow.makeKeyAndOrderFront(nil)
+        chatWindow.makeKeyAndOrderFront(nil)
+
+        agentChatWindow = chatWindow
+        agentPipelineWindow = pipeWindow
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    @objc private func openDeepfakeScanner() {
+        if let window = deepfakeScannerWindow, window.isVisible {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let scannerView = DeepfakeScannerView()
+        let hostingController = NSHostingController(rootView: scannerView)
+
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "Cena"
+        window.title = "Deepfake Scanner"
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
         window.styleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
-        window.setContentSize(NSSize(width: 720, height: 640))
-        window.minSize = NSSize(width: 520, height: 360)
-        window.center()
+        window.setContentSize(NSSize(width: 820, height: 720))
+        window.minSize = NSSize(width: 700, height: 600)
         window.isReleasedWhenClosed = false
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = true
+
+        Self.positionWindowLeftMiddle(window)
         window.makeKeyAndOrderFront(nil)
 
-        agentChatWindow = window
+        deepfakeScannerWindow = window
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    // MARK: - Window positioning helpers
+
+    /// Position a window at the left-middle of the main screen with comfortable margin.
+    static func positionWindowLeftMiddle(_ window: NSWindow, marginX: CGFloat = 40) {
+        guard let screen = NSScreen.main else { return }
+        let screenFrame = screen.visibleFrame
+        let windowSize = window.frame.size
+        let x = screenFrame.origin.x + marginX
+        let y = screenFrame.origin.y + (screenFrame.height - windowSize.height) / 2
+        window.setFrameOrigin(NSPoint(x: x, y: y))
     }
 
     @objc private func protectFromFile() {
@@ -227,6 +334,62 @@ class MenuBarController: NSObject {
                 self?.appState.protectImageFromFile(url: url)
             }
         }
+    }
+
+    @objc private func openCinematic() {
+        if let window = cinematicWindow, window.isVisible {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let view = CinematicDisplayView()
+        let hc = NSHostingController(rootView: view)
+
+        let window = NSWindow(contentViewController: hc)
+        window.title = "Watermark Robustness"
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.styleMask = [.titled, .closable, .fullSizeContentView]
+        window.setContentSize(NSSize(width: 580, height: 850))
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.hasShadow = true
+
+        Self.positionWindowLeftMiddle(window)
+        window.makeKeyAndOrderFront(nil)
+
+        cinematicWindow = window
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
+    @objc private func openDemo() {
+        if let window = demoWindow, window.isVisible {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let demoView = DemoView()
+        let hostingController = NSHostingController(rootView: demoView)
+
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = "Demo"
+        window.titlebarAppearsTransparent = true
+        window.titleVisibility = .hidden
+        window.styleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
+        window.setContentSize(NSSize(width: 860, height: 700))
+        window.minSize = NSSize(width: 700, height: 550)
+        window.isReleasedWhenClosed = false
+        window.isOpaque = false
+        window.backgroundColor = .clear
+        window.hasShadow = true
+        window.center()
+        window.makeKeyAndOrderFront(nil)
+
+        demoWindow = window
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     @objc private func showSettings() {

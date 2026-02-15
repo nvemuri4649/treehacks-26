@@ -211,13 +211,9 @@ def redact(text: str, session_id: str) -> tuple[str, dict[str, str]]:
                 EntityReport(pii_type=span.pii_type, action="REDACT", token=token)
             )
 
-    # ── 5. APPEND CONTEXT HINTS ───────────────────────────────────────
-    if blur_hints:
-        sanitized += (
-            "\n\n[Context — approximate values for reference, "
-            "do not reproduce this section in your answer]\n"
-            + "\n".join(blur_hints)
-        )
+    # ── 5. CONTEXT HINTS (kept local only — NEVER sent to cloud) ─────
+    # blur_hints are stored in EntityReport for the UI privacy panel
+    # but are NOT appended to the sanitized text.
 
     # ── 6. BUILD PRIVACY REPORT ───────────────────────────────────────
     # Reverse entity_reports so they're in document order (we built them

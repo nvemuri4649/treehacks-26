@@ -7,7 +7,7 @@ Supports:
     --server http://...  Direct URL override (ignores backends.json)
 
 Environment variable overrides:
-    DIFFGUARD_SERVER     Fallback URL if neither --backend nor --server given
+    ENCRYPTION_SERVER    Fallback URL if neither --backend nor --server given
     RUNPOD_POD_ID        RunPod pod ID (overrides backends.json pod_id)
     RUNPOD_API_KEY       RunPod API key
 """
@@ -36,7 +36,7 @@ def resolve_backend(backend_name: str | None, server_url: str | None) -> str:
     Priority:
         1. --server <url>         (explicit URL, always wins)
         2. --backend <name>       (look up in backends.json)
-        3. DIFFGUARD_SERVER env   (fallback)
+        3. ENCRYPTION_SERVER env  (fallback)
         4. default from config    (last resort)
 
     Returns the fully-resolved HTTP URL string.
@@ -47,7 +47,7 @@ def resolve_backend(backend_name: str | None, server_url: str | None) -> str:
 
     # 2. Named backend
     config = load_backends_config()
-    name = backend_name or os.environ.get("DIFFGUARD_BACKEND") or config.get("default", "local")
+    name = backend_name or os.environ.get("ENCRYPTION_BACKEND") or config.get("default", "local")
     backends = config.get("backends", {})
 
     if name not in backends:

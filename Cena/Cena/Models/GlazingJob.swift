@@ -31,6 +31,7 @@ class GlazingJob: ObservableObject, Identifiable {
     let iterations: Int
     let maskMode: MaskMode
     let source: JobSource
+    let intensity: Double  // 0.05–1.0: alpha blend between original and protected
 
     var protectedImage: NSImage?
     var maskImage: NSImage?
@@ -47,12 +48,13 @@ class GlazingJob: ObservableObject, Identifiable {
         case filePicker     // From manual file selection
     }
 
-    init(image: NSImage, iterations: Int = 200, maskMode: MaskMode = .autoFace, source: JobSource = .pasteboard) {
+    init(image: NSImage, iterations: Int = 200, maskMode: MaskMode = .autoFace, source: JobSource = .pasteboard, intensity: Double = 1.0) {
         self.originalImage = image
         self.iterations = iterations
         self.totalIterations = iterations
         self.maskMode = maskMode
         self.source = source
+        self.intensity = intensity
     }
 
     /// Whether the job is still pending

@@ -33,7 +33,11 @@ OPENAI_MODELS = {
     "gpt-4-turbo",
 }
 
-# ── Glazing Server (DiffusionGuard) ───────────────────────────────────────
+# ── Bright Data (Deepfake Detection Agent) ────────────────────────────────
+BRIGHTDATA_API_TOKEN: str = os.getenv("BRIGHTDATA_API_TOKEN", "")
+BRIGHTDATA_BROWSER_AUTH: str = os.getenv("BRIGHTDATA_BROWSER_AUTH", "")
+
+# ── Glazing / Encryption Server ───────────────────────────────────────────
 GLAZE_SERVER_URL: str = os.getenv("GLAZE_SERVER_URL", "http://spark-abcd.local:5000")
 GLAZE_DEFAULT_ITERS: int = int(os.getenv("GLAZE_DEFAULT_ITERS", "200"))
 

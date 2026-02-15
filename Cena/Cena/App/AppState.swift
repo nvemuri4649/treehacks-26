@@ -161,7 +161,8 @@ class AppState: ObservableObject {
         image: NSImage,
         iterations: Int,
         maskMode: GlazingJob.MaskMode,
-        source: GlazingJob.JobSource
+        source: GlazingJob.JobSource,
+        intensity: Double = 1.0
     ) {
         guard let glazingQueue = glazingQueue else {
             print("❌ Glazing queue not initialized")
@@ -172,7 +173,8 @@ class AppState: ObservableObject {
             image: image,
             iterations: iterations,
             maskMode: maskMode,
-            source: source
+            source: source,
+            intensity: intensity
         )
 
         // Show overlay
@@ -214,9 +216,13 @@ class AppState: ObservableObject {
     private func handleJobCompleted(_ job: GlazingJob) {
         print("✅ Job completed: \(job.id)")
 
-        // Replace pasteboard if job was from clipboard
-        if job.source == .pasteboard, let protectedImage = job.protectedImage {
-            pasteboardMonitor.replacePasteboardImage(with: protectedImage)
+        if let protectedImage = job.protectedImage {
+            switch job.source {
+            case .pasteboard:
+                pasteboardMonitor.replacePasteboardImage(with: protectedImage)
+            case .filePicker, .dragDrop:
+                saveProtectedImage(protectedImage)
+            }
         }
 
         // Hide overlay

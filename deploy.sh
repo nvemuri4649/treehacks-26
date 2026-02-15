@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Deploy DiffusionGuard server to a GPU backend
+# Deploy Cena encryption server to a GPU backend
 # ===============================================
 #
 # Usage:
@@ -20,7 +20,7 @@ usage() {
 Usage: ./deploy.sh <target-type> <connection-args...>
 
 Target types:
-  gx10    ASUS Ascent GX10 (uses Docker container 'diffguard')
+  gx10    ASUS Ascent GX10 (uses Docker container 'cena')
   runpod  RunPod GPU pod (direct install, no Docker)
   ssh     Any SSH-accessible machine with NVIDIA GPU (direct install)
 
@@ -37,7 +37,7 @@ EOF
 TARGET_TYPE="$1"
 shift
 SSH_ARGS="$@"
-REMOTE_DIR="diffusionguard_project"
+REMOTE_DIR="cena_encryption"
 PIP_DEPS="diffusers==0.24.0 transformers datasets huggingface-hub numpy omegaconf opencv-contrib-python scikit-learn tqdm hydra-core flask pillow"
 
 # -----------------------------------------------------------------------
@@ -52,10 +52,10 @@ copy_server_code() {
     cat server/requirements.txt | ssh $ssh_args "cat > $remote_dir/server/requirements.txt"
 }
 
-clone_diffguard() {
+clone_encryption_engine() {
     local ssh_args="$1"
     local remote_dir="$2"
-    echo "[*] Cloning DiffusionGuard repo (if needed)..."
+    echo "[*] Cloning encryption engine repo (if needed)..."
     ssh $ssh_args "cd $remote_dir && [ -d DiffusionGuard ] || git clone https://github.com/choi403/DiffusionGuard.git"
 }
 
@@ -67,24 +67,24 @@ deploy_gx10() {
     echo "=== Deploying to GX10 ($SSH_ARGS) ==="
 
     copy_server_code "$SSH_ARGS" "~/$remote"
-    clone_diffguard  "$SSH_ARGS" "~/$remote"
+    clone_encryption_engine  "$SSH_ARGS" "~/$remote"
 
-    echo "[*] Checking Docker container 'diffguard'..."
-    ssh $SSH_ARGS "docker ps -a --format '{{.Names}}' | grep -q diffguard" || {
-        echo "ERROR: Docker container 'diffguard' not found."
+    echo "[*] Checking Docker container 'cena'..."
+    ssh $SSH_ARGS "docker ps -a --format '{{.Names}}' | grep -q cena" || {
+        echo "ERROR: Docker container 'cena' not found."
         echo "Create it first — see SETUP_GX10.md Phase 3."
         exit 1
     }
 
     echo "[*] Installing dependencies inside Docker container..."
-    ssh $SSH_ARGS "docker start diffguard 2>/dev/null; docker exec diffguard pip install -q $PIP_DEPS"
+    ssh $SSH_ARGS "docker start cena 2>/dev/null; docker exec cena pip install -q $PIP_DEPS"
 
     echo ""
     echo "=== GX10 deploy complete! ==="
     echo ""
     echo "Start the server:"
     echo "  ssh $SSH_ARGS"
-    echo "  docker exec -it diffguard bash -c 'cd /workspace/project/server && python app.py'"
+    echo "  docker exec -it cena bash -c 'cd /workspace/project/server && python app.py'"
     echo ""
     echo "Then from your laptop:"
     echo "  python client/glaze.py --image photo.png --mask mask.png --backend gx10"
@@ -98,20 +98,20 @@ deploy_runpod() {
     echo "=== Deploying to RunPod ($SSH_ARGS) ==="
 
     copy_server_code "$SSH_ARGS" "$remote"
-    clone_diffguard  "$SSH_ARGS" "$remote"
+    clone_encryption_engine  "$SSH_ARGS" "$remote"
 
     echo "[*] Installing dependencies..."
     ssh $SSH_ARGS "pip install -q $PIP_DEPS"
 
     echo "[*] Starting server in background..."
-    ssh $SSH_ARGS "cd $remote/server && nohup python app.py > /workspace/diffguard.log 2>&1 &"
+    ssh $SSH_ARGS "cd $remote/server && nohup python app.py > /workspace/cena_encryption.log 2>&1 &"
 
     echo ""
     echo "=== RunPod deploy complete! ==="
     echo ""
     echo "Server is starting on port 5000."
     echo "First run downloads the model (~4GB) — check logs:"
-    echo "  ssh $SSH_ARGS 'tail -f /workspace/diffguard.log'"
+    echo "  ssh $SSH_ARGS 'tail -f /workspace/cena_encryption.log'"
     echo ""
     echo "Access URL: https://<POD_ID>-5000.proxy.runpod.net"
     echo ""
@@ -128,7 +128,7 @@ deploy_ssh() {
     echo "=== Deploying to remote GPU ($SSH_ARGS) ==="
 
     copy_server_code "$SSH_ARGS" "$remote"
-    clone_diffguard  "$SSH_ARGS" "$remote"
+    clone_encryption_engine  "$SSH_ARGS" "$remote"
 
     echo "[*] Installing dependencies..."
     ssh $SSH_ARGS "pip install -q $PIP_DEPS"

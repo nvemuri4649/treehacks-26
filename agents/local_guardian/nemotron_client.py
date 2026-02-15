@@ -8,20 +8,25 @@ agent's reasoning and tool-calling loop.
 
 from __future__ import annotations
 
-from openai import OpenAI
+import httpx
+from openai import AsyncOpenAI
 
 from config.settings import NEMOTRON_ENDPOINT, NEMOTRON_MODEL
 
+# Generous timeout for local vLLM — first request may be slow (JIT compile)
+_NEMOTRON_TIMEOUT = httpx.Timeout(connect=30.0, read=300.0, write=30.0, pool=30.0)
 
-def get_client() -> OpenAI:
+
+def get_client() -> AsyncOpenAI:
     """
-    Return an OpenAI-compatible client pointed at the local vLLM server.
+    Return an async OpenAI-compatible client pointed at the local vLLM server.
 
     The API key is ignored by vLLM but the SDK requires *something*.
     """
-    return OpenAI(
+    return AsyncOpenAI(
         base_url=NEMOTRON_ENDPOINT,
         api_key="not-needed",
+        timeout=_NEMOTRON_TIMEOUT,
     )
 
 
