@@ -36,24 +36,20 @@ struct CenaLogo: View {
         let step = (size - gap * CGFloat(gridCols - 1)) / CGFloat(gridCols)
         let cornerR = step * 0.3
 
-        ZStack(alignment: .topLeading) {
-            ForEach(Array(Self.tiles.enumerated()), id: \.offset) { index, tile in
+        Canvas { context, canvasSize in
+            for (index, tile) in Self.tiles.enumerated() {
                 let anim = animOffset(for: index, step: step, gap: gap)
-
-                RoundedRectangle(cornerRadius: cornerR, style: .continuous)
-                    .fill(color)
-                    .frame(
-                        width: CGFloat(tile.w) * step + CGFloat(tile.w - 1) * gap,
-                        height: CGFloat(tile.h) * step + CGFloat(tile.h - 1) * gap
-                    )
-                    .offset(
-                        x: CGFloat(tile.col) * (step + gap) + anim.width,
-                        y: CGFloat(tile.row) * (step + gap) + anim.height
-                    )
+                let w = CGFloat(tile.w) * step + CGFloat(tile.w - 1) * gap
+                let h = CGFloat(tile.h) * step + CGFloat(tile.h - 1) * gap
+                let x = CGFloat(tile.col) * (step + gap) + anim.width
+                let y = CGFloat(tile.row) * (step + gap) + anim.height
+                let rect = CGRect(x: x, y: y, width: w, height: h)
+                let path = RoundedRectangle(cornerRadius: cornerR, style: .continuous)
+                    .path(in: rect)
+                context.fill(path, with: .color(color))
             }
         }
         .frame(width: size, height: size)
-        .clipped()
         .onAppear { if isAnimating { startTimer() } }
         .onDisappear { stopTimer() }
         .onChange(of: isAnimating) { _, on in
