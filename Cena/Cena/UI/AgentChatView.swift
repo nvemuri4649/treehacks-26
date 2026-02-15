@@ -58,19 +58,12 @@ struct AgentChatView: View {
     // MARK: - Header
 
     private var headerBar: some View {
-        HStack(spacing: 8) {
-            // Logo
-            CenaLogo(size: 18, isAnimating: isProcessing)
+        HStack(spacing: 7) {
+            // Logo + title grouped tight
+            CenaLogo(size: 16, isAnimating: isProcessing, color: .white.opacity(0.85))
 
             Text("Cena")
                 .font(.system(size: 14, weight: .semibold, design: .rounded))
-
-            Text("·")
-                .foregroundStyle(.quaternary)
-
-            Text("Agent")
-                .font(.system(size: 13, weight: .regular))
-                .foregroundStyle(.secondary)
 
             Spacer()
 
@@ -162,8 +155,8 @@ struct AgentChatView: View {
             Spacer(minLength: 60)
 
             // Logo
-            CenaLogo(size: 52, isAnimating: false)
-                .opacity(0.6)
+            CenaLogo(size: 44, isAnimating: false, color: .white.opacity(0.3))
+                .padding(.bottom, 6)
 
             Text("What can I help with?")
                 .font(.system(size: 20, weight: .medium, design: .rounded))

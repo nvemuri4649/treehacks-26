@@ -2,7 +2,7 @@
 //  CenaLogo.swift
 //  Cena
 //
-//  4x4 grid logo with merged tiles and sliding animation
+//  3x3 grid logo with merged tiles and sliding animation
 //
 
 import SwiftUI
@@ -10,105 +10,83 @@ import SwiftUI
 struct CenaLogo: View {
     let size: CGFloat
     var isAnimating: Bool = false
+    var color: Color = .white
 
-    private let accentGrad = LinearGradient(
-        colors: [.blue, .purple],
-        startPoint: .topLeading, endPoint: .bottomTrailing
-    )
-
-    // Each tile: (col, row, colSpan, rowSpan)
-    private static let baseTiles: [(col: Int, row: Int, w: Int, h: Int)] = [
-        // Row 0: single, merged 2x1, single
-        (0, 0, 1, 1), (1, 0, 2, 1), (3, 0, 1, 1),
-        // Row 1: merged 2x1, single, single
-        (0, 1, 2, 1), (2, 1, 1, 1), (3, 1, 1, 1),
-        // Row 2: single, single, merged 2x1
-        (0, 2, 1, 1), (1, 2, 1, 1), (2, 2, 2, 1),
-        // Row 3: four singles
-        (0, 3, 1, 1), (1, 3, 1, 1), (2, 3, 1, 1), (3, 3, 1, 1),
+    // 3x3 grid layout:
+    //  Row 0: [1x1] [  2x1  ]       — 1 merged, then single
+    //  Row 1: [1x1] [1x1] [1x1]     — 3 singles
+    //  Row 2: [  2x1  ] [1x1]       — merged, then 1 single
+    private static let tiles: [(col: Int, row: Int, w: Int, h: Int)] = [
+        (0, 0, 1, 1), (1, 0, 2, 1),           // row 0
+        (0, 1, 1, 1), (1, 1, 1, 1), (2, 1, 1, 1), // row 1
+        (0, 2, 2, 1), (2, 2, 1, 1),           // row 2
     ]
 
-    // Perimeter indices in clockwise order for animation
-    // These are the indices into baseTiles that sit on the outer ring
-    // Row0: 0,1,2 | Right col: 5,8,12 (idx) | Bottom: 12,11,10,9 | Left: 6,3,0
-    // Outer ring tile indices: 0,1,2, 5,8, 12,11,10,9, 6,3
-    // Inner tiles: 4,7 (row1-col2, row2-col1)
-    private static let perimeterOrder: [Int] = [0, 1, 2, 5, 8, 12, 11, 10, 9, 6, 3]
+    // Perimeter order (all 7 tiles are on the edge of a 3x3, no inner tile)
+    // Clockwise: top-left, top-right-merged, right-mid, bottom-right, bottom-left-merged, left-mid
+    // Indices: 0, 1, 4, 6, 5, 2
+    private static let perimeterOrder: [Int] = [0, 1, 4, 6, 5, 2]
 
     @State private var phase: Int = 0
     @State private var timer: Timer?
 
     var body: some View {
-        let gridSize = 4
-        let gap: CGFloat = size * 0.08
-        let step = (size - gap * CGFloat(gridSize - 1)) / CGFloat(gridSize)
-        let cornerR = step * 0.28
+        let gridCols = 3
+        let gap: CGFloat = size * 0.1
+        let step = (size - gap * CGFloat(gridCols - 1)) / CGFloat(gridCols)
+        let cornerR = step * 0.3
 
         ZStack(alignment: .topLeading) {
-            ForEach(Array(Self.baseTiles.enumerated()), id: \.offset) { index, tile in
-                let offset = animationOffset(for: index, step: step, gap: gap)
+            ForEach(Array(Self.tiles.enumerated()), id: \.offset) { index, tile in
+                let anim = animOffset(for: index, step: step, gap: gap)
 
                 RoundedRectangle(cornerRadius: cornerR, style: .continuous)
-                    .fill(accentGrad)
+                    .fill(color)
                     .frame(
                         width: CGFloat(tile.w) * step + CGFloat(tile.w - 1) * gap,
                         height: CGFloat(tile.h) * step + CGFloat(tile.h - 1) * gap
                     )
                     .offset(
-                        x: CGFloat(tile.col) * (step + gap) + offset.width,
-                        y: CGFloat(tile.row) * (step + gap) + offset.height
+                        x: CGFloat(tile.col) * (step + gap) + anim.width,
+                        y: CGFloat(tile.row) * (step + gap) + anim.height
                     )
             }
         }
         .frame(width: size, height: size)
-        .onAppear { startIfNeeded() }
+        .clipped()
+        .onAppear { if isAnimating { startTimer() } }
         .onDisappear { stopTimer() }
-        .onChange(of: isAnimating) { _, animating in
-            if animating { startTimer() } else { stopTimer() }
+        .onChange(of: isAnimating) { _, on in
+            if on { startTimer() } else { stopTimer() }
         }
     }
 
     // MARK: - Animation
 
-    private func animationOffset(for index: Int, step: CGFloat, gap: CGFloat) -> CGSize {
-        guard isAnimating else { return .zero }
-
-        // Find this tile's position in the perimeter ring
-        guard let perimIdx = Self.perimeterOrder.firstIndex(of: index) else {
-            return .zero // inner tiles don't move
-        }
+    private func animOffset(for index: Int, step: CGFloat, gap: CGFloat) -> CGSize {
+        guard isAnimating, phase > 0 else { return .zero }
+        guard let pi = Self.perimeterOrder.firstIndex(of: index) else { return .zero }
 
         let count = Self.perimeterOrder.count
-        // How many steps this tile has shifted from its home
         let shift = phase % count
-
         if shift == 0 { return .zero }
 
-        // Compute where this tile should currently be
-        let targetPerimIdx = (perimIdx + shift) % count
-        let targetTileIdx = Self.perimeterOrder[targetPerimIdx]
+        let targetIdx = Self.perimeterOrder[(pi + shift) % count]
+        let src = Self.tiles[index]
+        let dst = Self.tiles[targetIdx]
 
-        let src = Self.baseTiles[index]
-        let dst = Self.baseTiles[targetTileIdx]
-
-        let dx = CGFloat(dst.col - src.col) * (step + gap)
-        let dy = CGFloat(dst.row - src.row) * (step + gap)
-
-        return CGSize(width: dx, height: dy)
-    }
-
-    private func startIfNeeded() {
-        if isAnimating { startTimer() }
+        return CGSize(
+            width: CGFloat(dst.col - src.col) * (step + gap),
+            height: CGFloat(dst.row - src.row) * (step + gap)
+        )
     }
 
     private func startTimer() {
         stopTimer()
         phase = 0
-        timer = Timer.scheduledTimer(withTimeInterval: 0.45, repeats: true) { _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
             Task { @MainActor in
-                withAnimation(.easeInOut(duration: 0.35)) {
-                    phase += 1
-                }
+                withAnimation(.easeInOut(duration: 0.4)) { phase += 1 }
             }
         }
     }
@@ -116,8 +94,6 @@ struct CenaLogo: View {
     private func stopTimer() {
         timer?.invalidate()
         timer = nil
-        withAnimation(.easeInOut(duration: 0.2)) {
-            phase = 0
-        }
+        withAnimation(.easeInOut(duration: 0.2)) { phase = 0 }
     }
 }
