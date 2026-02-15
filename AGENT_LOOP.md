@@ -1,8 +1,8 @@
-# Adversarial Agent Loop for Glazing Optimization
+# Adversarial Agent Loop for Encryption Optimization
 
 ## Overview
 
-The **Agent Loop** is an automated adversarial testing system that finds the optimal glazing strength to protect images against deepfakes. It uses Claude's vision capabilities to evaluate deepfake quality in an iterative loop.
+The **Agent Loop** is an automated adversarial testing system that finds the optimal encryption strength to protect images against deepfakes. It uses Claude's vision capabilities to evaluate deepfake quality in an iterative loop.
 
 ## How It Works
 
@@ -15,7 +15,7 @@ Start with N=100 PGD iterations
          │
          ▼
     ┌────────────────┐
-    │ 1. GLAZE       │  Apply DiffusionGuard with N iterations
+    │ 1. ENCYRPT       │  Apply DiffusionGuard with N iterations
     │    IMAGE       │  → Protected image
     └────────┬───────┘
              │
@@ -39,7 +39,7 @@ Start with N=100 PGD iterations
        ▼           ▼
    Increase N   SUCCESS!
    (N += 100)   Found optimal
-       │         glazing strength
+       │         encryption strength
        └─────┐
              │
              ▼
@@ -50,13 +50,13 @@ Start with N=100 PGD iterations
 
 ### Components
 
-1. **Glazing Engine** (`server/app.py`)
+1. **Encryption Engine** (`server/app.py`)
    - Applies DiffusionGuard protection with configurable PGD iterations
    - Runs on GPU backend (GX10 / RunPod / SSH)
 
 2. **Deepfake Generator** (`server/app.py`)
    - Uses Stable Diffusion Inpainting to generate deepfakes
-   - Tests whether glazing successfully disrupted the model
+   - Tests whether encryption successfully disrupted the model
 
 3. **Rater Agent** (`client/rater_agent.py`)
    - Claude Opus 4.6 with vision capabilities
@@ -74,10 +74,10 @@ The Claude rater agent uses this scale:
 
 | Score | Quality | Protection Status | Description |
 |-------|---------|-------------------|-------------|
-| 1-3 | Very Poor | **EXCELLENT** ✓ | Obvious artifacts, distortions, or failures. Glazing worked perfectly. |
-| 4-6 | Mediocre | **GOOD** ✓ | Noticeable quality issues. Glazing is effective. |
-| 7-8 | Good | **PARTIAL** ⚠️ | Mostly convincing but with subtle issues. Glazing partially worked. |
-| 9-10 | Excellent | **FAILED** ✗ | Highly realistic. Glazing did not protect the image. |
+| 1-3 | Very Poor | **EXCELLENT** ✓ | Obvious artifacts, distortions, or failures. Encryption worked perfectly. |
+| 4-6 | Mediocre | **GOOD** ✓ | Noticeable quality issues. Encryption is effective. |
+| 7-8 | Good | **PARTIAL** ⚠️ | Mostly convincing but with subtle issues. Encryption partially worked. |
+| 9-10 | Excellent | **FAILED** ✗ | Highly realistic. Encryption did not protect the image. |
 
 ## Setup
 
@@ -134,7 +134,7 @@ This will:
 1. Start with 100 PGD iterations
 2. Generate deepfakes and rate them with Claude
 3. Increase iterations by 100 each loop
-4. Stop when deepfake score ≤ 6/10 (glazing is effective)
+4. Stop when deepfake score ≤ 6/10 (encryption is effective)
 
 ### Advanced Options
 
@@ -213,7 +213,7 @@ Each iteration generates a summary image showing:
       "pgd_iters": 100,
       "score": 8,
       "reasoning": "The deepfake is mostly convincing with subtle artifacts...",
-      "glaze_time": 45.2,
+      "encryption_time": 45.2,
       "deepfake_time": 12.3,
       "protected_path": "iter01_protected_100iters.png",
       "deepfake_path": "iter01_deepfake_100iters.png",
@@ -224,7 +224,7 @@ Each iteration generates a summary image showing:
       "pgd_iters": 200,
       "score": 5,
       "reasoning": "Noticeable quality degradation with visible artifacts...",
-      "glaze_time": 89.7,
+      "encryption_time": 89.7,
       "deepfake_time": 12.1
     }
   ],
@@ -237,7 +237,7 @@ Each iteration generates a summary image showing:
 
 ## Examples
 
-### Example 1: Find Optimal Glazing for Face Protection
+### Example 1: Find Optimal Encryption for Face Protection
 
 ```bash
 python client/agent_loop.py \
@@ -261,7 +261,7 @@ ADVERSARIAL GLAZING AGENT LOOP
 ================================================================================
 ITERATION 1 — Testing with 100 PGD iterations
 ================================================================================
-[1/3] Glazing image (100 iterations)...
+[1/3] Encryption image (100 iterations)...
       ✓ Complete in 45.3s
 [2/3] Generating deepfake...
       ✓ Complete in 12.1s
@@ -274,7 +274,7 @@ Score 8/10 > threshold 6/10. Increasing to 200 iterations...
 ================================================================================
 ITERATION 2 — Testing with 200 PGD iterations
 ================================================================================
-[1/3] Glazing image (200 iterations)...
+[1/3] Encryption image (200 iterations)...
       ✓ Complete in 91.2s
 [2/3] Generating deepfake...
       ✓ Complete in 12.3s
@@ -283,7 +283,7 @@ ITERATION 2 — Testing with 200 PGD iterations
       Reasoning: Significant quality degradation with visible distortions...
 
 ================================================================================
-🎉 SUCCESS! Glazing is effective!
+🎉 SUCCESS! Encryption is effective!
 ================================================================================
   Final score: 5/10 (threshold: 6/10)
   Optimal PGD iterations: 200
@@ -291,7 +291,7 @@ ITERATION 2 — Testing with 200 PGD iterations
   Protection is working effectively!
 ```
 
-### Example 2: Test Aggressive Glazing
+### Example 2: Test Aggressive Encryption
 
 ```bash
 python client/agent_loop.py \
@@ -392,7 +392,7 @@ ERROR: Cannot reach server at http://...
 
 ### GPU Out of Memory
 
-If glazing fails with OOM errors, reduce batch size or use a smaller model variant on the server.
+If encryption fails with OOM errors, reduce batch size or use a smaller model variant on the server.
 
 ### Claude API Rate Limits
 
@@ -406,7 +406,7 @@ If you hit rate limits, the loop will fail. Solutions:
 ### Timing Expectations
 
 On NVIDIA DGX Spark (GX10):
-- **Glazing**: ~0.4s per PGD iteration (e.g., 200 iters ≈ 90s)
+- **Encryption**: ~0.4s per PGD iteration (e.g., 200 iters ≈ 90s)
 - **Deepfake Generation**: ~10-15s (50 diffusion steps)
 - **Claude Rating**: ~2-5s per image
 
@@ -432,7 +432,7 @@ The agent loop integrates seamlessly with the existing DiffusionGuard pipeline:
 │ agent_loop  │      │ DiffusionGrd │      │    Rater    │
 └─────────────┘      └──────────────┘      └─────────────┘
       │                      │                      │
-      │ /protect (glaze)     │                      │
+      │ /protect (encryption)     │                      │
       ├─────────────────────▶│                      │
       │                      │                      │
       │ /test-inpaint        │                      │
