@@ -1,8 +1,8 @@
 //
-//  BackendConfig.swift
-//  Cena
+// BackendConfig.swift
+// Cena
 //
-//  Model for parsing backends.json configuration file
+// Model for parsing backends.json configuration file
 //
 
 import Foundation
@@ -39,18 +39,18 @@ struct BackendConfig: Codable {
         var configPath: String
 
         if path.isEmpty {
-            // Search upward from the binary to find backends.json in the project root
+            //Search upward from the binary to find backends.json in the project root
             let searchPaths = [
-                // Relative to binary (e.g. Cena/.build/release/ -> project root)
+                //Relative to binary (e.g. Cena/.build/release/ -> project root)
                 URL(fileURLWithPath: CommandLine.arguments[0])
                     .deletingLastPathComponent()
                     .deletingLastPathComponent()
                     .deletingLastPathComponent()
                     .deletingLastPathComponent()
                     .appendingPathComponent("backends.json").path,
-                // Common project paths
+                //Common project paths
                 "/Users/nikhil/Documents/StudioProjects/treehacks-26/backends.json",
-                // Fallback: current working directory
+                //Fallback: current working directory
                 FileManager.default.currentDirectoryPath + "/backends.json",
             ]
 
@@ -65,7 +65,7 @@ struct BackendConfig: Codable {
             }
 
             if !found {
-                // Try bundle as last resort
+                //Try bundle as last resort
                 guard let bundlePath = Bundle.main.path(forResource: "backends", ofType: "json") else {
                     print("❌ backends.json not found. Searched: \(searchPaths)")
                     return nil

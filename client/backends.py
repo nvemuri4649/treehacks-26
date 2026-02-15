@@ -16,7 +16,7 @@ import json
 import os
 import sys
 
-# Path to backends.json (at repo root)
+#Path to backends.json (at repo root)
 _CONFIG_PATH = os.path.join(os.path.dirname(__file__), "..", "backends.json")
 
 
@@ -41,17 +41,17 @@ def resolve_backend(backend_name: str | None, server_url: str | None) -> str:
 
     Returns the fully-resolved HTTP URL string.
     """
-    # 1. Explicit URL
+    #1. Explicit URL
     if server_url:
         return server_url.rstrip("/")
 
-    # 2. Named backend
+    #2. Named backend
     config = load_backends_config()
     name = backend_name or os.environ.get("ENCRYPTION_BACKEND") or config.get("default", "local")
     backends = config.get("backends", {})
 
     if name not in backends:
-        # Maybe it's a raw URL passed as --backend
+        #Maybe it's a raw URL passed as --backend
         if name.startswith("http://") or name.startswith("https://"):
             return name.rstrip("/")
         available = ", ".join(backends.keys()) or "(none configured)"
@@ -62,7 +62,7 @@ def resolve_backend(backend_name: str | None, server_url: str | None) -> str:
     entry = backends[name]
     url = entry.get("url", "")
 
-    # Handle RunPod URL template
+    #Handle RunPod URL template
     if entry.get("type") == "runpod":
         pod_id = os.environ.get("RUNPOD_POD_ID") or entry.get("pod_id", "")
         if not pod_id:

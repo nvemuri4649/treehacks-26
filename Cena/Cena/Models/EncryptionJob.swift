@@ -1,14 +1,14 @@
 //
-//  GlazingJob.swift
-//  Cena
+// EncryptionJob.swift
+// Cena
 //
-//  Represents a single image glazing job and its state
+// single image encryption job and its state
 //
 
 import Foundation
 import AppKit
 
-enum GlazingJobStatus {
+enum EncryptionJobStatus {
     case pending
     case generatingMask
     case protecting
@@ -17,10 +17,10 @@ enum GlazingJobStatus {
     case cancelled
 }
 
-class GlazingJob: ObservableObject, Identifiable {
+class EncryptionJob: ObservableObject, Identifiable {
     let id = UUID()
 
-    @Published var status: GlazingJobStatus = .pending
+    @Published var status: EncryptionJobStatus = .pending
     @Published var progress: Double = 0.0  // 0.0 to 1.0
     @Published var currentIteration: Int = 0
     @Published var totalIterations: Int = 200
@@ -37,15 +37,15 @@ class GlazingJob: ObservableObject, Identifiable {
     var maskImage: NSImage?
 
     enum MaskMode {
-        case autoFace       // Automatically detect faces
-        case fullImage      // Protect entire image
-        case manual(NSImage) // Use provided mask
+        case autoFace       // automatically detect faces
+        case fullImage      // protect entire image
+        case manual(NSImage) // use provided mask
     }
 
     enum JobSource {
-        case pasteboard     // From clipboard monitoring
-        case dragDrop       // From drag-and-drop to menu bar
-        case filePicker     // From manual file selection
+        case pasteboard     // from clipboard monitoring
+        case dragDrop       // from drag-and-drop to menu bar
+        case filePicker     // from manual file selection
     }
 
     init(image: NSImage, iterations: Int = 200, maskMode: MaskMode = .autoFace, source: JobSource = .pasteboard, intensity: Double = 1.0) {
@@ -57,13 +57,13 @@ class GlazingJob: ObservableObject, Identifiable {
         self.intensity = intensity
     }
 
-    /// Whether the job is still pending
+    /// whether the job is still pending
     var isPending: Bool {
         if case .pending = status { return true }
         return false
     }
 
-    /// Calculate estimated time remaining based on current progress
+    /// estimated time remaining based on current progress
     func estimatedTimeRemaining() -> String {
         guard let startTime = startTime, progress > 0.01 else {
             return "Calculating..."
@@ -82,13 +82,13 @@ class GlazingJob: ObservableObject, Identifiable {
         }
     }
 
-    /// Update progress based on current iteration
+    /// update progress based on current iteration
     func updateProgress(iteration: Int) {
         self.currentIteration = iteration
         self.progress = Double(iteration) / Double(totalIterations)
     }
 
-    /// Mark job as completed successfully
+    /// mark job as completed successfully
     func complete(with protectedImage: NSImage) {
         self.protectedImage = protectedImage
         self.status = .completed
@@ -96,20 +96,20 @@ class GlazingJob: ObservableObject, Identifiable {
         self.endTime = Date()
     }
 
-    /// Mark job as failed with error
+    /// mark job as failed with error
     func fail(with error: Error) {
         self.status = .failed(error)
         self.endTime = Date()
     }
 
-    /// Cancel the job
+    /// cancel the job
     func cancel() {
         self.status = .cancelled
         self.endTime = Date()
     }
 }
 
-enum GlazingError: LocalizedError {
+enum EncryptionError: LocalizedError {
     case invalidImage
     case invalidMask
     case invalidResponse

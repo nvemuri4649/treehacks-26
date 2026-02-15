@@ -48,9 +48,9 @@ class AdversarialReport:
         return round(1.0 - self.risk_score, 3)
 
 
-# ---------------------------------------------------------------------------
-# Quasi-identifier type sets
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Quasi-identifier type sets
+#---------------------------------------------------------------------------
 
 _QUASI_ID_COMBOS: list[frozenset[str]] = [
     frozenset({"DATE", "LOCATION", "DEMOGRAPHIC"}),
@@ -63,7 +63,7 @@ _QUASI_ID_COMBOS: list[frozenset[str]] = [
     frozenset({"PERSON", "DATE", "LOCATION"}),
 ]
 
-# Types that are directly identifying — BLUR is never safe
+#Types that are directly identifying — BLUR is never safe
 _DIRECT_IDENTIFIERS: frozenset[str] = frozenset({
     "PERSON",
     "EMAIL",
@@ -77,9 +77,9 @@ _DIRECT_IDENTIFIERS: frozenset[str] = frozenset({
 })
 
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Public API
+#---------------------------------------------------------------------------
 
 
 def analyze(
@@ -97,7 +97,7 @@ def analyze(
     escalated: set[int] = set()
     risk_components: list[float] = []
 
-    # ── 1. Check directly-identifying singletons ─────────────────────
+    #── 1. Check directly-identifying singletons ─────────────────────
     for i, ss in enumerate(scored_spans):
         if ss.span.pii_type in _DIRECT_IDENTIFIERS and ss.action == "BLUR":
             risk_components.append(0.40)
@@ -107,7 +107,7 @@ def analyze(
                 f"merely blurred — escalating to REDACT."
             )
 
-    # ── 2. Quasi-identifier combination check ────────────────────────
+    #── 2. Quasi-identifier combination check ────────────────────────
     exposed_types: set[str] = set()
     exposed_type_indices: dict[str, list[int]] = {}
     for i, ss in enumerate(scored_spans):
@@ -124,13 +124,13 @@ def analyze(
                 f"Quasi-identifier combination [{combo_str}] detected — "
                 f"together these can narrow re-identification significantly."
             )
-            # Escalate the BLUR members of this combo
+            #Escalate the BLUR members of this combo
             for pii_type in combo:
                 for idx in exposed_type_indices.get(pii_type, []):
                     if scored_spans[idx].action == "BLUR":
                         escalated.add(idx)
 
-    # ── 3. Information density check ─────────────────────────────────
+    #── 3. Information density check ─────────────────────────────────
     total = len(scored_spans)
     exposed_count = sum(1 for ss in scored_spans if ss.action in ("BLUR", "KEEP"))
 
@@ -142,9 +142,9 @@ def analyze(
             f"remain partially exposed — cumulative inference risk is elevated."
         )
 
-    # ── 4. Compute overall risk score ────────────────────────────────
+    #── 4. Compute overall risk score ────────────────────────────────
     if risk_components:
-        # Combine probabilities: P(A∪B) = 1 − Π(1−pᵢ)
+        #Combine probabilities: P(A∪B) = 1 − Π(1−pᵢ)
         product = 1.0
         for r in risk_components:
             product *= 1.0 - min(r, 1.0)

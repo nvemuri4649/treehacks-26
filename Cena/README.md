@@ -18,17 +18,17 @@ cd Cena
 swift build -c release          # or open Package.swift in Xcode, Cmd+R
 ```
 
-Requires macOS 13+ and a running glazing backend (see root README).
+Requires macOS 13+ and a running encryption backend (see root README).
 
 ## Structure
 
 ```
 App/           — Entry point, AppState, MenuBarController
-Services/      — BackendService (HTTP), PasteboardMonitor, MaskGenerator (Vision), GlazingQueue
-UI/            — OverlayWindow (translucent HUD), GlazingProgressView, ApprovalDialog, SettingsView
-Models/        — BackendConfig, GlazingJob, Settings
+Services/      — BackendService (HTTP), PasteboardMonitor, MaskGenerator (Vision), EncryptionQueue
+UI/            — OverlayWindow (translucent HUD), EncryptionProgressView, ApprovalDialog, SettingsView
+Models/        — BackendConfig, EncryptionJob, Settings
 ```
 
 ## Configuration
 
-Settings stored in `~/Library/Application Support/Cena/config.json`. Backend resolved from `backends.json` in project root. Glazing strength: Low (100 iters), Medium (200), High (500), Maximum (1000).
+Settings stored in `~/Library/Application Support/Cena/config.json`. Backend resolved from `backends.json` in project root. Encryption strength: Low (100 iters), Medium (200), High (500), Maximum (1000).

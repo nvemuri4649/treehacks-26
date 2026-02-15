@@ -1,8 +1,8 @@
 //
-//  MaskGenerator.swift
-//  Cena
+// MaskGenerator.swift
+// Cena
 //
-//  Automatic mask generation using Apple Vision framework for face detection
+// Automatic mask generation using Apple Vision framework for face detection
 //
 
 import Foundation
@@ -11,22 +11,22 @@ import Vision
 
 class MaskGenerator {
 
-    // MARK: - Face Detection
+    //MARK: - Face Detection
 
     /// Generate a mask with white rectangles for detected faces, black background
     /// - Parameter image: Input image to detect faces in
     /// - Returns: Binary mask image (white = protect, black = ignore)
     static func generateFaceMask(for image: NSImage) async throws -> NSImage {
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-            throw GlazingError.invalidImage
+            throw EncryptionError.invalidImage
         }
 
         print("🔍 Detecting faces in image...")
 
-        // Create face detection request
+        //Create face detection request
         let request = VNDetectFaceRectanglesRequest()
 
-        // Perform request
+        //Perform request
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
         try handler.perform([request])
 
@@ -37,7 +37,7 @@ class MaskGenerator {
 
         print("✅ Detected \(results.count) face(s)")
 
-        // Create mask image with face rectangles
+        //Create mask image with face rectangles
         return drawFaceMask(faces: results, imageSize: image.size, cgImage: cgImage)
     }
 
@@ -48,7 +48,7 @@ class MaskGenerator {
     /// - Returns: Binary mask image with expanded face regions
     static func generateExpandedFaceMask(for image: NSImage, padding: CGFloat = 0.3) async throws -> NSImage {
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-            throw GlazingError.invalidImage
+            throw EncryptionError.invalidImage
         }
 
         print("🔍 Detecting faces with \(Int(padding * 100))% padding...")
@@ -64,7 +64,7 @@ class MaskGenerator {
 
         print("✅ Detected \(results.count) face(s)")
 
-        // Expand face rectangles
+        //Expand face rectangles
         let expandedFaces = results.map { face -> VNFaceObservation in
             let bbox = face.boundingBox
             let centerX = bbox.midX
@@ -72,20 +72,20 @@ class MaskGenerator {
             let newWidth = bbox.width * (1.0 + padding)
             let newHeight = bbox.height * (1.0 + padding)
 
-            // Create new bounding box (clamped to 0-1)
+            //Create new bounding box (clamped to 0-1)
             let newX = max(0, centerX - newWidth / 2)
             let newY = max(0, centerY - newHeight / 2)
             let _ = min(newWidth, 1.0 - newX)
             let _ = min(newHeight, 1.0 - newY)
 
-            // Note: We can't directly modify VNFaceObservation, so we'll pass the expanded rect separately
+            //Note: We can't directly modify VNFaceObservation, so we'll pass the expanded rect separately
             return face
         }
 
         return drawFaceMask(faces: expandedFaces, imageSize: image.size, cgImage: cgImage, padding: padding)
     }
 
-    // MARK: - Full Image Mask
+    //MARK: - Full Image Mask
 
     /// Create a mask that covers the entire image (all white)
     /// - Parameter size: Size of the mask image
@@ -102,7 +102,7 @@ class MaskGenerator {
         return maskImage
     }
 
-    // MARK: - Drawing Helpers
+    //MARK: - Drawing Helpers
 
     /// Draw white rectangles for detected faces on black background using CGContext
     private static func drawFaceMask(
@@ -111,7 +111,7 @@ class MaskGenerator {
         cgImage: CGImage,
         padding: CGFloat = 0.0
     ) -> NSImage {
-        // Use actual pixel dimensions from the CGImage for reliable rendering
+        //Use actual pixel dimensions from the CGImage for reliable rendering
         let pixelWidth = cgImage.width
         let pixelHeight = cgImage.height
 
@@ -129,17 +129,17 @@ class MaskGenerator {
             return createFullMask(size: imageSize)
         }
 
-        // Black background
+        //Black background
         ctx.setFillColor(gray: 0, alpha: 1)
         ctx.fill(CGRect(x: 0, y: 0, width: pixelWidth, height: pixelHeight))
 
-        // White rectangles for faces
+        //White rectangles for faces
         ctx.setFillColor(gray: 1, alpha: 1)
 
         for face in faces {
             var bbox = face.boundingBox
 
-            // Apply padding if specified
+            //Apply padding if specified
             if padding > 0 {
                 let centerX = bbox.midX
                 let centerY = bbox.midY
@@ -152,8 +152,8 @@ class MaskGenerator {
                 bbox.size.height = min(newHeight, 1.0 - bbox.origin.y)
             }
 
-            // Convert normalized Vision coordinates (bottom-left origin, 0-1)
-            // to pixel coordinates (CGContext also uses bottom-left origin)
+            //Convert normalized Vision coordinates (bottom-left origin, 0-1)
+            //to pixel coordinates (CGContext also uses bottom-left origin)
             let x = bbox.origin.x * CGFloat(pixelWidth)
             let y = bbox.origin.y * CGFloat(pixelHeight)
             let w = bbox.size.width * CGFloat(pixelWidth)
@@ -174,19 +174,19 @@ class MaskGenerator {
         return maskImage
     }
 
-    // MARK: - Advanced Face Detection (with landmarks)
+    //MARK: - Advanced Face Detection (with landmarks)
 
     /// Generate mask using face landmarks for more precise protection
     /// - Parameter image: Input image
     /// - Returns: Mask with face contours (more precise than rectangles)
     static func generateLandmarkMask(for image: NSImage) async throws -> NSImage {
         guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-            throw GlazingError.invalidImage
+            throw EncryptionError.invalidImage
         }
 
         print("🔍 Detecting face landmarks...")
 
-        // Create face landmarks request
+        //Create face landmarks request
         let request = VNDetectFaceLandmarksRequest()
 
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
@@ -204,7 +204,7 @@ class MaskGenerator {
 
     /// Draw mask using face landmarks (more precise) via CGContext
     private static func drawLandmarkMask(faces: [VNFaceObservation], imageSize: CGSize) -> NSImage {
-        // Default to reasonable pixel dimensions
+        //Default to reasonable pixel dimensions
         let pixelWidth = Int(imageSize.width)
         let pixelHeight = Int(imageSize.height)
 
@@ -221,11 +221,11 @@ class MaskGenerator {
             return createFullMask(size: imageSize)
         }
 
-        // Black background
+        //Black background
         ctx.setFillColor(gray: 0, alpha: 1)
         ctx.fill(CGRect(x: 0, y: 0, width: pixelWidth, height: pixelHeight))
 
-        // White ellipses for faces
+        //White ellipses for faces
         ctx.setFillColor(gray: 1, alpha: 1)
 
         for face in faces {
@@ -246,7 +246,7 @@ class MaskGenerator {
         return NSImage(cgImage: maskCGImage, size: imageSize)
     }
 
-    // MARK: - Mask Validation
+    //MARK: - Mask Validation
 
     /// Validate that a mask is suitable for protection
     /// - Parameter mask: Mask image to validate
@@ -264,7 +264,7 @@ class MaskGenerator {
         let width = cgImage.width
         let height = cgImage.height
 
-        // Count white pixels (value > 200)
+        //Count white pixels (value > 200)
         var whitePixelCount = 0
         let sampleRate = 10  // Check every 10th pixel for speed
 
@@ -285,7 +285,7 @@ class MaskGenerator {
 
         print("🎭 Mask validation: \(Int(whitePercentage))% white pixels")
 
-        // Mask should have at least 1% white pixels
+        //Mask should have at least 1% white pixels
         return whitePercentage >= 1.0
     }
 }

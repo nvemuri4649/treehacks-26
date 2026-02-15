@@ -20,7 +20,7 @@ import logging
 import requests
 from PIL import Image
 
-from config.settings import GLAZE_SERVER_URL, GLAZE_DEFAULT_ITERS
+from config.settings import ENCRYPTION_SERVER_URL, ENCRYPTION_DEFAULT_ITERS
 
 logger = logging.getLogger(__name__)
 
@@ -55,35 +55,35 @@ def transform(image_bytes: bytes, mime_type: str) -> bytes:
     unreachable (to avoid blocking the chat pipeline).
     """
     try:
-        # Create a full-image mask (protect everything)
+        #Create a full-image mask (protect everything)
         mask_bytes = _create_full_mask(image_bytes)
 
-        # Determine file extension from mime type
+        #Determine file extension from mime type
         ext = "png" if "png" in mime_type else "jpg"
 
-        # Send to the encryption server
+        #Send to the encryption server
         logger.info(
-            "Sending image to glazing server at %s (%d iterations)",
-            GLAZE_SERVER_URL,
-            GLAZE_DEFAULT_ITERS,
+            "Sending image to encryption server at %s (%d iterations)",
+            ENCRYPTION_SERVER_URL,
+            ENCRYPTION_DEFAULT_ITERS,
         )
 
         response = requests.post(
-            f"{GLAZE_SERVER_URL}/protect",
+            f"{ENCRYPTION_SERVER_URL}/protect",
             files={
                 "image": (f"upload.{ext}", io.BytesIO(image_bytes), mime_type),
                 "mask": ("mask.png", io.BytesIO(mask_bytes), "image/png"),
             },
-            params={"iters": GLAZE_DEFAULT_ITERS},
-            timeout=600,  # 10 min max for heavy glazing
+            params={"iters": ENCRYPTION_DEFAULT_ITERS},
+            timeout=600,  # 10 min max for encryption
         )
 
         if response.status_code == 200:
-            logger.info("Image glazed successfully (%d bytes)", len(response.content))
+            logger.info("Image encrypted successfully (%d bytes)", len(response.content))
             return response.content
         else:
             logger.warning(
-                "Glazing server returned %d: %s — falling back to original",
+                "Encryption server returned %d: %s — falling back to original",
                 response.status_code,
                 response.text[:200],
             )
@@ -91,11 +91,11 @@ def transform(image_bytes: bytes, mime_type: str) -> bytes:
 
     except requests.ConnectionError:
         logger.warning(
-            "Cannot reach glazing server at %s — passing image through unglazed",
-            GLAZE_SERVER_URL,
+            "Cannot reach encryption server at %s — passing image through unencrypted",
+            ENCRYPTION_SERVER_URL,
         )
         return image_bytes
 
     except Exception as e:
-        logger.error("Image glazing failed: %s — passing through unglazed", e)
+        logger.error("Image encryption failed: %s — passing through unencrypted", e)
         return image_bytes

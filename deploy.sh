@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 #
-# Deploy Cena encryption server to a GPU backend
-# ===============================================
+#Deploy Cena encryption server to a GPU backend
+#===============================================
 #
-# Usage:
-#   ./deploy.sh gx10   <user>@<host>             Deploy to ASUS Ascent GX10
-#   ./deploy.sh runpod  <ssh-args>                Deploy to RunPod GPU pod
-#   ./deploy.sh ssh     <user>@<host>             Deploy to any SSH-accessible GPU box
+#Usage:
+#  ./deploy.sh gx10   <user>@<host>             Deploy to ASUS Ascent GX10
+#  ./deploy.sh runpod  <ssh-args>                Deploy to RunPod GPU pod
+#  ./deploy.sh ssh     <user>@<host>             Deploy to any SSH-accessible GPU box
 #
-# Examples:
-#   ./deploy.sh gx10   nikhil@spark-abcd.local
-#   ./deploy.sh runpod  -p 22177 root@ssh.runpod.io
-#   ./deploy.sh ssh     ubuntu@my-gpu-server.com
+#Examples:
+#  ./deploy.sh gx10   nikhil@spark-abcd.local
+#  ./deploy.sh runpod  -p 22177 root@ssh.runpod.io
+#  ./deploy.sh ssh     ubuntu@my-gpu-server.com
 #
 set -euo pipefail
 
@@ -40,9 +40,9 @@ SSH_ARGS="$@"
 REMOTE_DIR="cena_encryption"
 PIP_DEPS="diffusers==0.24.0 transformers datasets huggingface-hub numpy omegaconf opencv-contrib-python scikit-learn tqdm hydra-core flask pillow"
 
-# -----------------------------------------------------------------------
-# Helper: copy server code via SSH pipe (works with any SSH config)
-# -----------------------------------------------------------------------
+#-----------------------------------------------------------------------
+#Helper: copy server code via SSH pipe (works with any SSH config)
+#-----------------------------------------------------------------------
 copy_server_code() {
     local ssh_args="$1"
     local remote_dir="$2"
@@ -59,9 +59,9 @@ clone_encryption_engine() {
     ssh $ssh_args "cd $remote_dir && [ -d DiffusionGuard ] || git clone https://github.com/choi403/DiffusionGuard.git"
 }
 
-# -----------------------------------------------------------------------
-# GX10 deploy (Docker-based)
-# -----------------------------------------------------------------------
+#-----------------------------------------------------------------------
+#GX10 deploy (Docker-based)
+#-----------------------------------------------------------------------
 deploy_gx10() {
     local remote="$REMOTE_DIR"
     echo "=== Deploying to GX10 ($SSH_ARGS) ==="
@@ -87,12 +87,12 @@ deploy_gx10() {
     echo "  docker exec -it cena bash -c 'cd /workspace/project/server && python app.py'"
     echo ""
     echo "Then from your laptop:"
-    echo "  python client/glaze.py --image photo.png --mask mask.png --backend gx10"
+    echo "  python client/encrypt.py --image photo.png --mask mask.png --backend gx10"
 }
 
-# -----------------------------------------------------------------------
-# RunPod deploy (direct install, no Docker)
-# -----------------------------------------------------------------------
+#-----------------------------------------------------------------------
+#RunPod deploy (direct install, no Docker)
+#-----------------------------------------------------------------------
 deploy_runpod() {
     local remote="/workspace/$REMOTE_DIR"
     echo "=== Deploying to RunPod ($SSH_ARGS) ==="
@@ -117,12 +117,12 @@ deploy_runpod() {
     echo ""
     echo "  1. Get your pod ID from runpod.io dashboard"
     echo "  2. export RUNPOD_POD_ID=<pod-id>"
-    echo "  3. python client/glaze.py --image photo.png --mask mask.png --backend runpod"
+    echo "  3. python client/encrypt.py --image photo.png --mask mask.png --backend runpod"
 }
 
-# -----------------------------------------------------------------------
-# Generic SSH deploy (any machine with GPU)
-# -----------------------------------------------------------------------
+#-----------------------------------------------------------------------
+#Generic SSH deploy (any machine with GPU)
+#-----------------------------------------------------------------------
 deploy_ssh() {
     local remote="~/$REMOTE_DIR"
     echo "=== Deploying to remote GPU ($SSH_ARGS) ==="
@@ -140,12 +140,12 @@ deploy_ssh() {
     echo "  ssh $SSH_ARGS 'cd ~/$REMOTE_DIR/server && python app.py'"
     echo ""
     echo "Then from your laptop:"
-    echo "  python client/glaze.py --image photo.png --mask mask.png --server http://<host>:5000"
+    echo "  python client/encrypt.py --image photo.png --mask mask.png --server http://<host>:5000"
 }
 
-# -----------------------------------------------------------------------
-# Dispatch
-# -----------------------------------------------------------------------
+#-----------------------------------------------------------------------
+#Dispatch
+#-----------------------------------------------------------------------
 case "$TARGET_TYPE" in
     gx10)   deploy_gx10   ;;
     runpod) deploy_runpod  ;;

@@ -32,9 +32,9 @@ from deepfake.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Data models
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Data models
+#---------------------------------------------------------------------------
 
 @dataclass
 class VisionAnalysisResult:
@@ -81,7 +81,7 @@ class DeepfakeAnalysisResult:
     metadata: MetadataAnalysisResult | None = None
     frequency: FrequencyAnalysisResult | None = None
 
-    # Source info
+    #Source info
     image_path: str = ""
     source_url: str = ""
 
@@ -97,9 +97,9 @@ class DeepfakeAnalysisResult:
             return "low"
 
 
-# ---------------------------------------------------------------------------
-# Signal 1: Claude Vision Analysis
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Signal 1: Claude Vision Analysis
+#---------------------------------------------------------------------------
 
 VISION_ANALYSIS_PROMPT = """You are an expert forensic analyst specializing in detecting AI-generated and deepfake images. Analyze this image carefully for signs that it is AI-generated, a face swap, or otherwise synthetically manipulated.
 
@@ -149,12 +149,12 @@ class VisionAnalyzer:
         logger.info("Vision analysis: %s", image_path)
         client = self._get_client()
 
-        # Read and encode image
+        #Read and encode image
         path = Path(image_path)
         with open(path, "rb") as f:
             image_data = base64.b64encode(f.read()).decode("utf-8")
 
-        # Determine media type
+        #Determine media type
         suffix = path.suffix.lower()
         media_types = {
             ".jpg": "image/jpeg",
@@ -191,7 +191,7 @@ class VisionAnalyzer:
             )
 
             raw_text = response.content[0].text
-            # Parse JSON from response (handle potential markdown wrapping)
+            #Parse JSON from response (handle potential markdown wrapping)
             json_text = raw_text
             if "```json" in json_text:
                 json_text = json_text.split("```json")[1].split("```")[0]
@@ -225,13 +225,13 @@ class VisionAnalyzer:
             )
 
 
-# ---------------------------------------------------------------------------
-# Signal 2: EXIF / Metadata Analysis
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Signal 2: EXIF / Metadata Analysis
+#---------------------------------------------------------------------------
 
-# Known AI tool metadata signatures
+#Known AI tool metadata signatures
 _AI_SIGNATURES = {
-    # Software / tool indicators
+    #Software / tool indicators
     "stable diffusion": "Stable Diffusion",
     "dall-e": "DALL-E",
     "dall·e": "DALL-E",
@@ -249,7 +249,7 @@ _AI_SIGNATURES = {
     "reface": "Reface",
 }
 
-# Camera EXIF tags that indicate authentic photography
+#Camera EXIF tags that indicate authentic photography
 _CAMERA_TAGS = {"Make", "Model", "LensModel", "FocalLength", "ExposureTime", "ISOSpeedRatings"}
 
 
@@ -283,15 +283,15 @@ class MetadataAnalyzer:
             logger.warning("Cannot open image for metadata analysis: %s", e)
             return result
 
-        # Extract all EXIF data
+        #Extract all EXIF data
         exif_data = self._extract_exif(img)
         result.raw_metadata = exif_data
 
-        # Check for camera EXIF (authentic photography indicator)
+        #Check for camera EXIF (authentic photography indicator)
         camera_tags_found = set(exif_data.keys()) & _CAMERA_TAGS
         result.has_camera_exif = len(camera_tags_found) >= 2
 
-        # Check for AI generation signatures
+        #Check for AI generation signatures
         all_values_str = " ".join(str(v).lower() for v in exif_data.values())
         for pattern, tool_name in _AI_SIGNATURES.items():
             if pattern in all_values_str:
@@ -300,7 +300,7 @@ class MetadataAnalyzer:
                 result.suspicious_fields.append(f"AI signature detected: {tool_name}")
                 break
 
-        # Check PNG text chunks (ComfyUI, A1111 embed workflow data here)
+        #Check PNG text chunks (ComfyUI, A1111 embed workflow data here)
         if path.suffix.lower() == ".png":
             png_text = self._extract_png_text(img)
             result.raw_metadata["_png_text_chunks"] = list(png_text.keys())
@@ -315,18 +315,18 @@ class MetadataAnalyzer:
                     )
                     break
 
-            # ComfyUI-specific: look for "prompt" or "workflow" keys
+            #ComfyUI-specific: look for "prompt" or "workflow" keys
             if "prompt" in png_text or "workflow" in png_text:
                 result.has_ai_signatures = True
                 result.ai_tool_detected = result.ai_tool_detected or "ComfyUI"
                 result.suspicious_fields.append("ComfyUI workflow data found in PNG")
 
-        # Check if EXIF is completely stripped (suspicious for social media repost)
+        #Check if EXIF is completely stripped (suspicious for social media repost)
         if not exif_data and path.suffix.lower() in (".jpg", ".jpeg"):
             result.exif_stripped = True
             result.suspicious_fields.append("All EXIF data stripped (common in AI images)")
 
-        # Compute metadata score
+        #Compute metadata score
         result.score = self._compute_score(result)
 
         return result
@@ -374,9 +374,9 @@ class MetadataAnalyzer:
         return min(1.0, max(0.0, score))
 
 
-# ---------------------------------------------------------------------------
-# Signal 3: Frequency Domain (DCT) Analysis
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Signal 3: Frequency Domain (DCT) Analysis
+#---------------------------------------------------------------------------
 
 class FrequencyAnalyzer:
     """
@@ -407,7 +407,7 @@ class FrequencyAnalyzer:
             logger.warning("Cannot load image for frequency analysis: %s", e)
             return FrequencyAnalysisResult(score=0.5, details=f"Load error: {e}")
 
-        # Resize to standard size for consistent analysis
+        #Resize to standard size for consistent analysis
         from PIL import Image as PILImage
         if img_array.shape[0] != 256 or img_array.shape[1] != 256:
             img_resized = Image.fromarray(img_array.astype(np.uint8)).resize(
@@ -415,22 +415,22 @@ class FrequencyAnalyzer:
             )
             img_array = np.array(img_resized, dtype=np.float64)
 
-        # Compute 2D DCT via FFT
+        #Compute 2D DCT via FFT
         spectrum = np.fft.fft2(img_array)
         spectrum_shifted = np.fft.fftshift(spectrum)
         magnitude = np.abs(spectrum_shifted)
         log_magnitude = np.log1p(magnitude)
 
-        # Compute spectral energy distribution
+        #Compute spectral energy distribution
         h, w = log_magnitude.shape
         center_y, center_x = h // 2, w // 2
 
-        # Create radial distance map
+        #Create radial distance map
         y_coords, x_coords = np.ogrid[:h, :w]
         distances = np.sqrt((y_coords - center_y) ** 2 + (x_coords - center_x) ** 2)
         max_radius = math.sqrt(center_x ** 2 + center_y ** 2)
 
-        # Divide spectrum into low (inner 30%), mid (30-70%), high (outer 30%) frequency bands
+        #Divide spectrum into low (inner 30%), mid (30-70%), high (outer 30%) frequency bands
         low_mask = distances <= (max_radius * 0.3)
         mid_mask = (distances > max_radius * 0.3) & (distances <= max_radius * 0.7)
         high_mask = distances > max_radius * 0.7
@@ -446,13 +446,13 @@ class FrequencyAnalyzer:
         high_ratio = high_energy / total_energy
         low_ratio = low_energy / total_energy
 
-        # Detect periodic artifacts: look for isolated peaks in the spectrum
+        #Detect periodic artifacts: look for isolated peaks in the spectrum
         has_periodic = self._detect_periodic_artifacts(log_magnitude, center_y, center_x)
 
-        # Detect spectral gap: GAN images often have a gap between mid and high frequencies
+        #Detect spectral gap: GAN images often have a gap between mid and high frequencies
         has_gap = self._detect_spectral_gap(log_magnitude, distances, max_radius)
 
-        # Compute score
+        #Compute score
         score = self._compute_score(high_ratio, low_ratio, has_periodic, has_gap)
 
         return FrequencyAnalysisResult(
@@ -478,7 +478,7 @@ class FrequencyAnalyzer:
         Detect periodic artifacts by looking for isolated peaks
         in the frequency spectrum (excluding DC component).
         """
-        # Mask out the central DC component region
+        #Mask out the central DC component region
         h, w = log_mag.shape
         masked = log_mag.copy()
         dc_radius = min(h, w) // 20
@@ -486,18 +486,18 @@ class FrequencyAnalyzer:
         dc_mask = (y_coords - center_y) ** 2 + (x_coords - center_x) ** 2 <= dc_radius ** 2
         masked[dc_mask] = 0
 
-        # Look for peaks significantly above the mean
+        #Look for peaks significantly above the mean
         mean_val = np.mean(masked[masked > 0]) if np.any(masked > 0) else 0
         std_val = np.std(masked[masked > 0]) if np.any(masked > 0) else 1
 
         if std_val == 0:
             return False
 
-        # Count peaks more than 4 standard deviations above mean
+        #Count peaks more than 4 standard deviations above mean
         threshold = mean_val + 4.0 * std_val
         peak_count = np.sum(masked > threshold)
 
-        # Periodic artifacts would create multiple symmetric peaks
+        #Periodic artifacts would create multiple symmetric peaks
         return peak_count > 8
 
     def _detect_spectral_gap(
@@ -512,7 +512,7 @@ class FrequencyAnalyzer:
         GANs sometimes produce images with sharp drop-offs in energy
         at certain frequency bands.
         """
-        # Compute radial energy profile (average energy per radius band)
+        #Compute radial energy profile (average energy per radius band)
         num_bins = 50
         bin_edges = np.linspace(0, max_radius, num_bins + 1)
         radial_energy = np.zeros(num_bins)
@@ -522,7 +522,7 @@ class FrequencyAnalyzer:
             if np.any(mask):
                 radial_energy[i] = np.mean(log_mag[mask])
 
-        # Smooth the profile
+        #Smooth the profile
         kernel_size = 3
         if len(radial_energy) >= kernel_size:
             kernel = np.ones(kernel_size) / kernel_size
@@ -530,7 +530,7 @@ class FrequencyAnalyzer:
         else:
             smoothed = radial_energy
 
-        # Look for sharp drops (> 60% decrease between adjacent bins)
+        #Look for sharp drops (> 60% decrease between adjacent bins)
         for i in range(1, len(smoothed) - 1):
             if smoothed[i - 1] > 0:
                 drop_ratio = smoothed[i] / smoothed[i - 1]
@@ -549,34 +549,34 @@ class FrequencyAnalyzer:
         """Compute frequency-based deepfake probability score."""
         score = 0.3  # Base neutral-ish score
 
-        # GAN images typically have lower high-frequency energy
-        # Natural photos: high_ratio usually 0.05-0.15
-        # GAN images: high_ratio usually 0.01-0.06
+        #GAN images typically have lower high-frequency energy
+        #Natural photos: high_ratio usually 0.05-0.15
+        #GAN images: high_ratio usually 0.01-0.06
         if high_ratio < 0.03:
             score += 0.25  # Very low high-frequency content
         elif high_ratio < 0.05:
             score += 0.10  # Somewhat low
 
-        # Concentrated low-frequency energy
+        #Concentrated low-frequency energy
         if low_ratio > 0.7:
             score += 0.15
 
-        # Periodic artifacts are strong GAN indicators
+        #Periodic artifacts are strong GAN indicators
         if has_periodic:
             score += 0.30
 
-        # Spectral gap is suggestive
+        #Spectral gap is suggestive
         if has_gap:
             score += 0.15
 
         return min(1.0, max(0.0, score))
 
 
-# ---------------------------------------------------------------------------
-# Combined Deepfake Detector
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Combined Deepfake Detector
+#---------------------------------------------------------------------------
 
-# Signal weights for the ensemble
+#Signal weights for the ensemble
 WEIGHT_VISION = 0.50
 WEIGHT_METADATA = 0.20
 WEIGHT_FREQUENCY = 0.30
@@ -616,16 +616,16 @@ class DeepfakeDetector:
         async with self._semaphore:
             logger.info("Full deepfake analysis: %s", image_path)
 
-            # Run metadata and frequency analysis synchronously (fast)
+            #Run metadata and frequency analysis synchronously (fast)
             meta_result = self.metadata.analyze(image_path)
             freq_result = self.frequency.analyze(image_path)
 
-            # Run vision analysis asynchronously (slower, costs API call)
+            #Run vision analysis asynchronously (slower, costs API call)
             vision_result = None
             if not skip_vision:
                 vision_result = await self.vision.analyze(image_path)
 
-            # Compute weighted ensemble score
+            #Compute weighted ensemble score
             if vision_result:
                 vision_score = vision_result.confidence if vision_result.is_likely_deepfake else (1.0 - vision_result.confidence)
                 ensemble = (
@@ -634,7 +634,7 @@ class DeepfakeDetector:
                     + WEIGHT_FREQUENCY * freq_result.score
                 )
             else:
-                # Without vision, re-weight metadata and frequency
+                #Without vision, re-weight metadata and frequency
                 adjusted_meta_weight = WEIGHT_METADATA / (WEIGHT_METADATA + WEIGHT_FREQUENCY)
                 adjusted_freq_weight = WEIGHT_FREQUENCY / (WEIGHT_METADATA + WEIGHT_FREQUENCY)
                 ensemble = (

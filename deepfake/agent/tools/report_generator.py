@@ -80,7 +80,7 @@ async def generate_report(args: dict[str, Any]) -> dict[str, Any]:
 
     logger.info("Tool: generate_report(scan_id=%s, findings=%d)", scan_id, len(findings))
 
-    # Determine overall threat level
+    #Determine overall threat level
     if not findings:
         overall_threat = "none"
         overall_message = (
@@ -114,14 +114,14 @@ async def generate_report(args: dict[str, Any]) -> dict[str, Any]:
                 f"but are likely authentic."
             )
 
-    # Sort findings by deepfake probability descending
+    #Sort findings by deepfake probability descending
     sorted_findings = sorted(
         findings,
         key=lambda f: f.get("deepfake_probability", 0),
         reverse=True,
     )
 
-    # Build the report
+    #Build the report
     report = {
         "scan_id": scan_id,
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -141,7 +141,7 @@ async def generate_report(args: dict[str, Any]) -> dict[str, Any]:
         "findings": sorted_findings,
     }
 
-    # Save report to disk
+    #Save report to disk
     report_path = settings.output_dir / f"report_{scan_id}.json"
     try:
         with open(report_path, "w") as f:

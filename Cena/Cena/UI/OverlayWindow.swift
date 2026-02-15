@@ -1,8 +1,8 @@
 //
-//  OverlayWindow.swift
-//  Cena
+// OverlayWindow.swift
+// Cena
 //
-//  Translucent system overlay window for displaying glazing progress
+// translucent overlay for encryption progress
 //
 
 import AppKit
@@ -18,23 +18,23 @@ class OverlayWindow: NSPanel {
             defer: false
         )
 
-        // Window configuration
+        //Window configuration
         self.level = .floating  // Float above other windows
         self.isOpaque = false
         self.backgroundColor = .clear
         self.hasShadow = true
         self.isMovableByWindowBackground = true
 
-        // Allow window to appear on all spaces
+        //Allow window to appear on all spaces
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary]
 
-        // Set content view
+        //Set content view
         self.contentView = contentView
 
-        // Center on screen
+        //Center on screen
         self.center()
 
-        // Animate in
+        //Animate in
         self.alphaValue = 0
         self.animator().alphaValue = 1
     }
@@ -64,7 +64,7 @@ class OverlayWindow: NSPanel {
     }
 }
 
-// MARK: - Visual Effect View (for vibrancy)
+//MARK: - Visual Effect View (for vibrancy)
 
 class VisualEffectView: NSVisualEffectView {
     init(material: NSVisualEffectView.Material = .hudWindow, blendingMode: NSVisualEffectView.BlendingMode = .behindWindow) {
@@ -79,7 +79,7 @@ class VisualEffectView: NSVisualEffectView {
     }
 }
 
-// MARK: - SwiftUI Bridge
+//MARK: - SwiftUI Bridge
 
 struct VisualEffectViewRepresentable: NSViewRepresentable {
     let material: NSVisualEffectView.Material

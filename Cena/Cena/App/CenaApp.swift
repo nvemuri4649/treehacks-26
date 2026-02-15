@@ -1,8 +1,8 @@
 //
-//  CenaApp.swift
-//  Cena
+// CenaApp.swift
+// Cena
 //
-//  Main application entry point
+// Main application entry point
 //
 
 import SwiftUI
@@ -13,7 +13,7 @@ struct CenaApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        // Menu bar only app — no main window
+        //Menu bar only app — no main window
         Window("Cena", id: "main") {
             EmptyView()
                 .frame(width: 0, height: 0)
@@ -31,24 +31,24 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("🚀 Cena starting...")
 
-        // Hide dock icon (menu bar app only)
+        //Hide dock icon (menu bar app only)
         NSApp.setActivationPolicy(.accessory)
 
-        // Initialize app state
+        //Initialize app state
         appState = AppState()
 
-        // Setup menu bar controller
+        //Setup menu bar controller
         menuBarController = MenuBarController(appState: appState)
 
-        // Setup notification center
+        //Setup notification center
         NSUserNotificationCenter.default.delegate = self
 
-        // Start pasteboard monitoring if enabled
+        //Start pasteboard monitoring if enabled
         if appState.settings.enabled && appState.settings.monitorPasteboard {
             appState.startPasteboardMonitoring()
         }
 
-        // Monitor for approval dialog
+        //Monitor for approval dialog
         setupApprovalDialogObserver()
 
         print("✅ Cena ready")
@@ -61,10 +61,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         appState.stopPasteboardMonitoring()
     }
 
-    // MARK: - Approval Dialog
+    //MARK: - Approval Dialog
 
     private func setupApprovalDialogObserver() {
-        // Poll on main RunLoop for approval dialog requests
+        //Poll on main RunLoop for approval dialog requests
         let t = Timer(timeInterval: 0.2, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 guard let self = self else { return }
@@ -105,7 +105,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         window.backgroundColor = .clear
         window.hasShadow = true
 
-        // Position at left-middle of screen
+        //Position at left-middle of screen
         MenuBarController.positionWindowLeftMiddle(window)
 
         let windowController = NSWindowController(window: window)
@@ -115,7 +115,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
 
         NSApp.activate(ignoringOtherApps: true)
 
-        // Auto-close when done
+        //Auto-close when done
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             if let window = windowController.window, !window.isVisible {
                 self.approvalWindowController = nil
@@ -130,8 +130,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
 
         switch option {
         case .once(let iterations, let maskMode, let intensity):
-            let mode: GlazingJob.MaskMode = maskMode == "auto_face" ? .autoFace : .fullImage
-            appState.startGlazingJob(
+            let mode: EncryptionJob.MaskMode = maskMode == "auto_face" ? .autoFace : .fullImage
+            appState.startEncryptionJob(
                 image: image,
                 iterations: iterations,
                 maskMode: mode,
@@ -145,8 +145,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
             appState.settings.defaultMaskMode = maskMode
             appState.settings.save()
 
-            let mode: GlazingJob.MaskMode = maskMode == "auto_face" ? .autoFace : .fullImage
-            appState.startGlazingJob(
+            let mode: EncryptionJob.MaskMode = maskMode == "auto_face" ? .autoFace : .fullImage
+            appState.startEncryptionJob(
                 image: image,
                 iterations: iterations,
                 maskMode: mode,
@@ -162,13 +162,13 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
         appState.currentPendingImage = nil
     }
 
-    // MARK: - Notification Delegate
+    //MARK: - Notification Delegate
 
     func userNotificationCenter(_ center: NSUserNotificationCenter, shouldPresent notification: NSUserNotification) -> Bool {
         return true  // Show notification even if app is active
     }
 
     func userNotificationCenter(_ center: NSUserNotificationCenter, didActivate notification: NSUserNotification) {
-        // Handle notification click if needed
+        //Handle notification click if needed
     }
 }

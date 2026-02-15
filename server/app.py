@@ -27,9 +27,7 @@ from flask import Flask, request, send_file, jsonify
 from omegaconf import OmegaConf
 from diffusers import StableDiffusionInpaintPipeline
 
-# ---------------------------------------------------------------------------
-# Ensure encryption engine repo is on the path
-# ---------------------------------------------------------------------------
+#encryption engine lives in a sibling dir (upstream implementation)
 ENCRYPTION_REPO = os.environ.get(
     "ENCRYPTION_REPO",
     os.path.join(os.path.dirname(__file__), "..", "DiffusionGuard"),
@@ -37,35 +35,29 @@ ENCRYPTION_REPO = os.environ.get(
 if os.path.isdir(ENCRYPTION_REPO):
     sys.path.insert(0, ENCRYPTION_REPO)
 else:
-    print(f"WARNING: Encryption engine repo not found at {ENCRYPTION_REPO}")
+    print(f"WARNING: encryption engine repo not found at {ENCRYPTION_REPO}")
     print("Clone it:  git clone https://github.com/choi403/DiffusionGuard.git")
     sys.exit(1)
 
 from attacks import protect_image  # noqa: E402
 from utils import overlay_images, get_mask_radius_list, tensor_to_pil_image  # noqa: E402
 
-# ---------------------------------------------------------------------------
-# Logging
-# ---------------------------------------------------------------------------
+#logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Flask app
-# ---------------------------------------------------------------------------
+#flask app
 app = Flask(__name__)
 
-# ---------------------------------------------------------------------------
-# Global model state (loaded once at startup)
-# ---------------------------------------------------------------------------
+#model state (loaded once at startup)
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 DTYPE = torch.float16 if DEVICE == "cuda" else torch.float32
 MODEL_ID = "runwayml/stable-diffusion-inpainting"
 IMG_SIZE = 512
 
-pipe = None  # loaded in load_model()
+pipe = None  # loaded in load_model
 
-# Default encryption config
+#default encryption config
 DEFAULT_CONFIG = {
     "exp_name": "api",
     "method": "diffusionguard",
@@ -74,11 +66,11 @@ DEFAULT_CONFIG = {
     "model": {"inpainting": MODEL_ID},
     "training": {
         "size": IMG_SIZE,
-        "iters": 500,        # Cranked up from 200 for stronger protection (~90s)
+        "iters": 500,        # stronger protection
         "grad_reps": 1,
         "batch_size": 1,
-        "eps": 0.03137254901960784,        # 8/255 — subtle perturbation
-        "step_size": 0.00392156862745098,  # 1/255 — fine step size
+        "eps": 0.03137254901960784,        # 8/255 subtle
+        "step_size": 0.00392156862745098,  # 1/255 step
         "num_inference_steps": 4,
         "mask": {
             "generation_method": "contour_shrink",
@@ -102,9 +94,9 @@ def load_model():
     logger.info("Model loaded successfully.")
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Helpers
+#---------------------------------------------------------------------------
 
 def center_crop_square(img: Image.Image) -> Image.Image:
     """Center-crop an image to a square (no stretching)."""
@@ -133,9 +125,9 @@ def pil_to_bytes(img: Image.Image, fmt: str = "PNG") -> io.BytesIO:
     return buf
 
 
-# ---------------------------------------------------------------------------
-# Routes
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Routes
+#---------------------------------------------------------------------------
 
 @app.route("/health", methods=["GET"])
 def health():
@@ -175,14 +167,14 @@ def protect():
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
 
-    # Allow callers to override iteration count
+    #Allow callers to override iteration count
     iters = request.args.get("iters", DEFAULT_CONFIG["training"]["iters"], type=int)
     iters = min(max(iters, 10), 1000)
 
     logger.info("Protecting image (%d PGD iterations)...", iters)
     t0 = time.time()
 
-    # Build config
+    #Build config
     config = OmegaConf.create(DEFAULT_CONFIG)
     config.training.iters = iters
 
@@ -190,7 +182,7 @@ def protect():
     mask_image_combined = overlay_images(mask_image_list)
     mask_radius_list = get_mask_radius_list(mask_image_list)
 
-    # Run encryption
+    #Run encryption
     adv_tensor = protect_image(
         config.method,
         pipe,
@@ -242,9 +234,9 @@ def test_inpaint():
     logger.info("Inpainting with prompt='%s', steps=%d, seed=%d", prompt, steps, seed)
     t0 = time.time()
 
-    # SD Inpainting expects: white = region to inpaint, black = region to keep
-    # Our masks use: white = sensitive region to keep
-    # So we invert the mask for the inpainting pipeline
+    #SD Inpainting expects: white = region to inpaint, black = region to keep
+    #Our masks use: white = sensitive region to keep
+    #So we invert the mask for the inpainting pipeline
     mask_array = np.array(mask_image.convert("L"))
     inverted_mask = Image.fromarray(255 - mask_array)
 
@@ -268,9 +260,9 @@ def test_inpaint():
     )
 
 
-# ---------------------------------------------------------------------------
-# Fawkes cloaking endpoint
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Fawkes cloaking endpoint
+#---------------------------------------------------------------------------
 
 @app.route("/fawkes", methods=["POST"])
 def fawkes_cloak():
@@ -313,14 +305,14 @@ def fawkes_cloak():
     )
 
 
-# ---------------------------------------------------------------------------
-# Entrypoint
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Entrypoint
+#---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     load_model()
 
-    # Pre-load Fawkes models (lazy — loads on first request if skipped here)
+    #Pre-load Fawkes models (lazy — loads on first request if skipped here)
     try:
         from fawkes_modern import init_fawkes
         init_fawkes("mid")

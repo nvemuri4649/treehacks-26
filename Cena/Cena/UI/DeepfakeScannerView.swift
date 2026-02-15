@@ -1,6 +1,6 @@
 //
-//  DeepfakeScannerView.swift
-//  Cena
+// DeepfakeScannerView.swift
+// Cena
 //
 
 import SwiftUI
@@ -46,7 +46,7 @@ struct DeepfakeScannerView: View {
     }
 }
 
-// MARK: - WKWebView wrapper with file upload support
+//MARK: - WKWebView wrapper with file upload support
 
 struct WebViewRepresentable: NSViewRepresentable {
     let url: URL
@@ -94,7 +94,7 @@ struct WebViewRepresentable: NSViewRepresentable {
             }
         }
 
-        // File upload support — handles <input type="file">
+        //File upload support — handles <input type="file">
         func webView(
             _ webView: WKWebView,
             runOpenPanelWith parameters: WKOpenPanelParameters,

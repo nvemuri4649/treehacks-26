@@ -1,14 +1,14 @@
 //
-//  MarkdownText.swift
-//  Cena
+// MarkdownText.swift
+// Cena
 //
-//  Renders markdown content with proper formatting:
-//  - Inline: **bold**, *italic*, `code`, [links](url)
-//  - Code blocks (``` fenced)
-//  - Bullet / numbered lists
-//  - Headings
+// Renders markdown content with proper formatting:
+// - Inline: **bold**, *italic*, `code`, [links](url)
+// - Code blocks (``` fenced)
+// - Bullet / numbered lists
+// - Headings
 //
-//  Keeps the translucent glass aesthetic.
+// Keeps the translucent glass aesthetic.
 //
 
 import SwiftUI
@@ -34,7 +34,7 @@ struct MarkdownText: View {
         }
     }
 
-    // MARK: - Block parsing
+    //MARK: - Block parsing
 
     private enum Block {
         case paragraph(String)
@@ -50,7 +50,7 @@ struct MarkdownText: View {
         while i < lines.count {
             let line = lines[i]
 
-            // Fenced code block
+            //Fenced code block
             if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") {
                 let lang = line.trimmingCharacters(in: .whitespaces)
                     .dropFirst(3)
@@ -71,7 +71,7 @@ struct MarkdownText: View {
                 continue
             }
 
-            // Heading (# ... ####)
+            //Heading (# ... ####)
             if let match = line.range(of: #"^(#{1,4})\s+(.+)$"#, options: .regularExpression) {
                 let raw = String(line[match])
                 let hashes = raw.prefix(while: { $0 == "#" }).count
@@ -81,11 +81,11 @@ struct MarkdownText: View {
                 continue
             }
 
-            // Accumulate paragraph lines (including blank lines as breaks)
+            //Accumulate paragraph lines (including blank lines as breaks)
             var paraLines: [String] = []
             while i < lines.count {
                 let pl = lines[i]
-                // Stop at code fence or heading
+                //Stop at code fence or heading
                 if pl.trimmingCharacters(in: .whitespaces).hasPrefix("```") { break }
                 if pl.range(of: #"^#{1,4}\s+"#, options: .regularExpression) != nil { break }
                 paraLines.append(pl)
@@ -101,7 +101,7 @@ struct MarkdownText: View {
         return result
     }
 
-    // MARK: - Inline markdown
+    //MARK: - Inline markdown
 
     @ViewBuilder
     private func inlineMarkdown(_ content: String) -> some View {
@@ -118,7 +118,7 @@ struct MarkdownText: View {
         }
     }
 
-    // MARK: - Code block
+    //MARK: - Code block
 
     private func codeBlockView(language: String?, code: String) -> some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -161,7 +161,7 @@ struct MarkdownText: View {
         )
     }
 
-    // MARK: - Heading
+    //MARK: - Heading
 
     @ViewBuilder
     private func headingView(level: Int, content: String) -> some View {

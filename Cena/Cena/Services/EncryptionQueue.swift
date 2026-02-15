@@ -1,17 +1,17 @@
 //
-//  GlazingQueue.swift
-//  Cena
+// EncryptionQueue.swift
+// Cena
 //
-//  Manages a queue of glazing jobs and coordinates processing
+// queue of encryption jobs and coordinates processing
 //
 
 import Foundation
 import AppKit
 
 @MainActor
-class GlazingQueue: ObservableObject {
-    @Published var jobs: [GlazingJob] = []
-    @Published var currentJob: GlazingJob?
+class EncryptionQueue: ObservableObject {
+    @Published var jobs: [EncryptionJob] = []
+    @Published var currentJob: EncryptionJob?
     @Published var isProcessing = false
 
     private let backendService: BackendService
@@ -22,14 +22,13 @@ class GlazingQueue: ObservableObject {
         self.settings = settings
     }
 
-    // MARK: - Queue Management
+    //MARK: - Queue Management
 
-    /// Add a new job to the queue and start processing
-    func enqueue(_ job: GlazingJob) {
+    /// add a new job to the queue and start processing
+    func enqueue(_ job: EncryptionJob) {
         jobs.append(job)
         print("📥 Enqueued job \(job.id) - Queue size: \(jobs.count)")
 
-        // Start processing if not already running
         if !isProcessing {
             Task {
                 await processQueue()
@@ -37,13 +36,13 @@ class GlazingQueue: ObservableObject {
         }
     }
 
-    /// Remove a completed or failed job from the queue
-    func remove(_ job: GlazingJob) {
+    /// remove a completed or failed job from the queue
+    func remove(_ job: EncryptionJob) {
         jobs.removeAll { $0.id == job.id }
         print("🗑️  Removed job \(job.id) - Queue size: \(jobs.count)")
     }
 
-    /// Clear all completed jobs
+    /// clear all completed jobs
     func clearCompleted() {
         let beforeCount = jobs.count
         jobs.removeAll { job in
@@ -60,9 +59,9 @@ class GlazingQueue: ObservableObject {
         }
     }
 
-    // MARK: - Processing
+    //MARK: - Processing
 
-    /// Process jobs in the queue sequentially
+    /// process jobs in the queue sequentially
     private func processQueue() async {
         guard !isProcessing else { return }
         isProcessing = true
@@ -84,14 +83,13 @@ class GlazingQueue: ObservableObject {
         print("✅ Queue processing complete")
     }
 
-    /// Process a single glazing job
-    private func processJob(_ job: GlazingJob) async {
+    /// process a single encryption job
+    private func processJob(_ job: EncryptionJob) async {
         print("⚙️  Processing job \(job.id)")
 
         job.startTime = Date()
 
         do {
-            // Step 1: Generate mask if needed
             let mask: NSImage
             switch job.maskMode {
             case .autoFace:
@@ -108,20 +106,16 @@ class GlazingQueue: ObservableObject {
                 job.maskImage = mask
             }
 
-            // Validate mask
             guard MaskGenerator.validateMask(mask) else {
-                throw GlazingError.maskGenerationFailed
+                throw EncryptionError.maskGenerationFailed
             }
 
-            // Step 2: Protect image
             job.status = .protecting
 
-            // Simulate progress updates (since we don't have real-time feedback yet)
-            // TODO: Add SSE endpoint for real-time progress from server
             let progressTask = Task {
                 var iteration = 0
                 let totalIterations = job.totalIterations
-                let estimatedTimePerIter = 0.4  // seconds
+                let estimatedTimePerIter = 0.4
 
                 while iteration < totalIterations && !Task.isCancelled {
                     try? await Task.sleep(nanoseconds: UInt64(estimatedTimePerIter * 1_000_000_000))
@@ -133,31 +127,26 @@ class GlazingQueue: ObservableObject {
                 }
             }
 
-            // Call backend service
             let rawProtected = try await backendService.protectImage(
                 image: job.originalImage,
                 mask: mask,
                 iterations: job.iterations
             )
 
-            // Apply intensity scaling: blend between original and protected
             let blended = job.intensity < 0.99
                 ? rawProtected.blendWith(original: job.originalImage, alpha: job.intensity)
                 : rawProtected
 
             let finalImage = blended.applyFinalization()
 
-            // Cancel progress simulation
             progressTask.cancel()
 
-            // Mark as complete
             await MainActor.run {
                 job.complete(with: finalImage)
             }
 
             print("✅ Job \(job.id) completed successfully")
 
-            // Show notification if enabled
             if settings.showNotifications {
                 showNotification(for: job)
             }
@@ -170,18 +159,17 @@ class GlazingQueue: ObservableObject {
         }
     }
 
-    /// Cancel a specific job
-    func cancel(_ job: GlazingJob) {
+    /// cancel a specific job
+    func cancel(_ job: EncryptionJob) {
         job.cancel()
         print("🚫 Cancelled job \(job.id)")
 
-        // If this was the current job, move to next
         if currentJob?.id == job.id {
             currentJob = nil
         }
     }
 
-    /// Cancel all pending jobs
+    /// cancel all pending jobs
     func cancelAll() {
         for job in jobs where job.isPending {
             job.cancel()
@@ -191,10 +179,10 @@ class GlazingQueue: ObservableObject {
         print("🚫 Cancelled all jobs")
     }
 
-    // MARK: - Notifications
+    //MARK: - Notifications
 
-    /// Show system notification for completed job
-    private func showNotification(for job: GlazingJob) {
+    /// show system notification for completed job
+    private func showNotification(for job: EncryptionJob) {
         let notification = NSUserNotification()
         notification.title = "Likeness Encrypted"
         notification.informativeText = "Your likeness has been encrypted and is ready to use"
@@ -203,9 +191,9 @@ class GlazingQueue: ObservableObject {
         NSUserNotificationCenter.default.deliver(notification)
     }
 
-    // MARK: - Statistics
+    //MARK: - Statistics
 
-    /// Get queue statistics
+    /// queue stats
     func getStats() -> (pending: Int, processing: Int, completed: Int, failed: Int) {
         var pending = 0
         var processing = 0

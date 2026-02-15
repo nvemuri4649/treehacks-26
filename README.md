@@ -31,7 +31,7 @@ Both features are native SwiftUI, unified in a single menu-bar app.
 │  ┌───────────────────────────▼──────────────────────────────────────────┐   │
 │  │  Cena Backend (FastAPI :8000 + Flask :5000)                         │   │
 │  │  ├─ Local Guardian (Nemotron via vLLM)                              │   │
-│  │  │   ├─ PII Redactor (placeholder)                                  │   │
+│  │  │   ├─ PII Redactor                                                │   │
 │  │  │   ├─ Likeness Encryptor (Cena Encryption)                        │   │
 │  │  │   └─ Re-referencing engine                                       │   │
 │  │  └─ Encryption Server (PGD + SD Inpainting + Fawkes)               │   │
@@ -53,11 +53,11 @@ Both features are native SwiftUI, unified in a single menu-bar app.
 ├── Cena/                        # Native macOS app (SwiftUI)
 │   └── Cena/
 │       ├── App/                 # CenaApp, AppState, MenuBarController
-│       ├── UI/                  # AgentChatView, OverlayWindow, GlazingProgressView,
+│       ├── UI/                  # AgentChatView, OverlayWindow, EncryptionProgressView,
 │       │                        #   ApprovalDialog, SettingsView
-│       ├── Services/            # AgentWebSocket, BackendService, GlazingQueue,
+│       ├── Services/            # AgentWebSocket, BackendService, EncryptionQueue,
 │       │                        #   MaskGenerator, PasteboardMonitor
-│       └── Models/              # ChatMessage, GlazingJob, Settings, BackendConfig
+│       └── Models/              # ChatMessage, EncryptionJob, Settings, BackendConfig
 ├── agents/
 │   ├── local_guardian/          # Nemotron agent: redact, encrypt, re-reference
 │   └── cloud_relay/             # Routes sanitized requests to Claude / GPT
@@ -67,7 +67,7 @@ Both features are native SwiftUI, unified in a single menu-bar app.
 │   ├── main.py                  # FastAPI server (agent WebSocket API)
 │   └── routes.py                # WebSocket + REST endpoints
 ├── client/
-│   ├── glaze.py                 # CLI image encryption
+│   ├── encrypt.py               # CLI image encryption
 │   ├── agent_loop.py            # Adversarial encrypt → generate → judge loop
 │   ├── rater_agent.py           # Claude vision deepfake rater
 │   └── backends.py              # Backend resolver
@@ -119,15 +119,10 @@ Copy `.env.example` to `.env` and set:
 | Variable | Purpose |
 |----------|---------|
 | `NEMOTRON_ENDPOINT` | vLLM server URL (default: `http://spark-abcd.local:8001/v1`) |
-| `GLAZE_SERVER_URL` | Encryption server (default: `http://spark-abcd.local:5000`) |
+| `ENCRYPTION_SERVER_URL` | Encryption server (default: `http://spark-abcd.local:5000`) |
 | `ANTHROPIC_API_KEY` | Cloud Claude access |
 | `OPENAI_API_KEY` | Cloud GPT access |
 | `ENCRYPTION_BACKEND` | Default backend name from `backends.json` |
-
-## Placeholders
-
-- **PII Redactor** (`agents/local_guardian/redactor.py`): Pass-through. Implement NER/regex PII detection.
-- **Dereferencer**: Planned — will fully decouple personal identifiers before cloud relay.
 
 ## References
 

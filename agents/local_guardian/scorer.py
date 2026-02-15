@@ -35,9 +35,9 @@ if TYPE_CHECKING:
     from agents.local_guardian.pii_detector import PIISpan
 
 
-# ---------------------------------------------------------------------------
-# Scored output
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Scored output
+#---------------------------------------------------------------------------
 
 
 @dataclass
@@ -53,24 +53,24 @@ class ScoredSpan:
     action: str  # "KEEP" | "BLUR" | "REDACT"
 
 
-# ---------------------------------------------------------------------------
-# Base sensitivity look-up   (0.0 = benign, 1.0 = critical)
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Base sensitivity look-up   (0.0 = benign, 1.0 = critical)
+#---------------------------------------------------------------------------
 
 _BASE_SENSITIVITY: dict[str, float] = {
-    # Critical — always redact
+    #Critical — always redact
     "SSN": 1.00,
     "CREDIT_CARD": 1.00,
     "PASSPORT": 0.95,
     "DRIVER_LICENSE": 0.95,
     "BANK_ACCOUNT": 0.95,
-    # Directly identifying
+    #Directly identifying
     "PERSON": 0.90,
     "EMAIL": 0.85,
     "PHONE": 0.85,
     "IP_ADDRESS": 0.80,
     "ADDRESS": 0.80,
-    # Moderate
+    #Moderate
     "URL": 0.60,
     "DEMOGRAPHIC": 0.55,
     "ZIPCODE": 0.55,
@@ -79,7 +79,7 @@ _BASE_SENSITIVITY: dict[str, float] = {
     "MONEY": 0.45,
     "ORGANIZATION": 0.40,
     "DATE": 0.40,
-    # Low
+    #Low
     "LEGAL_REF": 0.35,
     "TIME": 0.25,
     "EVENT": 0.20,
@@ -89,9 +89,9 @@ _BASE_SENSITIVITY: dict[str, float] = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Context patterns that boost sensitivity
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Context patterns that boost sensitivity
+#---------------------------------------------------------------------------
 
 _CONTEXT_DOMAINS: list[dict] = [
     {
@@ -142,25 +142,25 @@ _CONTEXT_DOMAINS: list[dict] = [
 ]
 
 
-# ---------------------------------------------------------------------------
-# Utility look-up   (0.0 = not needed at all, 1.0 = essential for quality)
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Utility look-up   (0.0 = not needed at all, 1.0 = essential for quality)
+#---------------------------------------------------------------------------
 
 _BASE_UTILITY: dict[str, float] = {
-    # Zero utility — hiding never hurts answer quality
+    #Zero utility — hiding never hurts answer quality
     "SSN": 0.00,
     "CREDIT_CARD": 0.00,
     "PASSPORT": 0.00,
     "DRIVER_LICENSE": 0.00,
     "BANK_ACCOUNT": 0.00,
     "PHONE": 0.05,
-    # Low utility
+    #Low utility
     "IP_ADDRESS": 0.10,
     "EMAIL": 0.15,
     "ZIPCODE": 0.15,
     "ADDRESS": 0.20,
     "DEMOGRAPHIC": 0.25,
-    # Moderate — blurring preserves enough
+    #Moderate — blurring preserves enough
     "PERSON": 0.30,
     "URL": 0.30,
     "LEGAL_REF": 0.40,
@@ -171,16 +171,16 @@ _BASE_UTILITY: dict[str, float] = {
     "MONEY": 0.55,
     "EVENT": 0.55,
     "DATE": 0.60,
-    # High utility — important for output quality
+    #High utility — important for output quality
     "PRODUCT": 0.60,
     "WORK_OF_ART": 0.60,
     "QUANTITY": 0.65,
 }
 
 
-# ---------------------------------------------------------------------------
-# Scoring helpers
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Scoring helpers
+#---------------------------------------------------------------------------
 
 
 def _get_context_window(text: str, start: int, end: int, window: int) -> str:
@@ -233,9 +233,9 @@ def _decide_action(sensitivity: float, utility: float) -> str:
     return "KEEP"
 
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Public API
+#---------------------------------------------------------------------------
 
 
 def score_spans(spans: list["PIISpan"], text: str) -> list[ScoredSpan]:

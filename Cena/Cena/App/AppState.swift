@@ -1,8 +1,8 @@
 //
-//  AppState.swift
-//  Cena
+// AppState.swift
+// Cena
 //
-//  Shared application state management
+// Shared application state management
 //
 
 import Foundation
@@ -11,22 +11,22 @@ import AppKit
 
 @MainActor
 class AppState: ObservableObject {
-    // Configuration
+    //Configuration
     @Published var settings: Settings
     @Published var backendConfig: BackendConfig?
 
-    // Services
+    //Services
     let pasteboardMonitor: PasteboardMonitor
     var backendService: BackendService?
-    var glazingQueue: GlazingQueue?
+    var encryptionQueue: EncryptionQueue?
 
-    // UI State
+    //UI State
     @Published var showSettingsWindow = false
     @Published var showApprovalDialog = false
     @Published var overlayWindow: OverlayWindow?
     @Published var currentPendingImage: NSImage?
 
-    // Status
+    //Status
     @Published var backendStatus: BackendStatus = .unknown
     @Published var lastError: String?
 
@@ -41,7 +41,7 @@ class AppState: ObservableObject {
         self.settings = Settings()
         self.pasteboardMonitor = PasteboardMonitor()
 
-        // Load backend configuration
+        //Load backend configuration
         if let config = BackendConfig.load() {
             self.backendConfig = config
             setupBackendService(config: config)
@@ -50,7 +50,7 @@ class AppState: ObservableObject {
         }
     }
 
-    // MARK: - Setup
+    //MARK: - Setup
 
     func setupBackendService(config: BackendConfig) {
         guard let backend = config.getBackend(named: settings.selectedBackend) else {
@@ -60,18 +60,18 @@ class AppState: ObservableObject {
 
         print("🔧 Setting up backend service: \(settings.selectedBackend)")
         self.backendService = BackendService(baseURL: backend.url)
-        self.glazingQueue = GlazingQueue(
+        self.encryptionQueue = EncryptionQueue(
             backendService: backendService!,
             settings: settings
         )
 
-        // Check backend health (non-blocking, silent on failure)
+        //Check backend health (non-blocking, silent on failure)
         Task {
             await checkBackendHealth(silent: true)
         }
     }
 
-    // MARK: - Backend Management
+    //MARK: - Backend Management
 
     func checkBackendHealth(silent: Bool = false) async {
         guard let backendService = backendService else {
@@ -106,7 +106,7 @@ class AppState: ObservableObject {
 
         print("🔄 Switching to backend: \(name)")
         self.backendService = BackendService(baseURL: backend.url)
-        self.glazingQueue = GlazingQueue(
+        self.encryptionQueue = EncryptionQueue(
             backendService: backendService!,
             settings: settings
         )
@@ -116,7 +116,7 @@ class AppState: ObservableObject {
         }
     }
 
-    // MARK: - Pasteboard Monitoring
+    //MARK: - Pasteboard Monitoring
 
     func startPasteboardMonitoring() {
         guard settings.monitorPasteboard else {
@@ -141,35 +141,35 @@ class AppState: ObservableObject {
         print("📋 Image copied to pasteboard")
 
         if settings.autoApprove {
-            // Auto-approve: glaze immediately
-            startGlazingJob(
+            //auto-approve: encrypt immediately
+            startEncryptionJob(
                 image: image,
                 iterations: settings.defaultIterations,
                 maskMode: settings.getMaskMode(),
                 source: .pasteboard
             )
         } else {
-            // Show approval dialog
+            //Show approval dialog
             currentPendingImage = image
             showApprovalDialog = true
         }
     }
 
-    // MARK: - Glazing Operations
+    //MARK: - Encryption
 
-    func startGlazingJob(
+    func startEncryptionJob(
         image: NSImage,
         iterations: Int,
-        maskMode: GlazingJob.MaskMode,
-        source: GlazingJob.JobSource,
+        maskMode: EncryptionJob.MaskMode,
+        source: EncryptionJob.JobSource,
         intensity: Double = 1.0
     ) {
-        guard let glazingQueue = glazingQueue else {
-            print("❌ Glazing queue not initialized")
+        guard let encryptionQueue = encryptionQueue else {
+            print("❌ Encryption queue not initialized")
             return
         }
 
-        let job = GlazingJob(
+        let job = EncryptionJob(
             image: image,
             iterations: iterations,
             maskMode: maskMode,
@@ -177,18 +177,18 @@ class AppState: ObservableObject {
             intensity: intensity
         )
 
-        // Show overlay
+        //Show overlay
         showOverlay(for: job)
 
-        // Enqueue job
-        glazingQueue.enqueue(job)
+        //Enqueue job
+        encryptionQueue.enqueue(job)
 
-        // Monitor job completion
+        //Monitor job completion
         monitorJob(job)
     }
 
-    private func monitorJob(_ job: GlazingJob) {
-        // Poll job status
+    private func monitorJob(_ job: EncryptionJob) {
+        //Poll job status
         Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self, weak job] timer in
             guard let self = self, let job = job else {
                 timer.invalidate()
@@ -213,7 +213,7 @@ class AppState: ObservableObject {
         }
     }
 
-    private func handleJobCompleted(_ job: GlazingJob) {
+    private func handleJobCompleted(_ job: EncryptionJob) {
         print("✅ Job completed: \(job.id)")
 
         if let protectedImage = job.protectedImage {
@@ -225,18 +225,18 @@ class AppState: ObservableObject {
             }
         }
 
-        // Hide overlay
+        //Hide overlay
         overlayWindow?.hide {
             self.overlayWindow = nil
         }
 
-        // Show notification
+        //Show notification
         if settings.showNotifications {
             showCompletionNotification(success: true)
         }
     }
 
-    private func handleJobFailed(_ job: GlazingJob, error: Error) {
+    private func handleJobFailed(_ job: EncryptionJob, error: Error) {
         print("❌ Job failed: \(job.id) - \(error)")
         lastError = error.localizedDescription
 
@@ -249,7 +249,7 @@ class AppState: ObservableObject {
         }
     }
 
-    private func handleJobCancelled(_ job: GlazingJob) {
+    private func handleJobCancelled(_ job: EncryptionJob) {
         print("🚫 Job cancelled: \(job.id)")
 
         overlayWindow?.hide {
@@ -257,11 +257,11 @@ class AppState: ObservableObject {
         }
     }
 
-    // MARK: - UI Management
+    //MARK: - UI Management
 
-    private func showOverlay(for job: GlazingJob) {
-        let progressView = GlazingProgressView(job: job) { [weak self] in
-            self?.glazingQueue?.cancel(job)
+    private func showOverlay(for job: EncryptionJob) {
+        let progressView = EncryptionProgressView(job: job) { [weak self] in
+            self?.encryptionQueue?.cancel(job)
         }
 
         let hostingView = NSHostingView(rootView: progressView)
@@ -286,7 +286,7 @@ class AppState: ObservableObject {
         NSUserNotificationCenter.default.deliver(notification)
     }
 
-    // MARK: - File Operations
+    //MARK: - File Operations
 
     func protectImageFromFile(url: URL) {
         guard let image = NSImage(contentsOf: url) else {
@@ -294,7 +294,7 @@ class AppState: ObservableObject {
             return
         }
 
-        startGlazingJob(
+        startEncryptionJob(
             image: image,
             iterations: settings.defaultIterations,
             maskMode: settings.getMaskMode(),

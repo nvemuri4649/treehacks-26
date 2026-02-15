@@ -1,8 +1,8 @@
 //
-//  CenaLogo.swift
-//  Cena
+// CenaLogo.swift
+// Cena
 //
-//  3x3 grid logo with merged tiles — always gently animating
+// 3x3 grid logo with merged tiles — always gently animating
 //
 
 import SwiftUI
@@ -12,24 +12,24 @@ struct CenaLogo: View {
     var isAnimating: Bool = false
     var color: Color = .white
 
-    // 3x3 grid layout:
-    //  Row 0: [1x1] [  2x1  ]
-    //  Row 1: [1x1] [1x1] [1x1]
-    //  Row 2: [  2x1  ] [1x1]
+    //3x3 grid layout:
+    // Row 0: [1x1] [  2x1  ]
+    // Row 1: [1x1] [1x1] [1x1]
+    // Row 2: [  2x1  ] [1x1]
     private static let tiles: [(col: Int, row: Int, w: Int, h: Int)] = [
         (0, 0, 1, 1), (1, 0, 2, 1),
         (0, 1, 1, 1), (1, 1, 1, 1), (2, 1, 1, 1),
         (0, 2, 2, 1), (2, 2, 1, 1),
     ]
 
-    // Continuous gentle floating offsets per tile (always active)
+    //Continuous gentle floating offsets per tile (always active)
     private static let floatAngles: [Double] = [0, 0.8, 1.6, 2.4, 3.2, 4.0, 4.8]
 
     @State private var breathe: CGFloat = 0
     @State private var phase: Int = 0
     @State private var slideTimer: Timer?
 
-    // Perimeter for active slide animation
+    //Perimeter for active slide animation
     private static let perimeterOrder: [Int] = [0, 1, 4, 6, 5, 2]
 
     var body: some View {
@@ -41,12 +41,12 @@ struct CenaLogo: View {
 
         Canvas { context, _ in
             for (index, tile) in Self.tiles.enumerated() {
-                // Gentle continuous float
+                //Gentle continuous float
                 let angle = Self.floatAngles[index] + Double(breathe)
                 let fx = CGFloat(sin(angle * 2.1)) * drift
                 let fy = CGFloat(cos(angle * 1.7)) * drift
 
-                // Active slide offset (only when processing)
+                //Active slide offset (only when processing)
                 let slide = slideOffset(for: index, step: step, gap: gap)
 
                 let w = CGFloat(tile.w) * step + CGFloat(tile.w - 1) * gap
@@ -68,7 +68,7 @@ struct CenaLogo: View {
         }
     }
 
-    // MARK: - Slide (active processing only)
+    //MARK: - Slide (active processing only)
 
     private func slideOffset(for index: Int, step: CGFloat, gap: CGFloat) -> CGSize {
         guard isAnimating, phase > 0 else { return .zero }
@@ -88,7 +88,7 @@ struct CenaLogo: View {
         )
     }
 
-    // MARK: - Continuous breathing (always on)
+    //MARK: - Continuous breathing (always on)
 
     private func startBreathing() {
         withAnimation(.linear(duration: 4).repeatForever(autoreverses: false)) {

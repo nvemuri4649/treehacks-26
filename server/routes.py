@@ -23,9 +23,9 @@ from config.settings import DEFAULT_CLOUD_MODEL
 router = APIRouter()
 
 
-# ------------------------------------------------------------------
-# REST endpoints
-# ------------------------------------------------------------------
+#------------------------------------------------------------------
+#REST endpoints
+#------------------------------------------------------------------
 
 @router.get("/health")
 async def health() -> dict:
@@ -47,9 +47,9 @@ async def remove_session(session_id: str) -> dict:
     return {"status": "deleted", "session_id": session_id}
 
 
-# ------------------------------------------------------------------
-# WebSocket chat endpoint
-# ------------------------------------------------------------------
+#------------------------------------------------------------------
+#WebSocket chat endpoint
+#------------------------------------------------------------------
 
 @router.websocket("/ws/{session_id}")
 async def websocket_chat(ws: WebSocket, session_id: str):
@@ -103,7 +103,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
             image_b64 = data.get("image")
             mime_type = data.get("mime_type")
 
-            # Decode base64 image if provided
+            #Decode base64 image if provided
             image_bytes: bytes | None = None
             if image_b64:
                 try:
@@ -116,15 +116,15 @@ async def websocket_chat(ws: WebSocket, session_id: str):
                     continue
 
             try:
-                # Stage 1: Sanitizing (dereferencing PII locally)
+                #Stage 1: Sanitizing (dereferencing PII locally)
                 await ws.send_json({"type": "status", "stage": "sanitizing"})
 
-                # Stage 1.5: Glazing (if image uploaded, apply adversarial protection)
+                #stage 1.5: encrypt image if uploaded
                 if image_bytes:
-                    await ws.send_json({"type": "status", "stage": "glazing"})
+                    await ws.send_json({"type": "status", "stage": "encrypting"})
 
-                # Stage 2 & 3: Thinking (cloud call) + Restoring
-                # The process_message function handles the full pipeline
+                #Stage 2 & 3: Thinking (cloud call) + Restoring
+                #The process_message function handles the full pipeline
                 await ws.send_json({"type": "status", "stage": "thinking"})
 
                 result = await process_message(
@@ -137,7 +137,7 @@ async def websocket_chat(ws: WebSocket, session_id: str):
 
                 await ws.send_json({"type": "status", "stage": "restoring"})
 
-                # Send final response (include privacy report if available)
+                #Send final response (include privacy report if available)
                 response_payload = {
                     "type": "response",
                     "text": result["response"],

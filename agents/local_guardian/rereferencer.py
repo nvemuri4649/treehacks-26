@@ -14,8 +14,8 @@ from __future__ import annotations
 import re
 
 
-# Regex to match the context-hints block appended by the redactor.
-# Handles the full section from header through all hint lines.
+#Regex to match the context-hints block appended by the redactor.
+#Handles the full section from header through all hint lines.
 _CONTEXT_BLOCK_RE = re.compile(
     r"\n*\[Context\s*[—–-]\s*approximate values for reference.*?\]"
     r"(?:\n\s*\[.*?\].*)*",
@@ -46,12 +46,12 @@ def re_reference(text: str, mapping: dict[str, str]) -> str:
     if not text:
         return text
 
-    # 1. Strip any residual context-hint blocks
+    #1. Strip any residual context-hint blocks
     result = _CONTEXT_BLOCK_RE.sub("", text)
 
-    # 2. Replace tokens → original values
+    #2. Replace tokens → original values
     if mapping:
-        # Sort tokens longest-first so [PERSON_10] beats [PERSON_1]
+        #Sort tokens longest-first so [PERSON_10] beats [PERSON_1]
         sorted_tokens = sorted(mapping.keys(), key=len, reverse=True)
         for token in sorted_tokens:
             result = result.replace(token, mapping[token])

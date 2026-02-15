@@ -65,7 +65,7 @@ async def detect_deepfake(args: dict[str, Any]) -> dict[str, Any]:
             "source_url": result.source_url,
         }
 
-        # Vision signal details
+        #Vision signal details
         if result.vision:
             output["vision_analysis"] = {
                 "is_likely_deepfake": result.vision.is_likely_deepfake,
@@ -74,7 +74,7 @@ async def detect_deepfake(args: dict[str, Any]) -> dict[str, Any]:
                 "reasoning": result.vision.reasoning,
             }
 
-        # Metadata signal details
+        #Metadata signal details
         if result.metadata:
             output["metadata_analysis"] = {
                 "score": round(result.metadata.score, 4),
@@ -85,7 +85,7 @@ async def detect_deepfake(args: dict[str, Any]) -> dict[str, Any]:
                 "suspicious_fields": result.metadata.suspicious_fields,
             }
 
-        # Frequency signal details
+        #Frequency signal details
         if result.frequency:
             output["frequency_analysis"] = {
                 "score": round(result.frequency.score, 4),
@@ -95,7 +95,7 @@ async def detect_deepfake(args: dict[str, Any]) -> dict[str, Any]:
                 "details": result.frequency.details,
             }
 
-        # Generate human-readable summary
+        #Generate human-readable summary
         if result.threat_level in ("high", "critical"):
             output["summary"] = (
                 f"HIGH RISK: This image has a {result.deepfake_probability:.0%} probability "

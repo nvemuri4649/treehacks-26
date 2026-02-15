@@ -20,9 +20,9 @@ from datetime import datetime
 from typing import Callable, Optional
 
 
-# ---------------------------------------------------------------------------
-# Per-type blur functions
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Per-type blur functions
+#---------------------------------------------------------------------------
 
 
 def blur_date(value: str) -> str:
@@ -40,7 +40,7 @@ def blur_date(value: str) -> str:
         "%b %d",
     ]
 
-    # Strip ordinal suffixes (1st, 2nd, 3rd, 4th …)
+    #Strip ordinal suffixes (1st, 2nd, 3rd, 4th …)
     cleaned = re.sub(r"(\d+)(?:st|nd|rd|th)", r"\1", value).strip()
 
     parsed: datetime | None = None
@@ -59,7 +59,7 @@ def blur_date(value: str) -> str:
             return f"{period} {month} {parsed.year}"
         return f"{period} {month}"
 
-    # Fallback — can't parse, provide something vague
+    #Fallback — can't parse, provide something vague
     return "around that time period"
 
 
@@ -90,7 +90,7 @@ def blur_money(value: str) -> str:
 
 def blur_location(value: str) -> str:
     """Blur a location — full addresses to city-level, cities left intact."""
-    # Full street address → city-level
+    #Full street address → city-level
     if re.search(
         r"\d+\s+\w+\s+(?:st|street|ave|avenue|rd|road|blvd|boulevard|"
         r"dr|drive|ln|lane|ct|court|way|pl|place|cir|circle|ter|terrace)",
@@ -102,7 +102,7 @@ def blur_location(value: str) -> str:
             return f"an address in {parts[-2]}"
         return "a residential address"
 
-    # Already city-level or broader — keep as-is
+    #Already city-level or broader — keep as-is
     return value
 
 
@@ -111,7 +111,7 @@ def blur_address(value: str) -> str:
     parts = [p.strip() for p in value.split(",")]
     if len(parts) >= 2:
         return f"a location in {parts[-1]}"
-    # Drop the street number and keep the street name
+    #Drop the street number and keep the street name
     no_number = re.sub(r"^\d+\s+", "", value)
     return f"near {no_number}" if no_number != value else "a street address"
 
@@ -200,9 +200,9 @@ def blur_product(value: str) -> str:
     return "a product"
 
 
-# ---------------------------------------------------------------------------
-# Registry
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Registry
+#---------------------------------------------------------------------------
 
 _BLUR_FUNCTIONS: dict[str, Callable[[str], str]] = {
     "DATE": blur_date,
@@ -223,9 +223,9 @@ _BLUR_FUNCTIONS: dict[str, Callable[[str], str]] = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Public API
+#---------------------------------------------------------------------------
 
 
 def blur(value: str, pii_type: str) -> Optional[str]:

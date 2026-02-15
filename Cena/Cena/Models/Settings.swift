@@ -1,8 +1,8 @@
 //
-//  Settings.swift
-//  Cena
+// Settings.swift
+// Cena
 //
-//  User preferences and application settings
+// User preferences and application settings
 //
 
 import Foundation
@@ -17,7 +17,7 @@ class Settings: ObservableObject, Codable {
     @Published var showNotifications: Bool = true
     @Published var launchAtLogin: Bool = false
 
-    // Configuration file path
+    //Configuration file path
     private static let configPath = FileManager.default
         .homeDirectoryForCurrentUser
         .appendingPathComponent("Library/Application Support/Cena/config.json")
@@ -49,7 +49,7 @@ class Settings: ObservableObject, Codable {
             let decoder = JSONDecoder()
             let loaded = try decoder.decode(Settings.self, from: data)
 
-            // Copy loaded values
+            //Copy loaded values
             self.enabled = loaded.enabled
             self.selectedBackend = loaded.selectedBackend
             self.monitorPasteboard = loaded.monitorPasteboard
@@ -68,7 +68,7 @@ class Settings: ObservableObject, Codable {
     /// Save settings to disk
     func save() {
         do {
-            // Create directory if needed
+            //Create directory if needed
             let directory = Settings.configPath.deletingLastPathComponent()
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
 
@@ -83,7 +83,7 @@ class Settings: ObservableObject, Codable {
         }
     }
 
-    // MARK: - Codable
+    //MARK: - Codable
 
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -110,7 +110,7 @@ class Settings: ObservableObject, Codable {
     }
 
     /// Get mask mode enum from string
-    func getMaskMode() -> GlazingJob.MaskMode {
+    func getMaskMode() -> EncryptionJob.MaskMode {
         switch defaultMaskMode {
         case "auto_face":
             return .autoFace

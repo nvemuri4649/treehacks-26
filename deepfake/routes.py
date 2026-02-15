@@ -28,20 +28,20 @@ from deepfake.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Router + templates
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Router + templates
+#---------------------------------------------------------------------------
 
 router = APIRouter()
 
 _templates_dir = Path(__file__).resolve().parent / "templates"
 templates = Jinja2Templates(directory=_templates_dir)
 
-# In-memory scan state
+#In-memory scan state
 _active_scans: dict[str, asyncio.Queue] = {}
 _scan_reports: dict[str, dict[str, Any]] = {}
 
-# Lazy-initialised agent (avoid heavy imports at module load)
+#Lazy-initialised agent (avoid heavy imports at module load)
 _agent: DeepfakeDetectionAgent | None = None
 
 
@@ -52,9 +52,9 @@ def _get_agent() -> DeepfakeDetectionAgent:
     return _agent
 
 
-# ---------------------------------------------------------------------------
-# Routes
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Routes
+#---------------------------------------------------------------------------
 
 
 @router.get("/", response_class=HTMLResponse)

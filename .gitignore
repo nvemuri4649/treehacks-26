@@ -1,8 +1,8 @@
-# Environment variables (contains API keys)
+#Environment variables (contains API keys)
 .env
 *.env
 
-# Python
+#Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -13,48 +13,48 @@ dist/
 build/
 *.egg
 
-# Virtual environments
+#Virtual environments
 venv/
 .venv/
 env/
 
-# Generated outputs (images, videos, masks, results)
+#Generated outputs (images, videos, masks, results)
 output/
 video_demo_output/
 test_results/
 agent_loop_results_*/
 *_protected.png
 
-# Test / demo images & photos
+#Test / demo images & photos
 photosofnikhil/
 test_images/
 
-# Model weights (downloaded at runtime on backend)
+#Model weights (downloaded at runtime on backend)
 *.bin
 *.safetensors
 *.ckpt
 *.pt
 *.pth
 
-# Encryption engine repo (cloned at deploy time on GPU backend)
+#encryption engine upstream repo (cloned at deploy)
 DiffusionGuard/
 
-# Temporary / intermediate files
+#Temporary / intermediate files
 _conditioned_*.png
 *.log
 
-# OS
+#OS
 .DS_Store
 Thumbs.db
 
-# IDE
+#IDE
 .vscode/
 .idea/
 .cursor/
 *.swp
 *.swo
 
-# macOS build artifacts
+#macOS build artifacts
 Cena/.build/
 Cena/build/
 Cena/*.xcodeproj

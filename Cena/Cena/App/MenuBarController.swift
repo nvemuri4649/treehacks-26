@@ -1,8 +1,8 @@
 //
-//  MenuBarController.swift
-//  Cena
+// MenuBarController.swift
+// Cena
 //
-//  Menu bar app controller with status icon and menu
+// Menu bar app controller with status icon and menu
 //
 
 import AppKit
@@ -29,17 +29,17 @@ class MenuBarController: NSObject {
         setupMenu()
     }
 
-    // MARK: - Status Item Setup
+    //MARK: - Status Item Setup
 
     private func setupStatusItem() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
         if let button = statusItem.button {
-            // Use shield icon
+            //Use shield icon
             button.image = NSImage(systemSymbolName: "shield.checkered", accessibilityDescription: "Cena")
             button.image?.isTemplate = true
 
-            // Enable drag and drop
+            //Enable drag and drop
             button.window?.registerForDraggedTypes([.fileURL, .png, .tiff])
             button.window?.delegate = self
         }
@@ -48,7 +48,7 @@ class MenuBarController: NSObject {
     private func setupMenu() {
         let menu = NSMenu()
 
-        // Status info
+        //Status info
         let titleItem = NSMenuItem(
             title: "Cena",
             action: nil,
@@ -59,7 +59,7 @@ class MenuBarController: NSObject {
 
         menu.addItem(NSMenuItem.separator())
 
-        // Backend status
+        //Backend status
         let backendMenuItem = NSMenuItem(
             title: backendStatusText(),
             action: #selector(checkBackend),
@@ -69,7 +69,7 @@ class MenuBarController: NSObject {
 
         menu.addItem(NSMenuItem.separator())
 
-        // Enable/Disable
+        //Enable/Disable
         let enableItem = NSMenuItem(
             title: appState.settings.enabled ? "Disable Cena" : "Enable Cena",
             action: #selector(toggleEnabled),
@@ -77,7 +77,7 @@ class MenuBarController: NSObject {
         )
         menu.addItem(enableItem)
 
-        // Pasteboard monitoring toggle
+        //Pasteboard monitoring toggle
         let monitorItem = NSMenuItem(
             title: appState.settings.monitorPasteboard ? "Stop Monitoring Clipboard" : "Start Monitoring Clipboard",
             action: #selector(toggleMonitoring),
@@ -87,7 +87,7 @@ class MenuBarController: NSObject {
 
         menu.addItem(NSMenuItem.separator())
 
-        // Agent Chat
+        //Agent Chat
         let agentItem = NSMenuItem(
             title: "Open Agent Chat...",
             action: #selector(openAgentChat),
@@ -95,7 +95,7 @@ class MenuBarController: NSObject {
         )
         menu.addItem(agentItem)
 
-        // Protect image from file
+        //Protect image from file
         let protectItem = NSMenuItem(
             title: "Encrypt Likeness...",
             action: #selector(protectFromFile),
@@ -103,7 +103,7 @@ class MenuBarController: NSObject {
         )
         menu.addItem(protectItem)
 
-        // Deepfake detection scanner
+        //Deepfake detection scanner
         let deepfakeItem = NSMenuItem(
             title: "Scan for Deepfakes...",
             action: #selector(openDeepfakeScanner),
@@ -111,7 +111,7 @@ class MenuBarController: NSObject {
         )
         menu.addItem(deepfakeItem)
 
-        // Demo
+        //Demo
         let demoItem = NSMenuItem(
             title: "Encryption Demo...",
             action: #selector(openDemo),
@@ -119,7 +119,7 @@ class MenuBarController: NSObject {
         )
         menu.addItem(demoItem)
 
-        // Cinematic image display (original vs encrypted)
+        //Cinematic image display (original vs encrypted)
         let cinematicItem = NSMenuItem(
             title: "Cinematic Image Display...",
             action: #selector(openCinematic),
@@ -129,7 +129,7 @@ class MenuBarController: NSObject {
 
         menu.addItem(NSMenuItem.separator())
 
-        // Settings
+        //Settings
         let settingsItem = NSMenuItem(
             title: "Settings...",
             action: #selector(showSettings),
@@ -139,7 +139,7 @@ class MenuBarController: NSObject {
 
         menu.addItem(NSMenuItem.separator())
 
-        // Quit
+        //Quit
         let quitItem = NSMenuItem(
             title: "Quit Cena",
             action: #selector(quit),
@@ -147,14 +147,14 @@ class MenuBarController: NSObject {
         )
         menu.addItem(quitItem)
 
-        // Set target on all actionable items so selectors resolve
+        //Set target on all actionable items so selectors resolve
         for item in menu.items where item.action != nil {
             item.target = self
         }
 
         statusItem.menu = menu
 
-        // Update menu periodically to reflect state changes
+        //Update menu periodically to reflect state changes
         Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.updateMenu()
         }
@@ -163,17 +163,17 @@ class MenuBarController: NSObject {
     private func updateMenu() {
         guard let menu = statusItem.menu else { return }
 
-        // Update backend status (item at index 2)
+        //Update backend status (item at index 2)
         if menu.items.count > 2 {
             menu.items[2].title = backendStatusText()
         }
 
-        // Update enable/disable (item at index 4)
+        //Update enable/disable (item at index 4)
         if menu.items.count > 4 {
             menu.items[4].title = appState.settings.enabled ? "Disable Cena" : "Enable Cena"
         }
 
-        // Update monitoring toggle (item at index 5)
+        //Update monitoring toggle (item at index 5)
         if menu.items.count > 5 {
             menu.items[5].title = appState.pasteboardMonitor.isMonitoring ? "Stop Monitoring Clipboard" : "Start Monitoring Clipboard"
         }
@@ -184,7 +184,7 @@ class MenuBarController: NSObject {
         return "Backend: \(backendName)"
     }
 
-    // MARK: - Menu Actions
+    //MARK: - Menu Actions
 
     @objc private func toggleEnabled() {
         appState.settings.enabled.toggle()
@@ -221,7 +221,7 @@ class MenuBarController: NSObject {
             return
         }
 
-        // ── Chat window (right) ───────────────────────────────────
+        //── Chat window (right) ───────────────────────────────────
         let chatView = AgentChatView(pipelineModel: pipelineModel)
         let hostingController = NSHostingController(rootView: chatView)
 
@@ -237,7 +237,7 @@ class MenuBarController: NSObject {
         chatWindow.backgroundColor = .clear
         chatWindow.hasShadow = true
 
-        // ── Pipeline window (left companion) ──────────────────────
+        //── Pipeline window (left companion) ──────────────────────
         let pipelineView = AgentPipelineWindowView(model: pipelineModel)
         let pipelineHosting = NSHostingController(rootView: pipelineView)
 
@@ -252,7 +252,7 @@ class MenuBarController: NSObject {
         pipeWindow.backgroundColor = .clear
         pipeWindow.hasShadow = true
 
-        // Position: pipeline window on left, chat window adjacent to its right
+        //Position: pipeline window on left, chat window adjacent to its right
         if let screen = NSScreen.main {
             let vis = screen.visibleFrame
             let gap: CGFloat = 8
@@ -307,7 +307,7 @@ class MenuBarController: NSObject {
         NSApp.activate(ignoringOtherApps: true)
     }
 
-    // MARK: - Window positioning helpers
+    //MARK: - Window positioning helpers
 
     /// Position a window at the left-middle of the main screen with comfortable margin.
     static func positionWindowLeftMiddle(_ window: NSWindow, marginX: CGFloat = 40) {
@@ -420,7 +420,7 @@ class MenuBarController: NSObject {
         window.makeKeyAndOrderFront(nil)
         window.isReleasedWhenClosed = false
 
-        // Apply backend changes when window closes
+        //Apply backend changes when window closes
         NotificationCenter.default.addObserver(
             forName: NSWindow.willCloseNotification,
             object: window,
@@ -441,12 +441,12 @@ class MenuBarController: NSObject {
     }
 }
 
-// MARK: - Drag and Drop Support
+//MARK: - Drag and Drop Support
 
 @MainActor
 extension MenuBarController: NSWindowDelegate {
     func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
-        // Check if dragging contains image files
+        //Check if dragging contains image files
         if let _ = getImageURL(from: sender) {
             return .copy
         }
@@ -473,7 +473,7 @@ extension MenuBarController: NSWindowDelegate {
             return nil
         }
 
-        // Check if it's an image file
+        //Check if it's an image file
         let imageExtensions = ["png", "jpg", "jpeg", "tiff", "tif", "gif", "bmp", "heic", "heif"]
         let ext = url.pathExtension.lowercased()
 

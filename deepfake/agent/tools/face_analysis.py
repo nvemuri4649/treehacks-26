@@ -19,10 +19,10 @@ from deepfake.core.face_engine import FaceEngine, FaceComparisonResult
 
 logger = logging.getLogger(__name__)
 
-# Singleton face engine instance
+#Singleton face engine instance
 _face_engine = FaceEngine()
 
-# In-memory storage for the reference embedding (set when scan starts)
+#In-memory storage for the reference embedding (set when scan starts)
 _reference_embedding: np.ndarray | None = None
 
 
@@ -77,7 +77,7 @@ async def analyze_face_match(args: dict[str, Any]) -> dict[str, Any]:
         }
 
     try:
-        # Detect faces in the candidate image
+        #Detect faces in the candidate image
         detections = _face_engine.detect_faces(image_path)
 
         if not detections:
@@ -94,7 +94,7 @@ async def analyze_face_match(args: dict[str, Any]) -> dict[str, Any]:
                 ]
             }
 
-        # Compare each detected face against the reference
+        #Compare each detected face against the reference
         best_match: FaceComparisonResult | None = None
         best_face_idx = -1
 

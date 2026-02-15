@@ -31,9 +31,9 @@ from agents.cloud_relay.agent import relay as cloud_relay
 from config.settings import DEFAULT_CLOUD_MODEL
 
 
-# =========================================================================
-# Tool definitions (OpenAI function-calling schema)
-# =========================================================================
+#=========================================================================
+#Tool definitions (OpenAI function-calling schema)
+#=========================================================================
 
 TOOL_DEFINITIONS: list[dict[str, Any]] = [
     {
@@ -140,9 +140,9 @@ TOOL_DEFINITIONS: list[dict[str, Any]] = [
 ]
 
 
-# =========================================================================
-# System prompt for the local Nemotron agent
-# =========================================================================
+#=========================================================================
+#System prompt for the local Nemotron agent
+#=========================================================================
 
 GUARDIAN_SYSTEM_PROMPT = """\
 You are the Cena Local Guardian agent running on the user's own \
@@ -171,9 +171,9 @@ RULES:
 """
 
 
-# =========================================================================
-# Session state
-# =========================================================================
+#=========================================================================
+#Session state
+#=========================================================================
 
 @dataclass
 class Session:
@@ -188,9 +188,9 @@ _pending_images: dict[str, dict[str, Any]] = {}
 _last_sanitized: dict[str, str] = {}
 
 
-# =========================================================================
-# Tool execution  (called inside the Nemotron tool-calling loop)
-# =========================================================================
+#=========================================================================
+#Tool execution  (called inside the Nemotron tool-calling loop)
+#=========================================================================
 
 async def _execute_tool(
     name: str,
@@ -253,9 +253,9 @@ async def _execute_tool(
     return json.dumps({"error": f"Unknown tool: {name}"})
 
 
-# =========================================================================
-# Nemotron tool-calling loop
-# =========================================================================
+#=========================================================================
+#Nemotron tool-calling loop
+#=========================================================================
 
 async def _run_nemotron_pipeline(
     session_id: str,
@@ -279,7 +279,7 @@ async def _run_nemotron_pipeline(
     import logging
     logger = logging.getLogger(__name__)
 
-    # ── Step 1: Local PII analysis via Nemotron + redaction ──────────
+    #── Step 1: Local PII analysis via Nemotron + redaction ──────────
     client = get_nemotron()
     nemotron_model = get_nemotron_model()
 
@@ -301,12 +301,12 @@ async def _run_nemotron_pipeline(
     except Exception as e:
         logger.warning("Nemotron PII analysis failed (%s), proceeding with rule-based redaction", e)
 
-    # Rule-based redaction (always runs — Nemotron analysis is supplementary)
+    #Rule-based redaction (always runs — Nemotron analysis is supplementary)
     sanitized, new_mapping = redact(text, session_id)
     _last_sanitized[session_id] = sanitized
     logger.info("Redacted %d PII tokens", len(new_mapping))
 
-    # ── Step 2: Transform image locally (if present) ─────────────────
+    #── Step 2: Transform image locally (if present) ─────────────────
     transformed_image = None
     transformed_mime = None
     if has_image:
@@ -317,7 +317,7 @@ async def _run_nemotron_pipeline(
             transformed_mime = img_data.get("mime_type")
             logger.info("Image transformed (%d bytes)", len(transformed_image) if transformed_image else 0)
 
-    # ── Step 3: Send sanitized data to cloud LLM ────────────────────
+    #── Step 3: Send sanitized data to cloud LLM ────────────────────
     session = _sessions.get(session_id)
     history = session.cloud_history if session else []
 
@@ -329,23 +329,23 @@ async def _run_nemotron_pipeline(
         conversation_history=history or None,
     )
 
-    # Update session history
+    #Update session history
     if session:
         session.cloud_history.append({"role": "user", "content": sanitized})
         session.cloud_history.append({"role": "assistant", "content": cloud_response})
 
     logger.info("Cloud response received (%d chars)", len(cloud_response))
 
-    # ── Step 4: Re-reference PII tokens in cloud response ───────────
+    #── Step 4: Re-reference PII tokens in cloud response ───────────
     mapping = mapping_store.get_mapping(session_id)
     final_response = re_reference(cloud_response, mapping)
 
     return final_response
 
 
-# =========================================================================
-# Session management  (public API used by the server layer)
-# =========================================================================
+#=========================================================================
+#Session management  (public API used by the server layer)
+#=========================================================================
 
 def create_session() -> str:
     """Create a new chat session and return its ID."""
@@ -367,9 +367,9 @@ def delete_session(session_id: str) -> None:
     clear_report(session_id)
 
 
-# =========================================================================
-# Main entry point
-# =========================================================================
+#=========================================================================
+#Main entry point
+#=========================================================================
 
 async def process_message(
     session_id: str,
@@ -404,7 +404,7 @@ async def process_message(
     model = model or DEFAULT_CLOUD_MODEL
     has_image = bool(image_bytes and mime_type)
 
-    # Stash the image where tools can reach it
+    #Stash the image where tools can reach it
     if has_image:
         _pending_images[session_id] = {
             "raw": image_bytes,
@@ -412,7 +412,7 @@ async def process_message(
             "transformed": None,
         }
 
-    # Run the full privacy pipeline (Nemotron local + cloud relay)
+    #Run the full privacy pipeline (Nemotron local + cloud relay)
     final_response = await _run_nemotron_pipeline(
         session_id=session_id,
         text=text,
@@ -420,10 +420,10 @@ async def process_message(
         has_image=has_image,
     )
 
-    # Grab the privacy report before cleanup
+    #Grab the privacy report before cleanup
     privacy_report = get_last_report(session_id)
 
-    # Clean up per-message transient state
+    #Clean up per-message transient state
     _pending_images.pop(session_id, None)
     clear_report(session_id)
 

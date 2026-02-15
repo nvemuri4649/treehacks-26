@@ -1,29 +1,29 @@
 //
-//  AgentPipelineWindow.swift
-//  Cena
+// AgentPipelineWindow.swift
+// Cena
 //
-//  A polished, animated visualization of the local ↔ cloud agent pipeline.
-//  Opens as a companion window to the left of the chat.
+// A polished, animated visualization of the local ↔ cloud agent pipeline.
+// Opens as a companion window to the left of the chat.
 //
-//  Flow (vertical):
-//    You  →  Local Guardian (Nemotron)  →  Cloud LLM  →  Local Re-ref  →  You
+// Flow (vertical):
+//   You  →  Local Guardian (Nemotron)  →  Cloud LLM  →  Local Re-ref  →  You
 //
 
 import SwiftUI
 
-// MARK: - Observable stage model (shared with chat)
+//MARK: - Observable stage model (shared with chat)
 
 class PipelineStageModel: ObservableObject {
     @Published var currentStage: String? = nil   // nil = idle
     @Published var isActive: Bool = false
 }
 
-// MARK: - Main view
+//MARK: - Main view
 
 struct AgentPipelineWindowView: View {
     @ObservedObject var model: PipelineStageModel
 
-    // Animation state
+    //Animation state
     @State private var particlePhase: CGFloat = 0
     @State private var pulseScale: CGFloat = 1.0
     @State private var glowOpacity: Double = 0.3
@@ -31,7 +31,7 @@ struct AgentPipelineWindowView: View {
     private let nodes: [(id: String, icon: String, label: String, sub: String, stage: String?)] = [
         ("user",    "person.fill",       "You",             "Raw message + PII",          nil),
         ("local1",  "cpu",               "Local Guardian",  "Nemotron · PII Analysis",    "sanitizing"),
-        ("glaze",   "shield.checkered",  "Likeness Shield", "Encryption",                 "glazing"),
+        ("encrypt", "shield.checkered",  "Likeness Shield", "Encryption",                 "encrypting"),
         ("cloud",   "cloud.fill",        "Cloud LLM",       "Claude · GPT · Reasoning",   "thinking"),
         ("local2",  "arrow.uturn.left",  "Re-Reference",    "Restore PII Tokens",         "restoring"),
         ("result",  "checkmark.seal.fill","Secure Response", "Privacy-safe answer",        nil),
@@ -39,13 +39,13 @@ struct AgentPipelineWindowView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
+            //Header
             header
             Spacer(minLength: 12)
-            // Pipeline nodes
+            //Pipeline nodes
             pipelineStack
             Spacer(minLength: 12)
-            // Footer
+            //Footer
             footer
         }
         .frame(width: 260)
@@ -57,7 +57,7 @@ struct AgentPipelineWindowView: View {
         .onAppear { startAnimations() }
     }
 
-    // MARK: - Header
+    //MARK: - Header
 
     private var header: some View {
         VStack(spacing: 6) {
@@ -73,15 +73,15 @@ struct AgentPipelineWindowView: View {
         .padding(.top, 16)
     }
 
-    // MARK: - Pipeline stack
+    //MARK: - Pipeline stack
 
     private var pipelineStack: some View {
         VStack(spacing: 0) {
             ForEach(Array(nodes.enumerated()), id: \.element.id) { index, node in
-                // Node
+                //Node
                 nodeRow(node: node, index: index)
 
-                // Connector (except after last)
+                //Connector (except after last)
                 if index < nodes.count - 1 {
                     connectorView(
                         fromStage: node.stage,
@@ -94,7 +94,7 @@ struct AgentPipelineWindowView: View {
         .padding(.horizontal, 20)
     }
 
-    // MARK: - Node row
+    //MARK: - Node row
 
     private func nodeRow(node: (id: String, icon: String, label: String, sub: String, stage: String?), index: Int) -> some View {
         let isActive = node.stage != nil && model.currentStage == node.stage
@@ -102,9 +102,9 @@ struct AgentPipelineWindowView: View {
         let isFutureOrIdle = !isActive && !isPast
 
         return HStack(spacing: 12) {
-            // Glowing orb
+            //Glowing orb
             ZStack {
-                // Glow ring (active only)
+                //Glow ring (active only)
                 if isActive {
                     Circle()
                         .fill(stageColor(node.stage).opacity(0.15))
@@ -117,14 +117,14 @@ struct AgentPipelineWindowView: View {
                         .scaleEffect(pulseScale)
                 }
 
-                // Past checkmark ring
+                //Past checkmark ring
                 if isPast {
                     Circle()
                         .stroke(Color.green.opacity(0.3), lineWidth: 1.5)
                         .frame(width: 38, height: 38)
                 }
 
-                // Core circle
+                //Core circle
                 Circle()
                     .fill(
                         isActive ? stageColor(node.stage).opacity(0.25) :
@@ -133,7 +133,7 @@ struct AgentPipelineWindowView: View {
                     )
                     .frame(width: 36, height: 36)
 
-                // Icon
+                //Icon
                 if isPast && node.stage != nil {
                     Image(systemName: "checkmark")
                         .font(.system(size: 13, weight: .bold))
@@ -151,7 +151,7 @@ struct AgentPipelineWindowView: View {
             }
             .frame(width: 44, height: 44)
 
-            // Labels
+            //Labels
             VStack(alignment: .leading, spacing: 2) {
                 Text(node.label)
                     .font(.system(size: 12, weight: isActive ? .bold : .medium))
@@ -174,7 +174,7 @@ struct AgentPipelineWindowView: View {
         }
     }
 
-    // MARK: - Connector (animated particles between nodes)
+    //MARK: - Connector (animated particles between nodes)
 
     private func connectorView(fromStage: String?, toStage: String?, index: Int) -> some View {
         let isFlowing = isConnectorActive(fromStage: fromStage, toStage: toStage)
@@ -185,19 +185,19 @@ struct AgentPipelineWindowView: View {
             Spacer().frame(width: 20) // Align under node center
 
             ZStack {
-                // Base line
+                //Base line
                 RoundedRectangle(cornerRadius: 1)
                     .fill(isPast ? Color.green.opacity(0.15) : Color.white.opacity(0.04))
                     .frame(width: 2, height: 24)
 
-                // Active glow line
+                //Active glow line
                 if isFlowing {
                     RoundedRectangle(cornerRadius: 1)
                         .fill(color.opacity(0.4))
                         .frame(width: 2, height: 24)
                 }
 
-                // Flowing particles
+                //Flowing particles
                 if isFlowing {
                     ForEach(0..<3, id: \.self) { i in
                         let phase = (particlePhase + CGFloat(i) * 0.33)
@@ -216,7 +216,7 @@ struct AgentPipelineWindowView: View {
         }
     }
 
-    // MARK: - Footer
+    //MARK: - Footer
 
     private var footer: some View {
         VStack(spacing: 4) {
@@ -243,12 +243,12 @@ struct AgentPipelineWindowView: View {
         .padding(.bottom, 8)
     }
 
-    // MARK: - Helpers
+    //MARK: - Helpers
 
     private func stageColor(_ stage: String?) -> Color {
         switch stage {
         case "sanitizing": return .yellow
-        case "glazing":    return .purple
+        case "encrypting":    return .purple
         case "thinking":   return .blue
         case "restoring":  return .green
         default:           return .white
@@ -258,14 +258,14 @@ struct AgentPipelineWindowView: View {
     private func stageDescription(_ stage: String) -> String {
         switch stage {
         case "sanitizing": return "Analyzing & redacting PII locally..."
-        case "glazing":    return "Encrypting likeness locally..."
+        case "encrypting":    return "Encrypting likeness locally..."
         case "thinking":   return "Cloud LLM reasoning on safe data..."
         case "restoring":  return "Restoring PII tokens locally..."
         default:           return stage
         }
     }
 
-    private var stageOrder: [String] { ["sanitizing", "glazing", "thinking", "restoring"] }
+    private var stageOrder: [String] { ["sanitizing", "encrypting", "thinking", "restoring"] }
 
     private func stageIdx(_ s: String?) -> Int {
         guard let s = s else { return -1 }
@@ -281,7 +281,7 @@ struct AgentPipelineWindowView: View {
         guard model.isActive, let current = model.currentStage else { return false }
         let ci = stageIdx(current)
         let fi = stageIdx(fromStage)
-        // Connector is active when we're at or transitioning to the toStage
+        //Connector is active when we're at or transitioning to the toStage
         return fi >= 0 && fi < ci || (fromStage == nil && ci >= 0) || stageIdx(toStage) == ci
     }
 
@@ -294,7 +294,7 @@ struct AgentPipelineWindowView: View {
         stageColor(toStage ?? model.currentStage)
     }
 
-    // MARK: - Animations
+    //MARK: - Animations
 
     private func startAnimations() {
         withAnimation(.linear(duration: 1.0).repeatForever(autoreverses: false)) {

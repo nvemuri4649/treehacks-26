@@ -25,7 +25,7 @@ from deepfake.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Rotating User-Agent strings to avoid blocks
+#Rotating User-Agent strings to avoid blocks
 _USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
@@ -123,7 +123,7 @@ class ImageProcessor:
                     content = response.content
                     content_type = response.headers.get("content-type", "")
 
-                    # Quick content-type check
+                    #Quick content-type check
                     if content_type and not content_type.startswith("image/"):
                         logger.debug("Non-image content-type for %s: %s", url[:60], content_type)
                         return None
@@ -159,7 +159,7 @@ class ImageProcessor:
         self, url: str, content: bytes
     ) -> Optional[DownloadedImage]:
         """Validate, deduplicate, resize, and save a downloaded image."""
-        # Content hash for dedup
+        #Content hash for dedup
         content_hash = hashlib.sha256(content).hexdigest()[:16]
 
         if content_hash in self._seen_hashes:
@@ -176,11 +176,11 @@ class ImageProcessor:
             )
         self._seen_hashes.add(content_hash)
 
-        # Validate it's a real image
+        #Validate it's a real image
         try:
             img = Image.open(io.BytesIO(content))
             img.verify()
-            # Re-open after verify (verify consumes the image)
+            #Re-open after verify (verify consumes the image)
             img = Image.open(io.BytesIO(content))
         except Exception:
             logger.debug("Invalid image data from %s", url[:60])
@@ -192,10 +192,10 @@ class ImageProcessor:
 
         orig_width, orig_height = img.size
 
-        # Resize if needed (preserve aspect ratio)
+        #Resize if needed (preserve aspect ratio)
         img = self._resize_image(img, MAX_IMAGE_DIMENSION)
 
-        # Save to disk
+        #Save to disk
         ext = img.format.lower() if img.format else "jpg"
         if ext == "jpeg":
             ext = "jpg"

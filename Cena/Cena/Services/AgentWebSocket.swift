@@ -1,8 +1,8 @@
 //
-//  AgentWebSocket.swift
-//  Cena
+// AgentWebSocket.swift
+// Cena
 //
-//  WebSocket client for the Cena privacy agent backend
+// WebSocket client for the Cena privacy agent backend
 //
 
 import Foundation
@@ -18,7 +18,7 @@ class AgentWebSocket: ObservableObject {
 
     var onMessage: ((ServerMessage) -> Void)?
 
-    // MARK: - Server message types
+    //MARK: - Server message types
 
     struct ServerMessage {
         enum MessageType {
@@ -33,7 +33,7 @@ class AgentWebSocket: ObservableObject {
         self.serverURL = serverURL
     }
 
-    // MARK: - Session management
+    //MARK: - Session management
 
     func createSession() async throws -> String {
         let url = URL(string: "\(serverURL)/api/session")!
@@ -69,7 +69,7 @@ class AgentWebSocket: ObservableObject {
         currentStage = nil
     }
 
-    // MARK: - Send
+    //MARK: - Send
 
     func send(text: String, model: String, imageData: Data? = nil, mimeType: String? = nil) {
         var payload: [String: Any] = [
@@ -92,7 +92,7 @@ class AgentWebSocket: ObservableObject {
         }
     }
 
-    // MARK: - Receive
+    //MARK: - Receive
 
     private func receiveMessage() {
         webSocket?.receive { [weak self] result in

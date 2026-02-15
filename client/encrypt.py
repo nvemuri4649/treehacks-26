@@ -1,24 +1,12 @@
 #!/usr/bin/env python3
 """
-Cena Encryption Client — Glaze Images via Any GPU Backend
-=========================================================
-Sends an image + mask to the Cena encryption server and saves the
-protected (glazed) image locally. Supports multiple GPU backends.
+cena encryption client — encrypt images via any gpu backend
+sends image + mask to the cena encryption server and saves the protected image locally.
 
-Usage:
-    # Use default backend (from backends.json)
-    python client/glaze.py --image photo.png --mask mask.png
-
-    # Use a named backend
-    python client/glaze.py --image photo.png --mask mask.png --backend gx10
-    python client/glaze.py --image photo.png --mask mask.png --backend runpod
-    python client/glaze.py --image photo.png --mask mask.png --backend local
-
-    # Use a direct URL (overrides backend name)
-    python client/glaze.py --image photo.png --mask mask.png --server http://192.168.1.42:5000
-
-    # RunPod with pod ID from env
-    RUNPOD_POD_ID=abc123 python client/glaze.py --image photo.png --mask mask.png --backend runpod
+usage:
+    python client/encrypt.py --image photo.png --mask mask.png
+    python client/encrypt.py --image photo.png --mask mask.png --backend gx10
+    python client/encrypt.py --image photo.png --mask mask.png --server http://host:5000
 """
 
 import argparse
@@ -82,10 +70,9 @@ def main():
         description="Protect images using Cena encryption on a remote GPU",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
-Examples:
-  python client/glaze.py --image photo.png --mask mask.png --backend gx10
-  python client/glaze.py --image photo.png --mask mask.png --backend runpod
-  python client/glaze.py --image photo.png --mask mask.png --server http://my-gpu:5000
+examples:
+  python client/encrypt.py --image photo.png --mask mask.png --backend gx10
+  python client/encrypt.py --image photo.png --mask mask.png --server http://my-gpu:5000
         """,
     )
     parser.add_argument("--image", required=True, help="Path to the source image")
@@ -95,7 +82,7 @@ Examples:
     add_backend_args(parser)
     args = parser.parse_args()
 
-    # Validate inputs
+    #Validate inputs
     if not os.path.isfile(args.image):
         print(f"ERROR: Image not found: {args.image}")
         sys.exit(1)
@@ -103,29 +90,29 @@ Examples:
         print(f"ERROR: Mask not found: {args.mask}")
         sys.exit(1)
 
-    # Default output path
+    #Default output path
     if args.output is None:
         base, ext = os.path.splitext(args.image)
         args.output = f"{base}_protected.png"
 
-    # Resolve backend
+    #Resolve backend
     server = get_server_url(args)
     print(f"Connecting to GPU backend...")
     print_backend_info(server, args.backend)
 
-    # Health check
+    #Health check
     info = check_health(server)
     print(f"  Server OK — GPU: {info.get('gpu', '?')}, Memory: {info.get('gpu_memory', '?')}")
 
-    # Protect
+    #Protect
     protected_bytes = protect_image(server, args.image, args.mask, args.iters)
 
-    # Save
+    #Save
     with open(args.output, "wb") as f:
         f.write(protected_bytes)
     print(f"  Saved: {args.output}")
 
-    # Quick visual sanity check
+    #Quick visual sanity check
     orig = Image.open(args.image).convert("RGB")
     prot = Image.open(args.output).convert("RGB")
     print(f"  Original size: {orig.size}, Protected size: {prot.size}")

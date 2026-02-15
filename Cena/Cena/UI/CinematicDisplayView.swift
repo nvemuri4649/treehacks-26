@@ -1,8 +1,8 @@
 //
-//  CinematicDisplayView.swift
-//  Cena
+// CinematicDisplayView.swift
+// Cena
 //
-//  Side-by-side display of original and encrypted demo images.
+// Side-by-side display of original and encrypted demo images.
 //
 
 import SwiftUI

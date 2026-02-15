@@ -1,25 +1,24 @@
 """
-Configuration settings for Cena.
-Loads environment variables from .env and exposes them as module-level constants.
+config for cena — loads .env and exposes settings.
 """
 
 import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load .env from project root
+#.env from project root
 _project_root = Path(__file__).resolve().parent.parent
 load_dotenv(_project_root / ".env")
 
-# ── Local Nemotron (vLLM) ────────────────────────────────────────────────
+#local nemotron (vllm)
 NEMOTRON_ENDPOINT: str = os.getenv("NEMOTRON_ENDPOINT", "http://localhost:8001/v1")
 NEMOTRON_MODEL: str = os.getenv("NEMOTRON_MODEL", "nvidia/NVIDIA-Nemotron-Nano-9B-v2")
 
-# ── Cloud API Keys ───────────────────────────────────────────────────────
+#cloud api keys
 ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
 
-# ── Cloud model defaults ─────────────────────────────────────────────────
+#default cloud model
 DEFAULT_CLOUD_MODEL: str = os.getenv("DEFAULT_CLOUD_MODEL", "claude-sonnet-4-20250514")
 
 CLAUDE_MODELS = {
@@ -33,15 +32,15 @@ OPENAI_MODELS = {
     "gpt-4-turbo",
 }
 
-# ── Bright Data (Deepfake Detection Agent) ────────────────────────────────
+#bright data (deepfake scanner)
 BRIGHTDATA_API_TOKEN: str = os.getenv("BRIGHTDATA_API_TOKEN", "")
 BRIGHTDATA_BROWSER_AUTH: str = os.getenv("BRIGHTDATA_BROWSER_AUTH", "")
 
-# ── Glazing / Encryption Server ───────────────────────────────────────────
-GLAZE_SERVER_URL: str = os.getenv("GLAZE_SERVER_URL", "http://spark-abcd.local:5000")
-GLAZE_DEFAULT_ITERS: int = int(os.getenv("GLAZE_DEFAULT_ITERS", "200"))
+#encryption server
+ENCRYPTION_SERVER_URL: str = os.getenv("ENCRYPTION_SERVER_URL", os.getenv("GLAZE_SERVER_URL", "http://spark-abcd.local:5000"))
+ENCRYPTION_DEFAULT_ITERS: int = int(os.getenv("ENCRYPTION_DEFAULT_ITERS", os.getenv("GLAZE_DEFAULT_ITERS", "200")))
 
-# ── Server ────────────────────────────────────────────────────────────────
+#server
 HOST: str = os.getenv("HOST", "127.0.0.1")
 PORT: int = int(os.getenv("PORT", "8000"))
 

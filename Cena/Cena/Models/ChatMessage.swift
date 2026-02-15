@@ -1,15 +1,15 @@
 //
-//  ChatMessage.swift
-//  Cena
+// ChatMessage.swift
+// Cena
 //
-//  Chat message model for the agent interface
+// Chat message model for the agent interface
 //
 
 import Foundation
 import AppKit
 
 
-// MARK: - Privacy Report Model
+//MARK: - Privacy Report Model
 
 struct PrivacyEntityReport: Identifiable {
     let id = UUID()
@@ -85,7 +85,7 @@ struct PrivacyReport {
 }
 
 
-// MARK: - Chat Message
+//MARK: - Chat Message
 
 struct ChatMessage: Identifiable {
     let id = UUID()

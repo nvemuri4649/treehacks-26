@@ -1,8 +1,8 @@
 //
-//  BackendService.swift
-//  Cena
+// BackendService.swift
+// Cena
 //
-//  HTTP client for communicating with the encryption server API
+// http client for encryption server api
 //
 
 import Foundation
@@ -20,7 +20,7 @@ struct HealthResponse: Codable {
         let memory: String?
     }
 
-    // Handle "gpu" being either a string ("NVIDIA GB10") or an object ({name, memory})
+    //Handle "gpu" being either a string ("NVIDIA GB10") or an object ({name, memory})
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         status = try container.decode(String.self, forKey: .status)
@@ -28,7 +28,7 @@ struct HealthResponse: Codable {
         device = try container.decodeIfPresent(String.self, forKey: .device)
         model_loaded = try container.decodeIfPresent(Bool.self, forKey: .model_loaded)
 
-        // Try decoding gpu as GPUInfo object first, then as plain string
+        //Try decoding gpu as GPUInfo object first, then as plain string
         if let gpuObj = try? container.decodeIfPresent(GPUInfo.self, forKey: .gpu) {
             gpu = gpuObj
         } else if let gpuString = try? container.decodeIfPresent(String.self, forKey: .gpu) {
@@ -46,19 +46,19 @@ class BackendService {
     init(baseURL: String) {
         self.baseURL = baseURL
 
-        // Configure session with longer timeout for glazing operations
+        //longer timeout for encryption
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30  // Health check timeout
-        config.timeoutIntervalForResource = 900  // 15 minutes for glazing
+        config.timeoutIntervalForResource = 900  // 15 min for encryption
         self.session = URLSession(configuration: config)
     }
 
-    // MARK: - Health Check
+    //MARK: - Health Check
 
     /// Check if backend server is available and get GPU info
     func checkHealth() async throws -> HealthResponse {
         guard let url = URL(string: "\(baseURL)/health") else {
-            throw GlazingError.backendUnavailable
+            throw EncryptionError.backendUnavailable
         }
 
         do {
@@ -66,7 +66,7 @@ class BackendService {
 
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200 else {
-                throw GlazingError.backendUnavailable
+                throw EncryptionError.backendUnavailable
             }
 
             let healthResponse = try JSONDecoder().decode(HealthResponse.self, from: data)
@@ -77,11 +77,11 @@ class BackendService {
             return healthResponse
         } catch {
             print("❌ Health check failed: \(error)")
-            throw GlazingError.networkError(error)
+            throw EncryptionError.networkError(error)
         }
     }
 
-    // MARK: - Image Protection
+    //MARK: - Image Protection
 
     /// Protect an image using the /protect endpoint
     /// - Parameters:
@@ -97,40 +97,40 @@ class BackendService {
         progressCallback: ((Double) -> Void)? = nil
     ) async throws -> NSImage {
         guard let url = URL(string: "\(baseURL)/protect?iters=\(iterations)") else {
-            throw GlazingError.backendUnavailable
+            throw EncryptionError.backendUnavailable
         }
 
-        // Convert images to PNG data
+        //Convert images to PNG data
         guard let imageData = image.pngData(),
               let maskData = mask.pngData() else {
-            throw GlazingError.invalidImage
+            throw EncryptionError.invalidImage
         }
 
-        // Build multipart/form-data request
+        //Build multipart/form-data request
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
 
         let boundary = "Boundary-\(UUID().uuidString)"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
 
-        // Create multipart body
+        //Create multipart body
         var body = Data()
 
-        // Add image file
+        //Add image file
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
         body.append("Content-Disposition: form-data; name=\"image\"; filename=\"image.png\"\r\n".data(using: .utf8)!)
         body.append("Content-Type: image/png\r\n\r\n".data(using: .utf8)!)
         body.append(imageData)
         body.append("\r\n".data(using: .utf8)!)
 
-        // Add mask file
+        //Add mask file
         body.append("--\(boundary)\r\n".data(using: .utf8)!)
         body.append("Content-Disposition: form-data; name=\"mask\"; filename=\"mask.png\"\r\n".data(using: .utf8)!)
         body.append("Content-Type: image/png\r\n\r\n".data(using: .utf8)!)
         body.append(maskData)
         body.append("\r\n".data(using: .utf8)!)
 
-        // Close boundary
+        //Close boundary
         body.append("--\(boundary)--\r\n".data(using: .utf8)!)
 
         request.httpBody = body
@@ -138,24 +138,24 @@ class BackendService {
 
         print("🔐 Protecting image: \(iterations) iterations, size: \(image.size)")
 
-        // Start request
+        //Start request
         let startTime = Date()
         do {
             let (data, response) = try await session.data(for: request)
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                throw GlazingError.invalidResponse
+                throw EncryptionError.invalidResponse
             }
 
             if httpResponse.statusCode != 200 {
                 print("❌ Server returned error: \(httpResponse.statusCode)")
-                throw GlazingError.invalidResponse
+                throw EncryptionError.invalidResponse
             }
 
-            // Parse response as image
+            //Parse response as image
             guard let protectedImage = NSImage(data: data) else {
                 print("❌ Server returned invalid image data")
-                throw GlazingError.invalidResponse
+                throw EncryptionError.invalidResponse
             }
 
             let elapsed = Date().timeIntervalSince(startTime)
@@ -163,15 +163,15 @@ class BackendService {
 
             return protectedImage
 
-        } catch let error as GlazingError {
+        } catch let error as EncryptionError {
             throw error
         } catch {
             print("❌ Network error during protection: \(error)")
-            throw GlazingError.networkError(error)
+            throw EncryptionError.networkError(error)
         }
     }
 
-    // MARK: - Helper Methods
+    //MARK: - Helper Methods
 
     /// Test if backend is reachable
     func isReachable() async -> Bool {
@@ -184,7 +184,7 @@ class BackendService {
     }
 }
 
-// MARK: - NSImage Extensions
+//MARK: - NSImage Extensions
 
 extension NSImage {
     /// Convert NSImage to PNG data

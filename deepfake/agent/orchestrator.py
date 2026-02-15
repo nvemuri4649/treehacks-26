@@ -42,9 +42,9 @@ from deepfake.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Scan state
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Scan state
+#---------------------------------------------------------------------------
 
 @dataclass
 class ScanProgress:
@@ -79,9 +79,9 @@ class ScanResult:
     error: str = ""
 
 
-# ---------------------------------------------------------------------------
-# Agent orchestrator
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Agent orchestrator
+#---------------------------------------------------------------------------
 
 class DeepfakeDetectionAgent:
     """
@@ -145,7 +145,7 @@ class DeepfakeDetectionAgent:
         scan_id = scan_id or str(uuid.uuid4())[:8]
         image_path = Path(image_path)
 
-        # --- Phase 0: Extract reference face embedding ---
+        #--- Phase 0: Extract reference face embedding ---
         yield ScanProgress(
             scan_id=scan_id,
             status="initializing",
@@ -172,7 +172,7 @@ class DeepfakeDetectionAgent:
             message="Face embedding extracted successfully. Starting agent...",
         )
 
-        # --- Phase 1-6: Agent-driven search and analysis ---
+        #--- Phase 1-6: Agent-driven search and analysis ---
         mcp_server = self._create_mcp_server()
         options = self._create_options(mcp_server)
 
@@ -205,7 +205,7 @@ class DeepfakeDetectionAgent:
                     if isinstance(message, AssistantMessage):
                         for block in message.content:
                             if isinstance(block, TextBlock):
-                                # Agent is providing reasoning/updates
+                                #Agent is providing reasoning/updates
                                 yield ScanProgress(
                                     scan_id=scan_id,
                                     status="searching",
@@ -214,7 +214,7 @@ class DeepfakeDetectionAgent:
                                 )
 
                             elif isinstance(block, ToolUseBlock):
-                                # Agent is calling a tool
+                                #Agent is calling a tool
                                 phase = self._tool_to_phase(block.name)
                                 yield ScanProgress(
                                     scan_id=scan_id,
@@ -227,7 +227,7 @@ class DeepfakeDetectionAgent:
                                     },
                                 )
 
-            # Check if a report was generated
+            #Check if a report was generated
             report_path = settings.output_dir / f"report_{scan_id}.json"
             report = None
             if report_path.exists():

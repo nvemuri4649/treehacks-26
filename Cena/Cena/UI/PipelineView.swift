@@ -1,21 +1,21 @@
 //
-//  PipelineView.swift
-//  Cena
+// PipelineView.swift
+// Cena
 //
-//  Animated visualization of the local-cloud agent pipeline
+// Animated visualization of the local-cloud agent pipeline
 //
 
 import SwiftUI
 
 struct PipelineView: View {
-    let stage: String  // "sanitizing", "glazing", "thinking", "restoring"
+    let stage: String  // sanitizing, encrypting, thinking, restoring
 
     @State private var particleOffset: CGFloat = 0
 
     private var stageIndex: Int {
         switch stage {
         case "sanitizing": return 0
-        case "glazing": return 1
+        case "encrypting": return 1
         case "thinking": return 2
         case "restoring": return 3
         default: return 0
@@ -24,28 +24,28 @@ struct PipelineView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // Local agent node
+            //Local agent node
             nodeView(
                 icon: "desktopcomputer",
                 label: "Local",
                 isActive: stageIndex <= 1
             )
 
-            // Arrow with particles flowing
+            //Arrow with particles flowing
             animatedArrow(
                 flowRight: stageIndex == 2,
                 flowLeft: stageIndex == 3,
                 color: stageIndex == 2 ? .blue : stageIndex == 3 ? .green : .clear
             )
 
-            // Cloud node
+            //Cloud node
             nodeView(
                 icon: "cloud",
                 label: "Cloud",
                 isActive: stageIndex == 2
             )
 
-            // Arrow back
+            //Arrow back
             animatedArrow(
                 flowRight: stageIndex == 3,
                 flowLeft: false,
@@ -64,7 +64,7 @@ struct PipelineView: View {
         }
     }
 
-    // MARK: - Node
+    //MARK: - Node
 
     private func nodeView(icon: String, label: String, isActive: Bool) -> some View {
         VStack(spacing: 3) {
@@ -83,19 +83,19 @@ struct PipelineView: View {
         }
     }
 
-    // MARK: - Animated arrow with flowing dots
+    //MARK: - Animated arrow with flowing dots
 
     private func animatedArrow(flowRight: Bool, flowLeft: Bool, color: Color) -> some View {
         GeometryReader { geo in
             let w = geo.size.width
             ZStack {
-                // Base line
+                //Base line
                 Rectangle()
                     .fill(.white.opacity(0.06))
                     .frame(height: 1)
                     .offset(y: 0)
 
-                // Flowing particles
+                //Flowing particles
                 if flowRight || flowLeft {
                     ForEach(0..<3, id: \.self) { i in
                         let basePhase = (particleOffset + CGFloat(i) * 0.33).truncatingRemainder(dividingBy: 1.0)
@@ -113,7 +113,7 @@ struct PipelineView: View {
     }
 }
 
-// MARK: - Stage descriptor
+//MARK: - Stage descriptor
 
 struct PipelineStageLabel: View {
     let stage: String
@@ -132,7 +132,7 @@ struct PipelineStageLabel: View {
     private var stageColor: Color {
         switch stage {
         case "sanitizing": return .yellow
-        case "glazing": return .purple
+        case "encrypting": return .purple
         case "thinking": return .blue
         case "restoring": return .green
         default: return .gray
@@ -142,7 +142,7 @@ struct PipelineStageLabel: View {
     private var stageText: String {
         switch stage {
         case "sanitizing": return "Dereferencing locally..."
-        case "glazing": return "Encrypting likeness..."
+        case "encrypting": return "Encrypting likeness..."
         case "thinking": return "Cloud reasoning..."
         case "restoring": return "Re-referencing..."
         default: return stage

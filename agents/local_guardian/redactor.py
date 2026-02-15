@@ -33,9 +33,9 @@ from agents.local_guardian.blur_strategies import blur
 from agents.local_guardian.adversarial_analyzer import analyze as adversarial_analyze
 
 
-# ---------------------------------------------------------------------------
-# Privacy report model
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Privacy report model
+#---------------------------------------------------------------------------
 
 
 @dataclass
@@ -80,9 +80,9 @@ class PrivacyReport:
         }
 
 
-# ---------------------------------------------------------------------------
-# Per-session report cache
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Per-session report cache
+#---------------------------------------------------------------------------
 
 _last_reports: dict[str, PrivacyReport] = {}
 
@@ -97,9 +97,9 @@ def clear_report(session_id: str) -> None:
     _last_reports.pop(session_id, None)
 
 
-# ---------------------------------------------------------------------------
-# Core redaction logic
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Core redaction logic
+#---------------------------------------------------------------------------
 
 
 def redact(text: str, session_id: str) -> tuple[str, dict[str, str]]:
@@ -128,7 +128,7 @@ def redact(text: str, session_id: str) -> tuple[str, dict[str, str]]:
     """
     from agents.local_guardian.pii_detector import is_spacy_available
 
-    # ── 1. DETECT ─────────────────────────────────────────────────────
+    #── 1. DETECT ─────────────────────────────────────────────────────
     spans: list[PIISpan] = detect(text)
 
     if not spans:
@@ -138,13 +138,13 @@ def redact(text: str, session_id: str) -> tuple[str, dict[str, str]]:
         )
         return text, {}
 
-    # ── 2. SCORE ──────────────────────────────────────────────────────
+    #── 2. SCORE ──────────────────────────────────────────────────────
     scored: list[ScoredSpan] = score_spans(spans, text)
 
-    # ── 3. ADVERSARIAL ANALYSIS ───────────────────────────────────────
+    #── 3. ADVERSARIAL ANALYSIS ───────────────────────────────────────
     adv_report = adversarial_analyze(scored, text)
 
-    # Escalate spans that the adversarial check flagged
+    #Escalate spans that the adversarial check flagged
     for idx in adv_report.escalated_spans:
         if idx < len(scored):
             old = scored[idx]
@@ -158,7 +158,7 @@ def redact(text: str, session_id: str) -> tuple[str, dict[str, str]]:
                 action="REDACT",
             )
 
-    # ── 4. APPLY REPLACEMENTS ─────────────────────────────────────────
+    #── 4. APPLY REPLACEMENTS ─────────────────────────────────────────
     new_mapping: dict[str, str] = {}
     blur_hints: list[str] = []
     entity_reports: list[EntityReport] = []
@@ -167,7 +167,7 @@ def redact(text: str, session_id: str) -> tuple[str, dict[str, str]]:
     blurred_count = 0
     kept_count = 0
 
-    # Process spans in reverse order to preserve character offsets
+    #Process spans in reverse order to preserve character offsets
     sorted_scored = sorted(scored, key=lambda s: s.span.start, reverse=True)
     sanitized = text
 
@@ -180,7 +180,7 @@ def redact(text: str, session_id: str) -> tuple[str, dict[str, str]]:
             entity_reports.append(EntityReport(pii_type=span.pii_type, action="KEEP"))
             continue
 
-        # Both REDACT and BLUR get a token
+        #Both REDACT and BLUR get a token
         token = mapping_store.add(session_id, span.pii_type, original)
         sanitized = sanitized[: span.start] + token + sanitized[span.end :]
         new_mapping[token] = original
@@ -199,25 +199,25 @@ def redact(text: str, session_id: str) -> tuple[str, dict[str, str]]:
                     )
                 )
             else:
-                # No blur strategy — fall through to REDACT presentation
+                #No blur strategy — fall through to REDACT presentation
                 redacted_count += 1
                 entity_reports.append(
                     EntityReport(pii_type=span.pii_type, action="REDACT", token=token)
                 )
         else:
-            # REDACT
+            #REDACT
             redacted_count += 1
             entity_reports.append(
                 EntityReport(pii_type=span.pii_type, action="REDACT", token=token)
             )
 
-    # ── 5. CONTEXT HINTS (kept local only — NEVER sent to cloud) ─────
-    # blur_hints are stored in EntityReport for the UI privacy panel
-    # but are NOT appended to the sanitized text.
+    #── 5. CONTEXT HINTS (kept local only — NEVER sent to cloud) ─────
+    #blur_hints are stored in EntityReport for the UI privacy panel
+    #but are NOT appended to the sanitized text.
 
-    # ── 6. BUILD PRIVACY REPORT ───────────────────────────────────────
-    # Reverse entity_reports so they're in document order (we built them
-    # backwards because of reverse offset processing)
+    #── 6. BUILD PRIVACY REPORT ───────────────────────────────────────
+    #Reverse entity_reports so they're in document order (we built them
+    #backwards because of reverse offset processing)
     entity_reports.reverse()
 
     report = PrivacyReport(

@@ -1,8 +1,8 @@
 //
-//  SettingsView.swift
-//  Cena
+// SettingsView.swift
+// Cena
 //
-//  User settings and configuration panel — glass aesthetic
+// User settings and configuration panel — glass aesthetic
 //
 
 import SwiftUI
@@ -27,7 +27,7 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
+            //Header
             HStack(spacing: 10) {
                 CenaLogo(size: 22, isAnimating: false, color: .white.opacity(0.8))
 
@@ -49,7 +49,7 @@ struct SettingsView: View {
 
             Rectangle().fill(.white.opacity(0.06)).frame(height: 0.5)
 
-            // Content
+            //Content
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
 
@@ -142,7 +142,7 @@ struct SettingsView: View {
 
             Rectangle().fill(.white.opacity(0.06)).frame(height: 0.5)
 
-            // Footer
+            //Footer
             HStack {
                 Button("Reset Defaults") {
                     resetToDefaults()
@@ -175,7 +175,7 @@ struct SettingsView: View {
         )
     }
 
-    // MARK: - Helpers
+    //MARK: - Helpers
 
     private var estimatedTime: String {
         let seconds = Double(settings.defaultIterations) * 0.4
@@ -205,7 +205,7 @@ struct SettingsView: View {
     }
 }
 
-// MARK: - Section
+//MARK: - Section
 
 struct SettingsSection<Content: View>: View {
     let title: String
@@ -240,7 +240,7 @@ struct SettingsSection<Content: View>: View {
     }
 }
 
-// MARK: - Toggle row
+//MARK: - Toggle row
 
 struct SettingsToggle: View {
     let label: String

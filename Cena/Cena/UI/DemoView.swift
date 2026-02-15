@@ -1,8 +1,8 @@
 //
-//  DemoView.swift
-//  Cena
+// DemoView.swift
+// Cena
 //
-//  Interactive demo: Image encryption + Video deepfake prevention
+// Interactive demo: Image encryption + Video deepfake prevention
 //
 
 import SwiftUI
@@ -17,7 +17,7 @@ struct DemoView: View {
             header
             Rectangle().fill(.white.opacity(0.06)).frame(height: 0.5)
 
-            // Tab picker
+            //Tab picker
             Picker("", selection: $selectedTab) {
                 Text("Image Demo").tag(0)
                 Text("Video Demo").tag(1)
@@ -53,7 +53,7 @@ struct DemoView: View {
     }
 }
 
-// MARK: - Shared
+//MARK: - Shared
 
 private let demoDir: URL? = {
     let candidates = [
@@ -69,7 +69,7 @@ private let demoDir: URL? = {
     return candidates.first
 }()
 
-// MARK: - Image Demo Tab
+//MARK: - Image Demo Tab
 
 struct ImageDemoTab: View {
     @State private var showDiffused = false
@@ -180,7 +180,7 @@ struct ImageDemoTab: View {
     }
 }
 
-// MARK: - Video Demo Tab
+//MARK: - Video Demo Tab
 
 struct VideoDemoTab: View {
     @State private var showResult = false
@@ -344,7 +344,7 @@ struct VideoDemoTab: View {
     }
 }
 
-// MARK: - Shared Components
+//MARK: - Shared Components
 
 private func sectionHeader(_ title: String, subtitle: String) -> some View {
     HStack(spacing: 5) {
@@ -444,7 +444,7 @@ struct DemoImageCard: View {
     }
 }
 
-// MARK: - Looping video via AVPlayerLayer (no AVKit import)
+//MARK: - Looping video via AVPlayerLayer (no AVKit import)
 
 struct LoopingVideoView: NSViewRepresentable {
     let url: URL

@@ -20,9 +20,9 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 
-# ---------------------------------------------------------------------------
-# Optional spaCy import — enhanced NER when available, regex-only fallback
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Optional spaCy import — enhanced NER when available, regex-only fallback
+#---------------------------------------------------------------------------
 
 try:
     import spacy
@@ -37,9 +37,9 @@ except ImportError:
     _SPACY_AVAILABLE = False
 
 
-# ---------------------------------------------------------------------------
-# Data model
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Data model
+#---------------------------------------------------------------------------
 
 
 @dataclass
@@ -54,13 +54,13 @@ class PIISpan:
     confidence: float = 1.0
 
 
-# ---------------------------------------------------------------------------
-# Regex patterns — (pii_type, compiled_pattern)
-# Ordered from most to least specific so overlap resolution favours precision.
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Regex patterns — (pii_type, compiled_pattern)
+#Ordered from most to least specific so overlap resolution favours precision.
+#---------------------------------------------------------------------------
 
 _REGEX_PATTERNS: list[tuple[str, re.Pattern]] = [
-    # ── Critical identifiers ──────────────────────────────────────────
+    #── Critical identifiers ──────────────────────────────────────────
     (
         "SSN",
         re.compile(r"\b\d{3}-\d{2}-\d{4}\b"),
@@ -69,7 +69,7 @@ _REGEX_PATTERNS: list[tuple[str, re.Pattern]] = [
         "CREDIT_CARD",
         re.compile(r"\b(?:\d{4}[-\s]?){3}\d{4}\b"),
     ),
-    # ── Contact information ───────────────────────────────────────────
+    #── Contact information ───────────────────────────────────────────
     (
         "EMAIL",
         re.compile(
@@ -82,7 +82,7 @@ _REGEX_PATTERNS: list[tuple[str, re.Pattern]] = [
             r"\b(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"
         ),
     ),
-    # ── Network / Digital ─────────────────────────────────────────────
+    #── Network / Digital ─────────────────────────────────────────────
     (
         "IP_ADDRESS",
         re.compile(r"\b(?:\d{1,3}\.){3}\d{1,3}\b"),
@@ -91,7 +91,7 @@ _REGEX_PATTERNS: list[tuple[str, re.Pattern]] = [
         "URL",
         re.compile(r"https?://[^\s<>\"']+"),
     ),
-    # ── Dates (multiple formats) ──────────────────────────────────────
+    #── Dates (multiple formats) ──────────────────────────────────────
     (
         "DATE",
         re.compile(
@@ -117,7 +117,7 @@ _REGEX_PATTERNS: list[tuple[str, re.Pattern]] = [
         "DATE",
         re.compile(r"\b\d{4}-\d{2}-\d{2}\b"),
     ),
-    # ── Geographic ────────────────────────────────────────────────────
+    #── Geographic ────────────────────────────────────────────────────
     (
         "ADDRESS",
         re.compile(
@@ -132,7 +132,7 @@ _REGEX_PATTERNS: list[tuple[str, re.Pattern]] = [
         "ZIPCODE",
         re.compile(r"\b\d{5}(?:-\d{4})?\b"),
     ),
-    # ── Monetary amounts ───────────────────────────────────────────────
+    #── Monetary amounts ───────────────────────────────────────────────
     (
         "MONEY",
         re.compile(
@@ -141,7 +141,7 @@ _REGEX_PATTERNS: list[tuple[str, re.Pattern]] = [
             re.IGNORECASE,
         ),
     ),
-    # ── Age expressions ───────────────────────────────────────────────
+    #── Age expressions ───────────────────────────────────────────────
     (
         "AGE",
         re.compile(
@@ -155,9 +155,9 @@ _REGEX_PATTERNS: list[tuple[str, re.Pattern]] = [
     ),
 ]
 
-# ---------------------------------------------------------------------------
-# spaCy entity label → our PII type
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#spaCy entity label → our PII type
+#---------------------------------------------------------------------------
 
 _SPACY_TYPE_MAP: dict[str, str] = {
     "PERSON": "PERSON",
@@ -177,9 +177,9 @@ _SPACY_TYPE_MAP: dict[str, str] = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Detection engines
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Detection engines
+#---------------------------------------------------------------------------
 
 
 def _detect_regex(text: str) -> list[PIISpan]:
@@ -218,10 +218,10 @@ def _detect_ner(text: str) -> list[PIISpan]:
         pii_type = _SPACY_TYPE_MAP.get(ent.label_)
         if pii_type is None:
             continue
-        # Skip common abbreviations / labels that NER picks up spuriously
+        #Skip common abbreviations / labels that NER picks up spuriously
         if ent.text.strip().lower() in _NER_STOPWORDS:
             continue
-        # Skip very short entities (likely noise)
+        #Skip very short entities (likely noise)
         if len(ent.text.strip()) < 2:
             continue
         spans.append(
@@ -237,9 +237,9 @@ def _detect_ner(text: str) -> list[PIISpan]:
     return spans
 
 
-# ---------------------------------------------------------------------------
-# Overlap resolution
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Overlap resolution
+#---------------------------------------------------------------------------
 
 
 def _resolve_overlaps(spans: list[PIISpan]) -> list[PIISpan]:
@@ -255,7 +255,7 @@ def _resolve_overlaps(spans: list[PIISpan]) -> list[PIISpan]:
     if not spans:
         return []
 
-    # Sort: highest confidence first, then longest, then earliest start
+    #Sort: highest confidence first, then longest, then earliest start
     ranked = sorted(
         spans,
         key=lambda s: (-s.confidence, -(s.end - s.start), s.start),
@@ -273,9 +273,9 @@ def _resolve_overlaps(spans: list[PIISpan]) -> list[PIISpan]:
     return sorted(accepted, key=lambda s: s.start)
 
 
-# ---------------------------------------------------------------------------
-# Public API
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Public API
+#---------------------------------------------------------------------------
 
 
 def detect(text: str) -> list[PIISpan]:

@@ -13,7 +13,7 @@ from openai import AsyncOpenAI
 
 from config.settings import NEMOTRON_ENDPOINT, NEMOTRON_MODEL
 
-# Generous timeout for local vLLM — first request may be slow (JIT compile)
+#Generous timeout for local vLLM — first request may be slow (JIT compile)
 _NEMOTRON_TIMEOUT = httpx.Timeout(connect=30.0, read=300.0, write=30.0, pool=30.0)
 
 

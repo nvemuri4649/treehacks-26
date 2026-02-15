@@ -14,14 +14,14 @@ The loop continues until the deepfake quality drops below the threshold,
 indicating that the glazing is strong enough to effectively protect the image.
 
 Usage:
-    # Basic usage with default backend
+    #Basic usage with default backend
     python client/agent_loop.py \
         --image face.png \
         --mask mask.png \
         --prompt "a person in a hospital" \
         --threshold 6
 
-    # With specific backend
+    #With specific backend
     python client/agent_loop.py \
         --image face.png \
         --mask mask.png \
@@ -29,7 +29,7 @@ Usage:
         --threshold 6 \
         --backend gx10
 
-    # Custom iteration schedule
+    #Custom iteration schedule
     python client/agent_loop.py \
         --image face.png \
         --mask mask.png \
@@ -61,9 +61,9 @@ from backends import add_backend_args, get_server_url, print_backend_info
 from rater_agent import rate_deepfake
 
 
-# ============================================================================
-# Server Communication
-# ============================================================================
+#============================================================================
+#Server Communication
+#============================================================================
 
 def check_server_health(server: str) -> dict:
     """Verify the GPU server is reachable and return status info."""
@@ -141,9 +141,9 @@ def generate_deepfake(
     return deepfake, elapsed
 
 
-# ============================================================================
-# Visualization
-# ============================================================================
+#============================================================================
+#Visualization
+#============================================================================
 
 def create_iteration_summary(
     iteration: int,
@@ -156,11 +156,11 @@ def create_iteration_summary(
     output_path: str,
 ):
     """Create a visual summary of one iteration with all images and metrics."""
-    # Resize all to same size
+    #Resize all to same size
     size = 384
     imgs = [img.resize((size, size), Image.LANCZOS) for img in [original, protected, deepfake]]
 
-    # Create canvas
+    #Create canvas
     header_h = 60
     footer_h = 120
     padding = 10
@@ -170,7 +170,7 @@ def create_iteration_summary(
     canvas = Image.new("RGB", (canvas_w, canvas_h), (40, 40, 40))
     draw = ImageDraw.Draw(canvas)
 
-    # Load font
+    #Load font
     try:
         title_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 24)
         label_font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 16)
@@ -183,32 +183,32 @@ def create_iteration_summary(
         except (IOError, OSError):
             title_font = label_font = text_font = ImageFont.load_default()
 
-    # Header
+    #Header
     title = f"Iteration {iteration} — {iters} PGD Iterations — Score: {score}/10"
     draw.text((padding, 15), title, fill=(255, 255, 255), font=title_font)
 
-    # Images
+    #Images
     labels = ["Original", f"Protected ({iters} iters)", f"Deepfake (Score: {score}/10)"]
     y_pos = header_h + padding
 
     for i, (img, label) in enumerate(zip(imgs, labels)):
         x_pos = padding + i * (size + padding)
 
-        # Label
+        #Label
         draw.text((x_pos, y_pos - 20), label, fill=(200, 200, 200), font=label_font)
 
-        # Image
+        #Image
         canvas.paste(img, (x_pos, y_pos))
 
-        # Color-coded border based on position
+        #Color-coded border based on position
         color = [(100, 100, 255), (255, 200, 100), (255, 100, 100)][i]
         draw.rectangle([x_pos - 2, y_pos - 2, x_pos + size + 2, y_pos + size + 2], outline=color, width=2)
 
-    # Footer with reasoning
+    #Footer with reasoning
     footer_y = y_pos + size + padding + 10
     draw.text((padding, footer_y), "Claude's Assessment:", fill=(200, 200, 200), font=label_font)
 
-    # Wrap reasoning text
+    #Wrap reasoning text
     max_chars = 110
     reasoning_short = reasoning[:300] if len(reasoning) > 300 else reasoning
     if len(reasoning_short) > max_chars:
@@ -219,7 +219,7 @@ def create_iteration_summary(
     else:
         draw.text((padding, footer_y + 25), reasoning_short, fill=(255, 255, 255), font=text_font)
 
-    # Score indicator
+    #Score indicator
     score_color = (100, 255, 100) if score <= 6 else (255, 200, 100) if score <= 8 else (255, 100, 100)
     draw.text((padding, footer_y + 70), f"Protection: {'EFFECTIVE' if score <= 6 else 'PARTIAL' if score <= 8 else 'WEAK'}",
               fill=score_color, font=label_font)
@@ -228,9 +228,9 @@ def create_iteration_summary(
     return canvas
 
 
-# ============================================================================
-# Main Loop
-# ============================================================================
+#============================================================================
+#Main Loop
+#============================================================================
 
 def run_agent_loop(
     server: str,
@@ -265,12 +265,12 @@ def run_agent_loop(
     """
     os.makedirs(output_dir, exist_ok=True)
 
-    # Load original image
+    #Load original image
     original = Image.open(image_path).convert("RGB")
     original_resized = original.resize((512, 512), Image.LANCZOS)
     original_resized.save(os.path.join(output_dir, "original.png"))
 
-    # Tracking
+    #Tracking
     results = []
     current_iters = start_iters
     iteration = 1
@@ -293,21 +293,21 @@ def run_agent_loop(
         print(f"ITERATION {iteration} — Testing with {current_iters} PGD iterations")
         print(f"{'='*80}")
 
-        # Step 1: Glaze the image
+        #Step 1: Glaze the image
         print(f"[1/3] Glazing image ({current_iters} iterations)...")
         protected, glaze_time = protect_image(server, image_path, mask_path, current_iters)
         protected_path = os.path.join(output_dir, f"iter{iteration:02d}_protected_{current_iters}iters.png")
         protected.save(protected_path)
         print(f"      ✓ Complete in {glaze_time:.1f}s → {protected_path}")
 
-        # Step 2: Generate deepfake
+        #Step 2: Generate deepfake
         print(f"[2/3] Generating deepfake...")
         deepfake, deepfake_time = generate_deepfake(server, protected, mask_path, prompt, seed)
         deepfake_path = os.path.join(output_dir, f"iter{iteration:02d}_deepfake_{current_iters}iters.png")
         deepfake.save(deepfake_path)
         print(f"      ✓ Complete in {deepfake_time:.1f}s → {deepfake_path}")
 
-        # Step 3: Rate with Claude
+        #Step 3: Rate with Claude
         print(f"[3/3] Rating deepfake quality with Claude...")
         try:
             score, reasoning = rate_deepfake(
@@ -325,7 +325,7 @@ def run_agent_loop(
             score = None
             reasoning = f"Error: {e}"
 
-        # Save iteration summary
+        #Save iteration summary
         summary_path = os.path.join(output_dir, f"iter{iteration:02d}_summary.png")
         create_iteration_summary(
             iteration, original_resized, protected, deepfake,
@@ -333,7 +333,7 @@ def run_agent_loop(
         )
         print(f"      ✓ Summary saved → {summary_path}")
 
-        # Track results
+        #Track results
         results.append({
             "iteration": iteration,
             "pgd_iters": current_iters,
@@ -348,7 +348,7 @@ def run_agent_loop(
 
         print()
 
-        # Check if we've reached the target
+        #Check if we've reached the target
         if score is not None and score <= threshold:
             print("=" * 80)
             print("🎉 SUCCESS! Glazing is effective!")
@@ -360,7 +360,7 @@ def run_agent_loop(
             print()
             break
 
-        # Check if we've hit max PGD iterations
+        #Check if we've hit max PGD iterations
         if current_iters >= max_iters:
             print("=" * 80)
             print("⚠️  Reached maximum PGD iterations")
@@ -374,12 +374,12 @@ def run_agent_loop(
             print()
             break
 
-        # Prepare for next iteration
+        #Prepare for next iteration
         current_iters += iter_increment
         iteration += 1
         print(f"Score {score}/10 > threshold {threshold}/10. Increasing to {current_iters} iterations...\n")
 
-    # Save results summary
+    #Save results summary
     results_json_path = os.path.join(output_dir, "results.json")
     with open(results_json_path, "w") as f:
         json.dump({
@@ -414,9 +414,9 @@ def run_agent_loop(
     print("=" * 80)
 
 
-# ============================================================================
-# CLI
-# ============================================================================
+#============================================================================
+#CLI
+#============================================================================
 
 def main():
     parser = argparse.ArgumentParser(
@@ -424,19 +424,19 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Basic usage
+  #Basic usage
   python client/agent_loop.py \\
       --image face.png --mask mask.png \\
       --prompt "a person in jail" --threshold 6
 
-  # Custom iteration schedule
+  #Custom iteration schedule
   python client/agent_loop.py \\
       --image face.png --mask mask.png \\
       --prompt "a person being arrested" \\
       --threshold 5 \\
       --start-iters 50 --iter-increment 100 --max-iters 800
 
-  # With specific backend
+  #With specific backend
   python client/agent_loop.py \\
       --image face.png --mask mask.png \\
       --prompt "a person in a hospital" \\
@@ -448,12 +448,12 @@ Environment:
         """,
     )
 
-    # Required arguments
+    #Required arguments
     parser.add_argument("--image", required=True, help="Path to the original image")
     parser.add_argument("--mask", required=True, help="Path to the mask (white = sensitive region)")
     parser.add_argument("--prompt", required=True, help="Inpainting prompt for deepfake generation")
 
-    # Loop parameters
+    #Loop parameters
     parser.add_argument("--threshold", type=int, default=6,
                         help="Target score threshold (1-10, default: 6). Loop until score <= threshold")
     parser.add_argument("--start-iters", type=int, default=100,
@@ -465,21 +465,21 @@ Environment:
     parser.add_argument("--max-iterations", type=int, default=10,
                         help="Maximum number of loop iterations (default: 10)")
 
-    # Output
+    #Output
     parser.add_argument("--output-dir", default=None,
                         help="Output directory (default: agent_loop_results_TIMESTAMP)")
 
-    # Other
+    #Other
     parser.add_argument("--seed", type=int, default=42, help="Random seed for deepfake generation")
     parser.add_argument("--anthropic-api-key", default=None,
                         help="Anthropic API key (or set ANTHROPIC_API_KEY env var)")
 
-    # Backend selection
+    #Backend selection
     add_backend_args(parser)
 
     args = parser.parse_args()
 
-    # Validate inputs
+    #Validate inputs
     if not os.path.isfile(args.image):
         print(f"ERROR: Image not found: {args.image}")
         sys.exit(1)
@@ -491,29 +491,29 @@ Environment:
         print(f"ERROR: Threshold must be between 1 and 10 (got {args.threshold})")
         sys.exit(1)
 
-    # Check for Anthropic API key
+    #Check for Anthropic API key
     api_key = args.anthropic_api_key or os.environ.get("ANTHROPIC_API_KEY")
     if not api_key:
         print("ERROR: Anthropic API key required.")
         print("  Set ANTHROPIC_API_KEY environment variable or use --anthropic-api-key")
         sys.exit(1)
 
-    # Default output directory
+    #Default output directory
     if args.output_dir is None:
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         args.output_dir = f"agent_loop_results_{timestamp}"
 
-    # Resolve backend
+    #Resolve backend
     server = get_server_url(args)
     print("Connecting to GPU backend...")
     print_backend_info(server, args.backend)
 
-    # Health check
+    #Health check
     info = check_server_health(server)
     print(f"  Server OK — GPU: {info.get('gpu', '?')}, Memory: {info.get('gpu_memory', '?')}")
     print()
 
-    # Run the loop
+    #Run the loop
     run_agent_loop(
         server=server,
         image_path=args.image,

@@ -16,18 +16,18 @@ If encryption works, inpaint_protected.png should be clearly degraded/broken
 compared to inpaint_original.png, proving the image is defended against malicious editing.
 
 Usage:
-    # Default backend
+    #Default backend
     python client/test_glazing.py --image face.png --mask mask.png
 
-    # Named backends
+    #Named backends
     python client/test_glazing.py --image face.png --mask mask.png --backend gx10
     python client/test_glazing.py --image face.png --mask mask.png --backend runpod
     python client/test_glazing.py --image face.png --mask mask.png --backend local
 
-    # Direct URL
+    #Direct URL
     python client/test_glazing.py --image face.png --mask mask.png --server http://192.168.1.42:5000
 
-    # Custom prompt
+    #Custom prompt
     python client/test_glazing.py --image face.png --mask mask.png --prompt "a person being arrested"
 """
 
@@ -152,7 +152,7 @@ Examples:
     add_backend_args(parser)
     args = parser.parse_args()
 
-    # Validate inputs
+    #Validate inputs
     for path in [args.image, args.mask]:
         if not os.path.isfile(path):
             print(f"ERROR: File not found: {path}")
@@ -160,12 +160,12 @@ Examples:
 
     os.makedirs(args.output_dir, exist_ok=True)
 
-    # Resolve backend
+    #Resolve backend
     server = get_server_url(args)
 
-    # ------------------------------------------------------------------
-    # Step 0: Health check
-    # ------------------------------------------------------------------
+    #------------------------------------------------------------------
+    #Step 0: Health check
+    #------------------------------------------------------------------
     print("=" * 60)
     print("Cena Encryption Protection Test")
     print("=" * 60)
@@ -173,16 +173,16 @@ Examples:
     check_health(server)
     print()
 
-    # ------------------------------------------------------------------
-    # Step 1: Load original image
-    # ------------------------------------------------------------------
+    #------------------------------------------------------------------
+    #Step 1: Load original image
+    #------------------------------------------------------------------
     original = Image.open(args.image).convert("RGB").resize((512, 512))
     original.save(os.path.join(args.output_dir, "original.png"))
     print(f"[1/4] Original image: {args.image} ({original.size})")
 
-    # ------------------------------------------------------------------
-    # Step 2: Protect the image (glaze it)
-    # ------------------------------------------------------------------
+    #------------------------------------------------------------------
+    #Step 2: Protect the image (glaze it)
+    #------------------------------------------------------------------
     print(f"[2/4] Protecting image ({args.iters} PGD iterations)...")
     t0 = time.time()
     protected = protect(server, args.image, args.mask, args.iters)
@@ -190,14 +190,14 @@ Examples:
     protected.save(os.path.join(args.output_dir, "protected.png"))
     print(f"       Done in {protect_time:.1f}s")
 
-    # Measure how different the protected image looks from the original
+    #Measure how different the protected image looks from the original
     diff_orig_prot = compute_pixel_diff(original, protected)
     print(f"       Pixel diff (original vs protected): {diff_orig_prot:.2f}")
     print(f"       (should be small — protection should be visually imperceptible)")
 
-    # ------------------------------------------------------------------
-    # Step 3: Inpaint the ORIGINAL (unprotected) image
-    # ------------------------------------------------------------------
+    #------------------------------------------------------------------
+    #Step 3: Inpaint the ORIGINAL (unprotected) image
+    #------------------------------------------------------------------
     print(f"[3/4] Inpainting ORIGINAL image with prompt: \"{args.prompt}\"...")
     t0 = time.time()
     inpainted_original = inpaint(server, original, args.mask, args.prompt, args.seed)
@@ -205,9 +205,9 @@ Examples:
     inpainted_original.save(os.path.join(args.output_dir, "inpaint_original.png"))
     print(f"       Done in {inpaint_orig_time:.1f}s")
 
-    # ------------------------------------------------------------------
-    # Step 4: Inpaint the PROTECTED (glazed) image
-    # ------------------------------------------------------------------
+    #------------------------------------------------------------------
+    #Step 4: Inpaint the PROTECTED (glazed) image
+    #------------------------------------------------------------------
     print(f"[4/4] Inpainting PROTECTED image with prompt: \"{args.prompt}\"...")
     t0 = time.time()
     inpainted_protected = inpaint(server, protected, args.mask, args.prompt, args.seed)
@@ -215,15 +215,15 @@ Examples:
     inpainted_protected.save(os.path.join(args.output_dir, "inpaint_protected.png"))
     print(f"       Done in {inpaint_prot_time:.1f}s")
 
-    # ------------------------------------------------------------------
-    # Analysis
-    # ------------------------------------------------------------------
+    #------------------------------------------------------------------
+    #Analysis
+    #------------------------------------------------------------------
     print()
     print("-" * 60)
     print("RESULTS")
     print("-" * 60)
 
-    # Compare inpainting quality: how much did inpainting change the image?
+    #Compare inpainting quality: how much did inpainting change the image?
     diff_inpaint_orig = compute_pixel_diff(original, inpainted_original)
     diff_inpaint_prot = compute_pixel_diff(protected, inpainted_protected)
     diff_between_inpaints = compute_pixel_diff(inpainted_original, inpainted_protected)
@@ -244,9 +244,9 @@ Examples:
         print("  RESULT: Protection may be WEAK.")
         print("  Try increasing --iters (e.g., 400 or 800) for stronger protection.")
 
-    # ------------------------------------------------------------------
-    # Generate comparison grid
-    # ------------------------------------------------------------------
+    #------------------------------------------------------------------
+    #Generate comparison grid
+    #------------------------------------------------------------------
     grid_path = os.path.join(args.output_dir, "comparison_grid.png")
     make_comparison_grid(
         [original, protected, inpainted_original, inpainted_protected],

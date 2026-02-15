@@ -27,9 +27,9 @@ from deepfake.core.config import settings
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Data models
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Data models
+#---------------------------------------------------------------------------
 
 @dataclass
 class SearchResult:
@@ -64,9 +64,9 @@ class ReverseSearchResult:
     similarity_label: str = ""  # e.g. "visually similar", "exact match"
 
 
-# ---------------------------------------------------------------------------
-# SERP Search (Bright Data SDK / REST API)
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#SERP Search (Bright Data SDK / REST API)
+#---------------------------------------------------------------------------
 
 class SerpSearchEngine:
     """Text and image search using Bright Data's SERP API."""
@@ -197,9 +197,9 @@ class SerpSearchEngine:
             await self._client.aclose()
 
 
-# ---------------------------------------------------------------------------
-# Reverse Image Search (Bright Data Scraping Browser + Google Lens)
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Reverse Image Search (Bright Data Scraping Browser + Google Lens)
+#---------------------------------------------------------------------------
 
 class ReverseImageSearchEngine:
     """
@@ -244,29 +244,29 @@ class ReverseImageSearchEngine:
                     context = browser.contexts[0] if browser.contexts else await browser.new_context()
                     page = await context.new_page()
 
-                    # Navigate to Google Images
+                    #Navigate to Google Images
                     await page.goto("https://images.google.com", timeout=60_000)
                     await page.wait_for_load_state("domcontentloaded")
 
-                    # Click the camera/lens icon to open reverse image search
+                    #Click the camera/lens icon to open reverse image search
                     lens_button = page.locator('[aria-label="Search by image"]').first
                     await lens_button.click(timeout=10_000)
                     await asyncio.sleep(1.5)
 
-                    # Click "upload a file" tab/link
+                    #Click "upload a file" tab/link
                     upload_tab = page.get_by_text("upload a file", exact=False).first
                     await upload_tab.click(timeout=10_000)
                     await asyncio.sleep(1)
 
-                    # Upload the image file
+                    #Upload the image file
                     file_input = page.locator('input[type="file"]').first
                     await file_input.set_input_files(str(image_path))
 
-                    # Wait for Google Lens results to load
+                    #Wait for Google Lens results to load
                     await page.wait_for_load_state("networkidle", timeout=30_000)
                     await asyncio.sleep(3)
 
-                    # Parse results - Google Lens shows visual matches
+                    #Parse results - Google Lens shows visual matches
                     results = await self._parse_lens_results(page, max_results)
 
                     logger.info("Reverse image search found %d results", len(results))
@@ -288,11 +288,11 @@ class ReverseImageSearchEngine:
         results: list[ReverseSearchResult] = []
 
         try:
-            # Try to find the "Find image source" or visual matches section
-            # Google Lens renders results as cards with links
+            #Try to find the "Find image source" or visual matches section
+            #Google Lens renders results as cards with links
             await page.wait_for_selector('a[href*="http"]', timeout=15_000)
 
-            # Extract all result links with images
+            #Extract all result links with images
             items = await page.evaluate("""() => {
                 const results = [];
                 // Look for result cards/links in the visual matches area
@@ -334,7 +334,7 @@ class ReverseImageSearchEngine:
         except Exception as e:
             logger.warning("Failed to parse Lens results: %s", e)
 
-            # Fallback: try getting page text for any useful info
+            #Fallback: try getting page text for any useful info
             try:
                 content = await page.content()
                 urls = re.findall(r'https?://(?!.*google\.com)[^\s"<>]+', content)
@@ -396,9 +396,9 @@ class ReverseImageSearchEngine:
         return results
 
 
-# ---------------------------------------------------------------------------
-# Platform-Specific Crawls
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Platform-Specific Crawls
+#---------------------------------------------------------------------------
 
 class PlatformCrawler:
     """
@@ -508,9 +508,9 @@ class PlatformCrawler:
         return results
 
 
-# ---------------------------------------------------------------------------
-# Unified Search Facade
-# ---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
+#Unified Search Facade
+#---------------------------------------------------------------------------
 
 class SearchEngine:
     """
@@ -546,7 +546,7 @@ class SearchEngine:
         """
         tasks = {}
 
-        # Default deepfake-oriented queries if name is known
+        #Default deepfake-oriented queries if name is known
         if not queries and name:
             queries = [
                 f'"{name}" deepfake',
@@ -554,17 +554,17 @@ class SearchEngine:
                 f'"{name}" face swap',
             ]
 
-        # SERP text + image searches
+        #SERP text + image searches
         if queries:
             for i, q in enumerate(queries):
                 tasks[f"text_{i}"] = self.serp.search_text(q)
                 tasks[f"images_{i}"] = self.serp.search_images(q)
 
-        # Reverse image search
+        #Reverse image search
         if image_path:
             tasks["reverse"] = self.reverse.reverse_image_search(image_path)
 
-        # Platform crawls
+        #Platform crawls
         if platforms and name:
             for platform in platforms:
                 deepfake_query = f"{name} deepfake OR AI generated OR face swap"
@@ -572,7 +572,7 @@ class SearchEngine:
                     platform, deepfake_query
                 )
 
-        # Execute all searches concurrently
+        #Execute all searches concurrently
         if not tasks:
             return {
                 "text_results": [],

@@ -1,17 +1,17 @@
 //
-//  GlazingProgressView.swift
-//  Cena
+// EncryptionProgressView.swift
+// Cena
 //
-//  Encryption progress — image with layered visual effects
+// encryption progress — image with layered visual effects
 //
 
 import SwiftUI
 
-struct GlazingProgressView: View {
-    @ObservedObject var job: GlazingJob
+struct EncryptionProgressView: View {
+    @ObservedObject var job: EncryptionJob
     let onCancel: () -> Void
 
-    // Animation drivers
+    //Animation drivers
     @State private var glitchX: CGFloat = 0
     @State private var hueShift: Double = 0
     @State private var vignettePulse: Double = 0.25
@@ -42,11 +42,11 @@ struct GlazingProgressView: View {
         .onAppear { startAnimations() }
     }
 
-    // MARK: - Image with layered FX
+    //MARK: - Image with layered FX
 
     private var imageSection: some View {
         ZStack {
-            // Base image
+            //Base image
             if let cg = job.originalImage.cgImage(forProposedRect: nil, context: nil, hints: nil) {
                 Image(decorative: cg, scale: 1.0)
                     .resizable()
@@ -66,7 +66,7 @@ struct GlazingProgressView: View {
             }
 
             if isProcessing {
-                // ── Face outline (if mask available) ──
+                //── Face outline (if mask available) ──
                 if isFaceMode, let mask = job.maskImage,
                    let maskCG = mask.cgImage(forProposedRect: nil, context: nil, hints: nil) {
                     GeometryReader { geo in
@@ -86,7 +86,7 @@ struct GlazingProgressView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
 
-                // ── Fine grain sand noise (concentrated on face if mask) ──
+                //── Fine grain sand noise (concentrated on face if mask) ──
                 TimelineView(.animation(minimumInterval: 0.15)) { timeline in
                     Canvas { ctx, size in
                         let t = timeline.date.timeIntervalSinceReferenceDate
@@ -101,7 +101,7 @@ struct GlazingProgressView: View {
                             var py = (h2 - floor(h2)) * Double(size.height)
                             let raw = h3 - floor(h3)
 
-                            // 70% of particles cluster inside face region
+                            //70% of particles cluster inside face region
                             if let fr = faceR, raw < 0.7 {
                                 px = (fr.minX + (h1 - floor(h1)) * fr.width) * Double(size.width)
                                 py = (fr.minY + (h2 - floor(h2)) * fr.height) * Double(size.height)
@@ -118,7 +118,7 @@ struct GlazingProgressView: View {
                 .blendMode(.screen)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
 
-                // ── Edge glow ──
+                //── Edge glow ──
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .stroke(
                         LinearGradient(colors: [.blue.opacity(edgeGlow), .purple.opacity(edgeGlow), .cyan.opacity(edgeGlow * 0.5)],
@@ -127,7 +127,7 @@ struct GlazingProgressView: View {
                     )
                     .blur(radius: 4)
 
-                // ── Layer 6: Vignette ──
+                //── Layer 6: Vignette ──
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(
                         RadialGradient(
@@ -139,7 +139,7 @@ struct GlazingProgressView: View {
                     )
             }
 
-            // Status badge
+            //Status badge
             VStack {
                 HStack {
                     Spacer()
@@ -158,7 +158,7 @@ struct GlazingProgressView: View {
                 Spacer()
             }
 
-            // Completed overlay
+            //Completed overlay
             if isComplete {
                 ZStack {
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -179,7 +179,7 @@ struct GlazingProgressView: View {
         }
     }
 
-    // MARK: - Controls
+    //MARK: - Controls
 
     private var controlsSection: some View {
         VStack(spacing: 14) {
@@ -250,7 +250,7 @@ struct GlazingProgressView: View {
         .padding(.horizontal, 4)
     }
 
-    // MARK: - State
+    //MARK: - State
 
     private var isProcessing: Bool {
         switch job.status {
@@ -285,7 +285,7 @@ struct GlazingProgressView: View {
         }
     }
 
-    // MARK: - Face helpers
+    //MARK: - Face helpers
 
     private var isFaceMode: Bool {
         if case .autoFace = job.maskMode { return true }
@@ -329,22 +329,22 @@ struct GlazingProgressView: View {
         )
     }
 
-    // MARK: - Animations
+    //MARK: - Animations
 
     private func startAnimations() {
-        // Glitch
+        //Glitch
         withAnimation(.easeInOut(duration: 0.07).repeatForever(autoreverses: true)) {
             glitchX = CGFloat.random(in: -2...2)
         }
-        // Hue shift
+        //Hue shift
         withAnimation(.easeInOut(duration: 3.0).repeatForever(autoreverses: true)) {
             hueShift = 12
         }
-        // Vignette pulse
+        //Vignette pulse
         withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
             vignettePulse = 0.45
         }
-        // Edge glow
+        //Edge glow
         withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
             edgeGlow = 0.5
         }
@@ -352,16 +352,16 @@ struct GlazingProgressView: View {
 }
 
 #if DEBUG
-struct GlazingProgressView_Previews: PreviewProvider {
+struct EncryptionProgressView_Previews: PreviewProvider {
     static var previews: some View {
-        let job = GlazingJob(
+        let job = EncryptionJob(
             image: NSImage(systemSymbolName: "photo", accessibilityDescription: nil) ?? NSImage(),
             iterations: 200
         )
         job.status = .protecting
         job.updateProgress(iteration: 75)
         job.startTime = Date().addingTimeInterval(-30)
-        return GlazingProgressView(job: job, onCancel: {})
+        return EncryptionProgressView(job: job, onCancel: {})
     }
 }
 #endif

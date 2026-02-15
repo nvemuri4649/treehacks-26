@@ -63,10 +63,10 @@ class FaceComparisonResult:
         dist = 1.0 - sim
         is_same = dist <= threshold
 
-        # Map distance to a 0-1 confidence score
-        # At distance 0 -> confidence 1.0
-        # At threshold -> confidence 0.5
-        # At distance 1 -> confidence ~0
+        #Map distance to a 0-1 confidence score
+        #At distance 0 -> confidence 1.0
+        #At threshold -> confidence 0.5
+        #At distance 1 -> confidence ~0
         if dist <= 0:
             confidence = 1.0
         elif dist >= 1.0:
@@ -167,7 +167,7 @@ class FaceEngine:
             )
             detections.append(det)
 
-        # Sort by detection score descending
+        #Sort by detection score descending
         detections.sort(key=lambda d: d.det_score, reverse=True)
         return detections
 
@@ -256,7 +256,7 @@ class FaceEngine:
         return matches
 
 
-# Module-level convenience accessor
+#Module-level convenience accessor
 def get_face_engine() -> FaceEngine:
     """Get or create the singleton FaceEngine instance."""
     return FaceEngine()

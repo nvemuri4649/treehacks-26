@@ -1,8 +1,8 @@
 //
-//  ApprovalDialog.swift
-//  Cena
+// ApprovalDialog.swift
+// Cena
 //
-//  Dialog asking user for consent before encrypting a likeness
+// Dialog asking user for consent before encrypting a likeness
 //
 
 import SwiftUI
@@ -25,7 +25,7 @@ struct ApprovalDialog: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            // Header
+            //Header
             HStack(spacing: 14) {
                 CenaLogo(size: 48, isAnimating: false, color: .white.opacity(0.8))
 
@@ -41,7 +41,7 @@ struct ApprovalDialog: View {
 
             Divider()
 
-            // Image preview + settings
+            //Image preview + settings
             HStack(alignment: .top) {
                 if let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) {
                     Image(decorative: cgImage, scale: 1.0)
@@ -58,7 +58,7 @@ struct ApprovalDialog: View {
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
-                    // Iterations
+                    //Iterations
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Iterations:")
                             .font(.system(size: 11, weight: .medium))
@@ -74,7 +74,7 @@ struct ApprovalDialog: View {
                         .pickerStyle(.segmented)
                     }
 
-                    // Region
+                    //Region
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Region:")
                             .font(.system(size: 11, weight: .medium))
@@ -87,7 +87,7 @@ struct ApprovalDialog: View {
                         .pickerStyle(.segmented)
                     }
 
-                    // Intensity slider
+                    //Intensity slider
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
                             Text("Intensity:")
@@ -113,7 +113,7 @@ struct ApprovalDialog: View {
                         }
                     }
 
-                    // Estimate
+                    //Estimate
                     HStack {
                         Image(systemName: "clock")
                             .font(.caption)
@@ -131,7 +131,7 @@ struct ApprovalDialog: View {
 
             Divider()
 
-            // Buttons
+            //Buttons
             HStack {
                 Button("Skip") {
                     onDeny()

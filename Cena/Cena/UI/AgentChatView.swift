@@ -1,8 +1,8 @@
 //
-//  AgentChatView.swift
-//  Cena
+// AgentChatView.swift
+// Cena
 //
-//  Translucent glass chat interface with accent colors
+// Translucent glass chat interface with accent colors
 //
 
 import SwiftUI
@@ -60,11 +60,11 @@ struct AgentChatView: View {
         Rectangle().fill(.white.opacity(0.07)).frame(height: 0.5)
     }
 
-    // MARK: - Header
+    //MARK: - Header
 
     private var headerBar: some View {
         HStack(spacing: 7) {
-            // Logo + title grouped tight
+            //Logo + title grouped tight
             CenaLogo(size: 16, isAnimating: isProcessing, color: .white.opacity(0.85))
 
             Text("Cena")
@@ -74,7 +74,7 @@ struct AgentChatView: View {
 
             modelSelector
 
-            // New session
+            //New session
             Button { initSession() } label: {
                 Image(systemName: "plus.message")
                     .font(.system(size: 13, weight: .medium))
@@ -92,7 +92,7 @@ struct AgentChatView: View {
         .padding(.top, 14)
     }
 
-    // MARK: - Model selector
+    //MARK: - Model selector
 
     private var selectedModelIcon: String {
         models.first(where: { $0.id == selectedModel })?.icon ?? "cpu"
@@ -129,7 +129,7 @@ struct AgentChatView: View {
         .fixedSize()
     }
 
-    // MARK: - Chat
+    //MARK: - Chat
 
     private var chatArea: some View {
         ScrollViewReader { proxy in
@@ -153,13 +153,13 @@ struct AgentChatView: View {
         }
     }
 
-    // MARK: - Welcome
+    //MARK: - Welcome
 
     private var welcomeView: some View {
         VStack(spacing: 14) {
             Spacer(minLength: 60)
 
-            // Logo
+            //Logo
             CenaLogo(size: 44, isAnimating: false, color: .white.opacity(0.3))
                 .padding(.bottom, 6)
 
@@ -177,7 +177,7 @@ struct AgentChatView: View {
         }
     }
 
-    // MARK: - Bubbles
+    //MARK: - Bubbles
 
     @ViewBuilder
     private func messageBubble(_ msg: ChatMessage) -> some View {
@@ -219,7 +219,7 @@ struct AgentChatView: View {
                         )
                         .textSelection(.enabled)
 
-                    // Footer: model label + privacy badge
+                    //Footer: model label + privacy badge
                     HStack(spacing: 8) {
                         if let model = msg.model {
                             HStack(spacing: 3) {
@@ -237,7 +237,7 @@ struct AgentChatView: View {
                     }
                     .padding(.leading, 6)
 
-                    // Expandable privacy detail panel
+                    //Expandable privacy detail panel
                     if expandedPrivacyId == msg.id, let report = msg.privacyReport {
                         privacyDetailPanel(report: report, sanitizedPrompt: msg.sanitizedPrompt)
                             .transition(.opacity.combined(with: .move(edge: .top)))
@@ -267,7 +267,7 @@ struct AgentChatView: View {
         }
     }
 
-    // MARK: - Status
+    //MARK: - Status
 
     @ViewBuilder
     private var statusIndicator: some View {
@@ -282,7 +282,7 @@ struct AgentChatView: View {
         }
     }
 
-    // MARK: - Privacy Badge
+    //MARK: - Privacy Badge
 
     private func privacyBadge(msg: ChatMessage, report: PrivacyReport) -> some View {
         Button {
@@ -322,11 +322,11 @@ struct AgentChatView: View {
         return .orange
     }
 
-    // MARK: - Privacy Detail Panel
+    //MARK: - Privacy Detail Panel
 
     private func privacyDetailPanel(report: PrivacyReport, sanitizedPrompt: String?) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Confidence bar
+            //Confidence bar
             HStack(spacing: 8) {
                 Image(systemName: "shield.lefthalf.filled")
                     .font(.system(size: 11))
@@ -351,14 +351,14 @@ struct AgentChatView: View {
                 }
             }
 
-            // Stats row
+            //Stats row
             HStack(spacing: 12) {
                 statPill(count: report.redactedCount, label: "Redacted", color: .red)
                 statPill(count: report.blurredCount, label: "Blurred", color: .yellow)
                 statPill(count: report.keptCount, label: "Kept", color: .green)
             }
 
-            // Entity list
+            //Entity list
             if !report.entities.isEmpty {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Detected Entities")
@@ -397,7 +397,7 @@ struct AgentChatView: View {
                 }
             }
 
-            // Warnings
+            //Warnings
             if !report.warnings.isEmpty {
                 VStack(alignment: .leading, spacing: 3) {
                     ForEach(report.warnings, id: \.self) { warning in
@@ -413,7 +413,7 @@ struct AgentChatView: View {
                 }
             }
 
-            // Sanitized prompt preview
+            //Sanitized prompt preview
             if let prompt = sanitizedPrompt, !prompt.isEmpty {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Sent to Cloud")
@@ -464,7 +464,7 @@ struct AgentChatView: View {
         }
     }
 
-    // MARK: - Image preview
+    //MARK: - Image preview
 
     @ViewBuilder
     private var imagePreviewBar: some View {
@@ -491,7 +491,7 @@ struct AgentChatView: View {
         }
     }
 
-    // MARK: - Input
+    //MARK: - Input
 
     private var inputBar: some View {
         HStack(alignment: .center, spacing: 10) {
@@ -531,7 +531,7 @@ struct AgentChatView: View {
         isProcessing || inputText.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
-    // MARK: - Actions
+    //MARK: - Actions
 
     private func initSession() {
         messages = []; ws.disconnect(); isProcessing = false; clearImage()

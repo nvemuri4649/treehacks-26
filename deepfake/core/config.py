@@ -14,7 +14,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-# Load .env from project root (same as config/settings.py)
+#Load .env from project root (same as config/settings.py)
 _project_root = Path(__file__).resolve().parent.parent.parent
 load_dotenv(_project_root / ".env")
 
@@ -23,30 +23,30 @@ load_dotenv(_project_root / ".env")
 class DeepfakeSettings:
     """Settings specific to the deepfake detection module."""
 
-    # API Keys (shared with main config)
+    #API Keys (shared with main config)
     anthropic_api_key: str = ""
     brightdata_api_token: str = ""
     brightdata_browser_auth: str = ""
 
-    # Face matching
+    #Face matching
     face_match_threshold: float = 0.35
 
-    # Deepfake detection
+    #Deepfake detection
     deepfake_flag_threshold: float = 0.6
     deepfake_high_confidence_threshold: float = 0.8
 
-    # Search limits
+    #Search limits
     max_candidates_per_search: int = 50
 
-    # Concurrency
+    #Concurrency
     image_download_concurrency: int = 10
     deepfake_analysis_concurrency: int = 3
 
-    # Server (inherited from main config)
+    #Server (inherited from main config)
     host: str = "127.0.0.1"
     port: int = 8000
 
-    # Paths — scoped under the project's output directory
+    #Paths — scoped under the project's output directory
     project_root: Path = _project_root
     output_dir: Path = field(default_factory=lambda: _project_root / "output" / "deepfake")
     upload_dir: Path = field(
@@ -89,15 +89,15 @@ class DeepfakeSettings:
             )
         )
 
-        # Read host/port from main config
+        #Read host/port from main config
         self.host = os.getenv("HOST", self.host)
         self.port = int(os.getenv("PORT", str(self.port)))
 
-        # Ensure output directories exist
+        #Ensure output directories exist
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.upload_dir.mkdir(parents=True, exist_ok=True)
         self.evidence_dir.mkdir(parents=True, exist_ok=True)
 
 
-# Singleton settings instance
+#Singleton settings instance
 settings = DeepfakeSettings()
