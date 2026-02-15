@@ -1,13 +1,13 @@
-# Cena — macOS Menu Bar Image Protection
+# Cena — Automatic Likeness Encryption
 
-Native macOS menu bar app that automatically glazes images copied to clipboard, protecting against deepfake generation. Shows a translucent overlay with progress while the glazing server runs on the GPU backend.
+Native macOS menu bar app that automatically encrypts your likeness in images copied to clipboard, preventing deepfake generation. Shows a translucent overlay with progress while the encryption runs on the GPU backend.
 
 ## How It Works
 
 1. Copy an image (Cmd+C) — Cena detects it via clipboard monitoring
 2. Approval dialog appears (or auto-approve if configured)
-3. Translucent overlay shows glazing progress
-4. Clipboard is replaced with the protected image — paste as normal
+3. Translucent overlay shows encryption progress
+4. Clipboard is replaced with the encrypted image — paste as normal
 
 Also supports drag-and-drop onto the menu bar icon, or "Protect Image..." from the menu.
 

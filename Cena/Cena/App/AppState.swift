@@ -267,11 +267,11 @@ class AppState: ObservableObject {
         let notification = NSUserNotification()
 
         if success {
-            notification.title = "✅ Image Protected"
-            notification.informativeText = "Your image has been glazed and is ready to use"
+            notification.title = "✅ Likeness Encrypted"
+            notification.informativeText = "Your likeness has been encrypted and is ready to use"
             notification.soundName = NSUserNotificationDefaultSoundName
         } else {
-            notification.title = "❌ Protection Failed"
+            notification.title = "❌ Encryption Failed"
             notification.informativeText = error ?? "An unknown error occurred"
         }
 

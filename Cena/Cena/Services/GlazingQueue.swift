@@ -189,8 +189,8 @@ class GlazingQueue: ObservableObject {
     /// Show system notification for completed job
     private func showNotification(for job: GlazingJob) {
         let notification = NSUserNotification()
-        notification.title = "Image Protected"
-        notification.informativeText = "Your image has been glazed and is ready to use"
+        notification.title = "Likeness Encrypted"
+        notification.informativeText = "Your likeness has been encrypted and is ready to use"
         notification.soundName = NSUserNotificationDefaultSoundName
 
         NSUserNotificationCenter.default.deliver(notification)

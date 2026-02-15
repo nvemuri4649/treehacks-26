@@ -83,7 +83,7 @@ class MenuBarController: NSObject {
 
         // Protect image from file
         let protectItem = NSMenuItem(
-            title: "Protect Image...",
+            title: "Encrypt Likeness...",
             action: #selector(protectFromFile),
             keyEquivalent: "o"
         )

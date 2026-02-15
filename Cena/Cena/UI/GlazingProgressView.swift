@@ -154,11 +154,11 @@ struct GlazingProgressView: View {
         case .generatingMask:
             return "Detecting Faces"
         case .protecting:
-            return "Protecting Your Image"
+            return "Encrypting Your Likeness"
         case .completed:
-            return "Protection Complete!"
+            return "Encryption Complete!"
         case .failed:
-            return "Protection Failed"
+            return "Encryption Failed"
         case .cancelled:
             return "Cancelled"
         }
@@ -171,7 +171,7 @@ struct GlazingProgressView: View {
         case .protecting where job.currentIteration > 0:
             return "Applying adversarial perturbations"
         case .completed:
-            return "Image is ready to use"
+            return "Likeness encrypted and ready to use"
         case .failed(let error):
             return error.localizedDescription
         default:

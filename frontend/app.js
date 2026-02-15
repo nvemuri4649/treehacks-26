@@ -99,7 +99,7 @@
 
     const stageLabels = {
         sanitizing: "Dereferencing personal information locally...",
-        glazing:    "Glazing uploaded image with adversarial protection...",
+        glazing:    "Encrypting likeness in uploaded image...",
         thinking:   "Cloud model is thinking (sanitized data only)...",
         restoring:  "Re-referencing your information locally...",
     };
@@ -123,11 +123,11 @@
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                 </svg>
                 <h2>Your conversations, protected.</h2>
-                <p>Personal information is dereferenced and images are glazed locally before reaching any cloud model.
+                <p>Personal information is dereferenced and likenesses are encrypted locally before reaching any cloud model.
                    Your data never leaves your machine unprotected.</p>
                 <div class="welcome-features">
                     <div class="feature-pill">PII Dereferencing</div>
-                    <div class="feature-pill">Image Glazing</div>
+                    <div class="feature-pill">Likeness Encryption</div>
                     <div class="feature-pill">Local Processing</div>
                 </div>
             </div>

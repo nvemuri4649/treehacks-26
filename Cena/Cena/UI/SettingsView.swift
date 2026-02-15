@@ -78,7 +78,7 @@ struct SettingsView: View {
                             }
                         }
                         .pickerStyle(.menu)
-                        .onChange(of: selectedBackendName) { newValue in
+                        .onChange(of: selectedBackendName) { _, newValue in
                             settings.selectedBackend = newValue
                         }
 
@@ -97,10 +97,10 @@ struct SettingsView: View {
                     }
 
                     // Protection Settings Section
-                    SettingsSection(title: "Protection Settings", icon: "lock.shield") {
+                    SettingsSection(title: "Encryption Settings", icon: "lock.shield") {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
-                                Text("Glazing Strength:")
+                                Text("Encryption Strength:")
                                     .frame(width: 140, alignment: .leading)
 
                                 Picker("", selection: $settings.defaultIterations) {
@@ -113,7 +113,7 @@ struct SettingsView: View {
                             }
 
                             HStack {
-                                Text("Protection Mode:")
+                                Text("Encryption Mode:")
                                     .frame(width: 140, alignment: .leading)
 
                                 Picker("", selection: $settings.defaultMaskMode) {
@@ -134,11 +134,11 @@ struct SettingsView: View {
                         Toggle("Monitor Clipboard for Images", isOn: $settings.monitorPasteboard)
                             .toggleStyle(.switch)
 
-                        Toggle("Auto-approve Protection", isOn: $settings.autoApprove)
+                        Toggle("Auto-approve Encryption", isOn: $settings.autoApprove)
                             .toggleStyle(.switch)
                             .disabled(!settings.monitorPasteboard)
 
-                        Text("When enabled, Cena will automatically detect when you copy images and offer to protect them before pasting.")
+                        Text("When enabled, Cena will automatically detect when you copy images and encrypt your likeness before pasting.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .fixedSize(horizontal: false, vertical: true)

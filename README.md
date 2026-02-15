@@ -4,7 +4,7 @@
 
 Cena provides two core functionalities:
 
-1. **Image & Video Glazing** — A translucent system overlay (macOS) that intercepts images/videos before upload and applies adversarial glazing to defeat deepfake generation and AI inpainting. A small loading indicator and checkmark appear in a translucent bubble, seamlessly replacing the original with a glazed version.
+1. **Automatic Likeness Encryption** — A translucent system overlay (macOS) that intercepts images/videos before upload and encrypts your likeness to defeat deepfake generation and AI inpainting. A small loading indicator and checkmark appear in a translucent bubble, seamlessly replacing the original with an encrypted version.
 
 2. **Cena Agent** — A dual local-cloud agent system with a web-based chat interface. Documents, images, and messages are dereferenced/redacted locally before being sent to cloud LLMs for heavy reasoning. Images uploaded here also get the glazing treatment. Personal information never leaves your device unprotected.
 
@@ -20,7 +20,7 @@ Cena provides two core functionalities:
 │  │  Cena (macOS)  │    │  Cena Local Guardian          │   │
 │  │  ├─ Clipboard monitor│    │  ├─ Nemotron (vLLM, local)              │   │
 │  │  ├─ Translucent HUD  │    │  ├─ PII Redactor (placeholder)         │   │
-│  │  └─ Auto-glaze on    │    │  ├─ Image Glazer (→ DiffusionGuard)    │   │
+│  │  └─ Auto-encrypt on  │    │  ├─ Likeness Encryptor (DiffusionGuard)│   │
 │  │     upload            │    │  └─ Re-referencing engine              │   │
 │  └────────┬─────────────┘    └──────────────┬──────────────────────────┘   │
 │           │                                  │                              │
@@ -47,7 +47,7 @@ Cena provides two core functionalities:
 
 ```
 .
-├── Cena/                        # macOS menu-bar app (translucent overlay UI)
+├── Cena/                        # macOS menu-bar app (Automatic Likeness Encryption)
 │   └── Cena/                    # App/, UI/, Models/, Services/
 ├── agents/
 │   ├── local_guardian/          # Nemotron agent: redact, glaze, re-reference
@@ -72,7 +72,7 @@ Cena provides two core functionalities:
 
 ## Quick Start
 
-### 1. Deploy Glazing Server (on DGX Spark)
+### 1. Deploy Encryption Server (on DGX Spark)
 
 ```bash
 ./deploy.sh gx10 nikhil@spark-abcd.local
@@ -80,7 +80,7 @@ ssh nikhil@spark-abcd.local
 docker exec -it diffguard bash -c 'cd /workspace/project/server && python app.py'
 ```
 
-### 2. Cena App (macOS overlay)
+### 2. Cena App (Automatic Likeness Encryption)
 
 ```bash
 cd Cena && swift build -c release    # or: make build && make run

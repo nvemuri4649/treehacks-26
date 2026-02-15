@@ -75,8 +75,8 @@ class MaskGenerator {
             // Create new bounding box (clamped to 0-1)
             let newX = max(0, centerX - newWidth / 2)
             let newY = max(0, centerY - newHeight / 2)
-            let clampedWidth = min(newWidth, 1.0 - newX)
-            let clampedHeight = min(newHeight, 1.0 - newY)
+            let _ = min(newWidth, 1.0 - newX)
+            let _ = min(newHeight, 1.0 - newY)
 
             // Note: We can't directly modify VNFaceObservation, so we'll pass the expanded rect separately
             return face

@@ -2,7 +2,7 @@
 //  ApprovalDialog.swift
 //  Cena
 //
-//  Dialog asking user for consent before protecting an image
+//  Dialog asking user for consent before encrypting a likeness
 //
 
 import SwiftUI
@@ -37,10 +37,10 @@ struct ApprovalDialog: View {
                     )
 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Protect This Image?")
+                    Text("Encrypt This Likeness?")
                         .font(.title2.weight(.semibold))
 
-                    Text("Cena can add adversarial protection to prevent deepfake generation")
+                    Text("Automatic Likeness Encryption prevents deepfake generation")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -105,7 +105,7 @@ struct ApprovalDialog: View {
             }
 
             // Remember choice checkbox
-            Toggle("Always protect copied images", isOn: $rememberChoice)
+            Toggle("Always encrypt copied images", isOn: $rememberChoice)
                 .toggleStyle(.checkbox)
                 .font(.caption)
 
@@ -113,7 +113,7 @@ struct ApprovalDialog: View {
 
             // Action buttons
             HStack {
-                Button("Don't Protect") {
+                Button("Skip") {
                     onDeny()
                     dismiss()
                 }
@@ -121,7 +121,7 @@ struct ApprovalDialog: View {
 
                 Spacer()
 
-                Button("Protect Image") {
+                Button("Encrypt") {
                     let option: ApprovalOption
                     if rememberChoice {
                         option = .always(iterations: selectedStrength, maskMode: selectedMaskMode)
