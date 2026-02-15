@@ -93,16 +93,7 @@ export RUNPOD_POD_ID=abc123xyz
 
 ```bash
 ./deploy.sh ssh ubuntu@my-gpu-server.com
-ssh ubuntu@my-gpu-server.com 'cd ~/diffusionguard_project/server && python app.py'
-```
-
-#### Option D: Local (your machine has a GPU)
-
-```bash
-# Clone DiffusionGuard next to this repo
-git clone https://github.com/choi403/DiffusionGuard.git ../DiffusionGuard
-pip install -r server/requirements.txt
-python server/app.py
+ssh ubuntu@my-gpu-server.com 'cd server && python app.py'
 ```
 
 ### 3. Protect an image (from your laptop)
@@ -201,10 +192,3 @@ curl -X POST "http://<gpu>:5000/test-inpaint?prompt=a+person+in+jail" \
 ```
 
 Query params: `prompt` (str), `steps` (int, default 50), `seed` (int, default 42).
-
-## References
-
-- [DiffusionGuard Paper (ICLR 2025)](https://arxiv.org/abs/2410.05694)
-- [DiffusionGuard Code](https://github.com/choi403/DiffusionGuard)
-- [ASUS Ascent GX10](https://www.asus.com/us/networking-iot-servers/desktop-ai-supercomputer/ultra-small-ai-supercomputers/asus-ascent-gx10/)
-- [RunPod](https://runpod.io)
