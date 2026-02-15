@@ -152,17 +152,7 @@ class MenuBarController: NSObject {
 
     private func backendStatusText() -> String {
         let backendName = appState.settings.selectedBackend.capitalized
-
-        switch appState.backendStatus {
-        case .available:
-            return "✅ Backend: \(backendName)"
-        case .unavailable:
-            return "❌ Backend: \(backendName) (unavailable)"
-        case .checking:
-            return "⏳ Checking backend..."
-        case .unknown:
-            return "❓ Backend: \(backendName)"
-        }
+        return "Backend: \(backendName)"
     }
 
     // MARK: - Menu Actions
@@ -205,16 +195,17 @@ class MenuBarController: NSObject {
         let hostingController = NSHostingController(rootView: chatView)
 
         let window = NSWindow(contentViewController: hostingController)
-        window.title = "Cena Agent"
+        window.title = "Cena"
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
         window.styleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
-        window.setContentSize(NSSize(width: 600, height: 680))
-        window.minSize = NSSize(width: 440, height: 360)
+        window.setContentSize(NSSize(width: 720, height: 640))
+        window.minSize = NSSize(width: 520, height: 360)
         window.center()
         window.isReleasedWhenClosed = false
-        window.backgroundColor = .clear
         window.isOpaque = false
+        window.backgroundColor = NSColor(white: 0.06, alpha: 0.88)
+        window.hasShadow = true
         window.makeKeyAndOrderFront(nil)
 
         agentChatWindow = window
