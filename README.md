@@ -2,13 +2,15 @@
 
 > **TreeHacks '26** — A suite of tools that protect your personal data from AI exploitation.
 
-Cena provides two core functionalities:
+Cena is a native macOS app with two core features:
 
-1. **Automatic Likeness Encryption** — A translucent system overlay (macOS) that intercepts images/videos before upload and encrypts your likeness to defeat deepfake generation and AI inpainting. A small loading indicator and checkmark appear in a translucent bubble, seamlessly replacing the original with an encrypted version.
+1. **Automatic Likeness Encryption** — A translucent system overlay that intercepts images/videos before upload and encrypts your likeness to defeat deepfake generation and AI inpainting. A small loading indicator and checkmark appear in a translucent bubble, seamlessly replacing the original with an encrypted version.
 
-2. **Cena Agent** — A dual local-cloud agent system with a web-based chat interface. Documents, images, and messages are dereferenced/redacted locally before being sent to cloud LLMs for heavy reasoning. Images uploaded here also get the glazing treatment. Personal information never leaves your device unprotected.
+2. **Cena Agent** — A native chat interface for talking to cloud LLMs with full privacy. Documents, images, and messages are dereferenced/redacted locally before being sent to the cloud. Images uploaded here also get likeness encryption. Personal information never leaves your device unprotected.
 
-**Key principle:** All personalized information is processed locally (on the DGX Spark) — the local agent, glazing, redaction — before being dereferenced/glazed and sent to the cloud.
+Both features are native SwiftUI, unified in a single menu-bar app.
+
+**Key principle:** All personalized information is processed locally (on the DGX Spark) — the local agent, encryption, redaction — before being dereferenced/encrypted and sent to the cloud.
 
 ## Architecture
 
@@ -16,25 +18,26 @@ Cena provides two core functionalities:
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                         YOUR MACHINE (DGX Spark / SSH)                      │
 │                                                                             │
-│  ┌──────────────────────┐    ┌──────────────────────────────────────────┐   │
-│  │  Cena (macOS)  │    │  Cena Local Guardian          │   │
-│  │  ├─ Clipboard monitor│    │  ├─ Nemotron (vLLM, local)              │   │
-│  │  ├─ Translucent HUD  │    │  ├─ PII Redactor (placeholder)         │   │
-│  │  └─ Auto-encrypt on  │    │  ├─ Likeness Encryptor (DiffusionGuard)│   │
-│  │     upload            │    │  └─ Re-referencing engine              │   │
-│  └────────┬─────────────┘    └──────────────┬──────────────────────────┘   │
-│           │                                  │                              │
-│  ┌────────▼─────────────┐                    │ sanitized only               │
-│  │  Agent Loop          │                    │                              │
-│  │  ├─ Glaze            │                    │                              │
-│  │  ├─ Generate deepfake│    ┌───────────────▼──────────────────────────┐   │
-│  │  ├─ Judge (Claude)   │    │  DiffusionGuard Server (Flask :5000)    │   │
-│  │  └─ Increase eps     │    │  ├─ PGD adversarial perturbation        │   │
-│  └──────────────────────┘    │  ├─ SD Inpainting pipeline              │   │
-│                              │  └─ Fawkes facial recognition cloak     │   │
-│                              └─────────────────────────────────────────┘   │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │  Cena (native macOS)                                                │   │
+│  │  ├─ Automatic Likeness Encryption (translucent overlay)             │   │
+│  │  │   ├─ Clipboard monitor → auto-encrypt on copy/upload             │   │
+│  │  │   └─ Translucent HUD with progress                              │   │
+│  │  └─ Agent Chat (native SwiftUI window)                              │   │
+│  │      ├─ WebSocket → FastAPI backend                                 │   │
+│  │      └─ Model picker (Claude / GPT)                                 │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                              │                                              │
+│  ┌───────────────────────────▼──────────────────────────────────────────┐   │
+│  │  Cena Backend (FastAPI :8000 + Flask :5000)                         │   │
+│  │  ├─ Local Guardian (Nemotron via vLLM)                              │   │
+│  │  │   ├─ PII Redactor (placeholder)                                  │   │
+│  │  │   ├─ Likeness Encryptor (DiffusionGuard)                         │   │
+│  │  │   └─ Re-referencing engine                                       │   │
+│  │  └─ DiffusionGuard Server (PGD + SD Inpainting + Fawkes)           │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
 └──────────────────────────────────────────┬──────────────────────────────────┘
-                                           │ redacted / glazed data only
+                                           │ redacted / encrypted data only
                                            ▼
                               ┌──────────────────────────┐
                               │  Cloud Relay              │
@@ -47,27 +50,32 @@ Cena provides two core functionalities:
 
 ```
 .
-├── Cena/                        # macOS menu-bar app (Automatic Likeness Encryption)
-│   └── Cena/                    # App/, UI/, Models/, Services/
+├── Cena/                        # Native macOS app (SwiftUI)
+│   └── Cena/
+│       ├── App/                 # CenaApp, AppState, MenuBarController
+│       ├── UI/                  # AgentChatView, OverlayWindow, GlazingProgressView,
+│       │                        #   ApprovalDialog, SettingsView
+│       ├── Services/            # AgentWebSocket, BackendService, GlazingQueue,
+│       │                        #   MaskGenerator, PasteboardMonitor
+│       └── Models/              # ChatMessage, GlazingJob, Settings, BackendConfig
 ├── agents/
-│   ├── local_guardian/          # Nemotron agent: redact, glaze, re-reference
+│   ├── local_guardian/          # Nemotron agent: redact, encrypt, re-reference
 │   └── cloud_relay/             # Routes sanitized requests to Claude / GPT
-├── frontend/                    # Web chat UI (index.html, styles.css, app.js)
 ├── server/
-│   ├── app.py                   # Flask GPU server (glazing + Fawkes)
+│   ├── app.py                   # Flask GPU server (encryption + Fawkes)
 │   ├── fawkes_modern.py         # Fawkes facial recognition cloaking
-│   ├── main.py                  # FastAPI server (Cena chat)
+│   ├── main.py                  # FastAPI server (agent WebSocket API)
 │   └── routes.py                # WebSocket + REST endpoints
 ├── client/
-│   ├── glaze.py                 # CLI image protection
-│   ├── agent_loop.py            # Adversarial glaze → generate → judge loop
+│   ├── glaze.py                 # CLI image encryption
+│   ├── agent_loop.py            # Adversarial encrypt → generate → judge loop
 │   ├── rater_agent.py           # Claude vision deepfake rater
 │   └── backends.py              # Backend resolver
 ├── config/settings.py           # All configuration
 ├── backends.json                # GPU backend definitions
 ├── deploy.sh                    # Deploy to GX10 / RunPod / SSH
 ├── .env.example                 # Environment variable template
-└── requirements.txt             # Cena dependencies
+└── requirements.txt             # Backend Python dependencies
 ```
 
 ## Quick Start
@@ -80,15 +88,7 @@ ssh nikhil@spark-abcd.local
 docker exec -it diffguard bash -c 'cd /workspace/project/server && python app.py'
 ```
 
-### 2. Cena App (Automatic Likeness Encryption)
-
-```bash
-cd Cena && swift build -c release    # or: make build && make run
-```
-
-Copy an image → translucent bubble appears → image is glazed → paste the protected version.
-
-### 3. Cena Chat (web UI)
+### 2. Start Agent Backend
 
 ```bash
 # On DGX Spark: start local Nemotron
@@ -98,25 +98,19 @@ vllm serve nvidia/NVIDIA-Nemotron-Nano-9B-v2 --port 8001 --trust-remote-code
 cp .env.example .env   # add your API keys
 pip install -r requirements.txt
 python -m server.main
-# Open http://127.0.0.1:8000
 ```
 
-### 4. CLI Glazing
+### 3. Build & Run Cena
 
 ```bash
-pip install requests pillow
-python client/glaze.py --image photo.png --mask mask.png --backend gx10
+cd Cena && swift build -c release
+.build/release/Cena
 ```
 
-### 5. Agent Loop (auto-optimize glazing strength)
+The shield icon appears in your menu bar with two main actions:
 
-```bash
-export ANTHROPIC_API_KEY="sk-ant-..."
-python client/agent_loop.py \
-  --image face.png --mask mask.png \
-  --prompt "a person in jail" \
-  --threshold 6 --backend gx10
-```
+- **Automatic Likeness Encryption**: Copy an image → translucent bubble → encrypted → paste
+- **Open Agent Chat** (Cmd+A): Native chat window connected to the privacy agent
 
 ## Configuration
 

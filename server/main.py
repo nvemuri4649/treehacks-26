@@ -1,16 +1,15 @@
 """
 Cena — FastAPI application entry point.
 
+Serves the WebSocket + REST API that the native Cena macOS agent
+chat connects to. No web frontend — the UI is native Swift.
+
 Run with:
     python -m server.main
 """
 
-from pathlib import Path
-
 import uvicorn
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
 
 from config.settings import HOST, PORT
 from server.routes import router
@@ -24,15 +23,19 @@ app = FastAPI(
 # Register API / WebSocket routes
 app.include_router(router)
 
-# Serve frontend static files
-_frontend_dir = Path(__file__).resolve().parent.parent / "frontend"
-app.mount("/static", StaticFiles(directory=str(_frontend_dir)), name="static")
-
 
 @app.get("/")
-async def serve_index():
-    """Serve the chatbot UI."""
-    return FileResponse(str(_frontend_dir / "index.html"))
+async def root():
+    """API root — confirms the server is running."""
+    return {
+        "service": "cena",
+        "status": "ok",
+        "endpoints": {
+            "health": "GET /health",
+            "session": "POST /api/session",
+            "chat": "WS /ws/{session_id}",
+        },
+    }
 
 
 if __name__ == "__main__":

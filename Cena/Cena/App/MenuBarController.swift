@@ -14,6 +14,7 @@ class MenuBarController: NSObject {
     private var appState: AppState
     private var settingsWindow: NSWindow?
     private var approvalWindow: NSWindow?
+    private var agentChatWindow: NSWindow?
 
     init(appState: AppState) {
         self.appState = appState
@@ -80,6 +81,14 @@ class MenuBarController: NSObject {
         menu.addItem(monitorItem)
 
         menu.addItem(NSMenuItem.separator())
+
+        // Agent Chat
+        let agentItem = NSMenuItem(
+            title: "Open Agent Chat...",
+            action: #selector(openAgentChat),
+            keyEquivalent: "a"
+        )
+        menu.addItem(agentItem)
 
         // Protect image from file
         let protectItem = NSMenuItem(
@@ -178,6 +187,34 @@ class MenuBarController: NSObject {
         Task { @MainActor in
             await appState.checkBackendHealth()
         }
+    }
+
+    @objc private func openAgentChat() {
+        if let window = agentChatWindow, window.isVisible {
+            window.makeKeyAndOrderFront(nil)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        let chatView = AgentChatView()
+        let hostingController = NSHostingController(rootView: chatView)
+
+        let window = NSWindow(contentViewController: hostingController)
+        window.title = "Cena Agent"
+        window.titlebarAppearsTransparent = true
+        window.styleMask = [.titled, .closable, .resizable, .miniaturizable, .fullSizeContentView]
+        window.setContentSize(NSSize(width: 640, height: 700))
+        window.minSize = NSSize(width: 480, height: 400)
+        window.center()
+        window.isReleasedWhenClosed = false
+        window.makeKeyAndOrderFront(nil)
+
+        // Dark translucent background
+        window.backgroundColor = NSColor(white: 0.08, alpha: 0.95)
+        window.isMovableByWindowBackground = true
+
+        agentChatWindow = window
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     @objc private func protectFromFile() {
