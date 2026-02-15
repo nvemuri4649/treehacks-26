@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Threat Report - {{ scan_id }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="bg-[#0f172a] min-h-screen text-gray-200">
+    <!-- Header -->
+    <header class="border-b border-gray-800">
+        <div class="max-w-5xl mx-auto px-6 py-5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="/" class="text-gray-500 hover:text-gray-300 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <h1 class="text-xl font-semibold text-white">Threat Report</h1>
+                <span class="text-sm text-gray-500">Scan #{{ scan_id }}</span>
+            </div>
+            <a href="/api/report/{{ scan_id }}" target="_blank"
+               class="text-sm text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+                Export JSON
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-6 py-8">
+        <!-- Threat Level Banner -->
+        {% set threat_colors = {
+            'none': 'border-green-800 bg-green-900/20',
+            'low': 'border-green-800 bg-green-900/20',
+            'medium': 'border-yellow-800 bg-yellow-900/20',
+            'high': 'border-orange-800 bg-orange-900/20',
+            'critical': 'border-red-800 bg-red-900/20'
+        } %}
+        {% set threat_text_colors = {
+            'none': 'text-green-400',
+            'low': 'text-green-400',
+            'medium': 'text-yellow-400',
+            'high': 'text-orange-400',
+            'critical': 'text-red-400'
+        } %}
+        {% set threat_icons = {
+            'none': 'M5 13l4 4L19 7',
+            'low': 'M5 13l4 4L19 7',
+            'medium': 'M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+            'high': 'M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
+            'critical': 'M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+        } %}
+
+        <div class="rounded-xl border {{ threat_colors.get(report.overall_threat_level, 'border-gray-800 bg-gray-900/20') }} p-6 mb-8">
+            <div class="flex items-start gap-4">
+                <div class="flex-shrink-0">
+                    <svg class="w-8 h-8 {{ threat_text_colors.get(report.overall_threat_level, 'text-gray-400') }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ threat_icons.get(report.overall_threat_level, '') }}"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center gap-3 mb-1">
+                        <h2 class="text-lg font-bold {{ threat_text_colors.get(report.overall_threat_level, 'text-gray-400') }} uppercase">
+                            {{ report.overall_threat_level }} Threat
+                        </h2>
+                    </div>
+                    <p class="text-gray-300">{{ report.overall_message }}</p>
+                    {% if report.person_name and report.person_name != 'Unknown' %}
+                    <p class="text-sm text-gray-500 mt-2">Person identified: <span class="text-gray-300">{{ report.person_name }}</span></p>
+                    {% endif %}
+                    <p class="text-xs text-gray-600 mt-2">Generated: {{ report.generated_at }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-[#1e293b] rounded-xl p-4 border border-gray-800">
+                <p class="text-2xl font-bold text-white">{{ report.statistics.get('images_downloaded', 0) }}</p>
+                <p class="text-xs text-gray-500 mt-1">Images Downloaded</p>
+            </div>
+            <div class="bg-[#1e293b] rounded-xl p-4 border border-gray-800">
+                <p class="text-2xl font-bold text-white">{{ report.statistics.get('faces_matched', 0) }}</p>
+                <p class="text-xs text-gray-500 mt-1">Faces Matched</p>
+            </div>
+            <div class="bg-[#1e293b] rounded-xl p-4 border border-gray-800">
+                <p class="text-2xl font-bold text-white">{{ report.statistics.get('images_analyzed', 0) }}</p>
+                <p class="text-xs text-gray-500 mt-1">Images Analyzed</p>
+            </div>
+            <div class="bg-[#1e293b] rounded-xl p-4 border border-gray-800">
+                <p class="text-2xl font-bold text-white">{{ report.statistics.get('total_findings', 0) }}</p>
+                <p class="text-xs text-gray-500 mt-1">Findings</p>
+            </div>
+        </div>
+
+        <!-- Search Effort Summary -->
+        <div class="bg-[#1e293b] rounded-xl p-5 border border-gray-800 mb-8">
+            <h3 class="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-3">Search Effort</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-y-3 gap-x-6 text-sm">
+                <div>
+                    <span class="text-gray-500">Reverse Image:</span>
+                    <span class="text-gray-300 ml-1">{{ report.statistics.get('reverse_image_results', 0) }} results</span>
+                </div>
+                <div>
+                    <span class="text-gray-500">Text Search:</span>
+                    <span class="text-gray-300 ml-1">{{ report.statistics.get('text_search_results', 0) }} results</span>
+                </div>
+                <div>
+                    <span class="text-gray-500">Image Search:</span>
+                    <span class="text-gray-300 ml-1">{{ report.statistics.get('image_search_results', 0) }} results</span>
+                </div>
+                <div>
+                    <span class="text-gray-500">Platform Crawls:</span>
+                    <span class="text-gray-300 ml-1">{{ report.statistics.get('platform_results', 0) }} results</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Findings -->
+        {% if report.findings %}
+        <h3 class="text-lg font-bold text-white mb-4">Flagged Images ({{ report.findings | length }})</h3>
+
+        <div class="space-y-4">
+            {% for finding in report.findings %}
+            {% set f_threat_colors = {
+                'low': 'border-green-800/50',
+                'medium': 'border-yellow-800/50',
+                'high': 'border-orange-800/50',
+                'critical': 'border-red-800/50'
+            } %}
+            {% set f_badge_colors = {
+                'low': 'bg-green-900/30 text-green-400',
+                'medium': 'bg-yellow-900/30 text-yellow-400',
+                'high': 'bg-orange-900/30 text-orange-400',
+                'critical': 'bg-red-900/30 text-red-400'
+            } %}
+
+            <div class="bg-[#1e293b] rounded-xl border {{ f_threat_colors.get(finding.get('threat_level', 'low'), 'border-gray-800') }} overflow-hidden">
+                <div class="p-5">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full {{ f_badge_colors.get(finding.get('threat_level', 'low'), 'bg-gray-900/30 text-gray-400') }} uppercase">
+                                {{ finding.get('threat_level', 'unknown') }}
+                            </span>
+                            <span class="text-sm font-mono text-gray-400">
+                                {{ "%.0f" | format(finding.get('deepfake_probability', 0) * 100) }}% deepfake probability
+                            </span>
+                        </div>
+                        <span class="text-xs text-gray-600">
+                            Face similarity: {{ "%.1f" | format(finding.get('face_similarity', 0) * 100) }}%
+                        </span>
+                    </div>
+
+                    {% if finding.get('source_url') %}
+                    <div class="mb-3">
+                        <p class="text-xs text-gray-500 mb-1">Source</p>
+                        <a href="{{ finding.source_url }}" target="_blank" rel="noopener"
+                           class="text-sm text-blue-400 hover:text-blue-300 break-all">
+                            {{ finding.source_url[:120] }}{% if finding.source_url|length > 120 %}...{% endif %}
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    {% if finding.get('analysis_summary') %}
+                    <p class="text-sm text-gray-300 mb-3">{{ finding.analysis_summary }}</p>
+                    {% endif %}
+
+                    {% if finding.get('artifacts') %}
+                    <div>
+                        <p class="text-xs text-gray-500 mb-2">Detected Artifacts</p>
+                        <div class="flex flex-wrap gap-2">
+                            {% for artifact in finding.artifacts %}
+                            <span class="px-2 py-1 text-xs bg-gray-800 text-gray-400 rounded-lg">{{ artifact }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Expandable Details -->
+                <details class="border-t border-gray-800">
+                    <summary class="px-5 py-3 text-xs text-gray-500 cursor-pointer hover:text-gray-400 transition-colors">
+                        Show detailed analysis
+                    </summary>
+                    <div class="px-5 pb-4">
+                        <pre class="text-xs text-gray-500 overflow-x-auto whitespace-pre-wrap">{{ finding | tojson(indent=2) }}</pre>
+                    </div>
+                </details>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <!-- No Findings -->
+        <div class="text-center py-16">
+            <div class="w-16 h-16 mx-auto rounded-full bg-green-900/20 flex items-center justify-center mb-4">
+                <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-white mb-2">No Deepfakes Detected</h3>
+            <p class="text-gray-400 max-w-md mx-auto">
+                The agent searched across multiple platforms and did not find any
+                AI-generated deepfakes matching your face.
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Back Button -->
+        <div class="mt-12 text-center">
+            <a href="/"
+               class="px-6 py-2.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-xl transition-colors inline-block">
+                New Scan
+            </a>
+        </div>
+    </main>
+</body>
+</html>

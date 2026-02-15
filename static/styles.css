@@ -1,0 +1,79 @@
+/* Custom styles for Deepfake Detection Agent */
+
+/* Smooth scrollbar for dark theme */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* Log feed scrollbar */
+#log-feed::-webkit-scrollbar {
+    width: 4px;
+}
+#log-feed::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 2px;
+}
+
+/* Step transitions */
+.step {
+    transition: all 0.3s ease;
+}
+.step .step-icon {
+    transition: all 0.3s ease;
+}
+
+/* Drop zone active state */
+#drop-zone.drag-active {
+    border-color: rgba(239, 68, 68, 0.5);
+    background-color: rgba(239, 68, 68, 0.05);
+}
+
+/* Pulse animation for active indicator */
+@keyframes gentle-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+.animate-pulse {
+    animation: gentle-pulse 2s ease-in-out infinite;
+}
+
+/* Details/summary styling */
+details summary {
+    list-style: none;
+}
+details summary::-webkit-details-marker {
+    display: none;
+}
+details[open] summary {
+    border-bottom: 1px solid #1e293b;
+    margin-bottom: 0.75rem;
+}
+
+/* Fade in animation for log entries */
+#log-feed p {
+    animation: fadeIn 0.2s ease-in;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Threat level banner pulse for critical */
+.border-red-800 {
+    animation: critical-pulse 3s ease-in-out infinite;
+}
+@keyframes critical-pulse {
+    0%, 100% { border-color: rgba(153, 27, 27, 1); }
+    50% { border-color: rgba(220, 38, 38, 0.8); }
+}
