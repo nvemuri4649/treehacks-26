@@ -34,10 +34,12 @@ class PasteboardMonitor: ObservableObject {
         self.lastChangeCount = NSPasteboard.general.changeCount
         self.isMonitoring = true
 
-        // Poll pasteboard every 0.5 seconds
-        timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        // Poll pasteboard every 0.5 seconds on the main RunLoop
+        let t = Timer(timeInterval: 0.5, repeats: true) { [weak self] _ in
             self?.checkPasteboard()
         }
+        RunLoop.main.add(t, forMode: .common)
+        timer = t
 
         print("👀 Started pasteboard monitoring")
     }
@@ -54,19 +56,25 @@ class PasteboardMonitor: ObservableObject {
 
     /// Check if pasteboard has changed and contains an image
     private func checkPasteboard() {
-        let currentCount = NSPasteboard.general.changeCount
+        let pasteboard = NSPasteboard.general
+        let currentCount = pasteboard.changeCount
 
         // No change detected
         guard currentCount != lastChangeCount else {
             return
         }
 
+        print("📋 Pasteboard changed (\(lastChangeCount) → \(currentCount)), types: \(pasteboard.types?.map(\.rawValue) ?? [])")
         lastChangeCount = currentCount
 
         // Check for image content
         if let image = getImageFromPasteboard() {
             print("📋 Image detected on pasteboard: \(image.size)")
-            onImageDetected?(image)
+            DispatchQueue.main.async { [weak self] in
+                self?.onImageDetected?(image)
+            }
+        } else {
+            print("📋 No image found in pasteboard")
         }
     }
 
