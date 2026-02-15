@@ -66,14 +66,17 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDele
     private func setupApprovalDialogObserver() {
         // Poll on main RunLoop for approval dialog requests
         let t = Timer(timeInterval: 0.2, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
+            Task { @MainActor in
+                guard let self = self else { return }
 
-            if self.appState.showApprovalDialog,
-               let image = self.appState.currentPendingImage,
-               self.approvalWindowController == nil {
+                if self.appState.showApprovalDialog,
+                   let image = self.appState.currentPendingImage,
+                   self.approvalWindowController == nil {
 
-                self.showApprovalDialog(for: image)
-                self.appState.showApprovalDialog = false
+                    print("🔐 Showing approval dialog")
+                    self.showApprovalDialog(for: image)
+                    self.appState.showApprovalDialog = false
+                }
             }
         }
         RunLoop.main.add(t, forMode: .common)
