@@ -8,6 +8,7 @@
 import AppKit
 import SwiftUI
 
+@MainActor
 class MenuBarController: NSObject {
     private var statusItem: NSStatusItem!
     private var appState: AppState
@@ -218,13 +219,15 @@ class MenuBarController: NSObject {
         window.makeKeyAndOrderFront(nil)
         window.isReleasedWhenClosed = false
 
-        // Listen for backend changes
-        window.contentViewController?.view.window?.windowController?.shouldCloseDocument = { [weak self] in
-            // Apply backend changes
+        // Apply backend changes when window closes
+        NotificationCenter.default.addObserver(
+            forName: NSWindow.willCloseNotification,
+            object: window,
+            queue: .main
+        ) { [weak self] _ in
             if let currentBackend = self?.appState.settings.selectedBackend {
                 self?.appState.changeBackend(to: currentBackend)
             }
-            return true
         }
 
         settingsWindow = window
@@ -239,6 +242,7 @@ class MenuBarController: NSObject {
 
 // MARK: - Drag and Drop Support
 
+@MainActor
 extension MenuBarController: NSWindowDelegate {
     func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
         // Check if dragging contains image files

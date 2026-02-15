@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "Cena",
     platforms: [
-        .macOS(.v13)
+        .macOS(.v14)
     ],
     products: [
         .executable(
@@ -15,7 +15,11 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "Cena",
-            path: "Cena"
+            path: "Cena",
+            exclude: ["Info.plist", "Cena.entitlements"],
+            resources: [
+                .process("Assets.xcassets")
+            ]
         )
     ]
 )

@@ -55,6 +55,12 @@ class GlazingJob: ObservableObject, Identifiable {
         self.source = source
     }
 
+    /// Whether the job is still pending
+    var isPending: Bool {
+        if case .pending = status { return true }
+        return false
+    }
+
     /// Calculate estimated time remaining based on current progress
     func estimatedTimeRemaining() -> String {
         guard let startTime = startTime, progress > 0.01 else {

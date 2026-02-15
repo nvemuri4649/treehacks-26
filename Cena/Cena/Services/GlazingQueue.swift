@@ -176,7 +176,7 @@ class GlazingQueue: ObservableObject {
 
     /// Cancel all pending jobs
     func cancelAll() {
-        for job in jobs where job.status == .pending {
+        for job in jobs where job.isPending {
             job.cancel()
         }
         currentJob = nil

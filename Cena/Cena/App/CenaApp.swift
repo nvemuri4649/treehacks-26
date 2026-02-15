@@ -13,13 +13,16 @@ struct CenaApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
-        // Empty scene - we only use menu bar
-        Settings {
+        // Menu bar only app — no main window
+        Window("Cena", id: "main") {
             EmptyView()
+                .frame(width: 0, height: 0)
         }
+        .defaultSize(width: 0, height: 0)
     }
 }
 
+@MainActor
 class AppDelegate: NSObject, NSApplicationDelegate, NSUserNotificationCenterDelegate {
     private var menuBarController: MenuBarController!
     private var appState: AppState!
